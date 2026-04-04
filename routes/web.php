@@ -9,7 +9,7 @@ use App\Http\Controllers\FbrNoticeController;
 use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/login');
 });
 
 Route::middleware(['auth'])->group(function () {
