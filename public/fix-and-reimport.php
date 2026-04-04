@@ -1,20 +1,10 @@
 <?php
 set_time_limit(300);
-echo "<pre><h2>Fix DB & Import Remaining Clients</h2>\n";
+echo "<pre><h2>Import Missing Clients</h2>\n";
 
 $pdo = new PDO("mysql:host=localhost;dbname=fairtax1_fti_pak;charset=utf8mb4", "fairtax1_fti_pak", "Yousafzai1");
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// Fix: allow email to be empty string
-echo "Fixing email column to allow empty values...\n";
-$pdo->exec("ALTER TABLE clients MODIFY COLUMN email VARCHAR(255) NOT NULL DEFAULT ''");
-echo "Done.\n\n";
-
-// Fix: allow contact_no to be nullable
-$pdo->exec("ALTER TABLE clients MODIFY COLUMN contact_no VARCHAR(255) NOT NULL DEFAULT ''");
-echo "Fixed contact_no column.\n\n";
-
-// Now re-import missing clients
 $csvFile = __DIR__ . '/pakistan-clients.csv';
 $handle = fopen($csvFile, 'r');
 $header = fgetcsv($handle);
@@ -33,11 +23,10 @@ while ($row = $svc->fetch(PDO::FETCH_ASSOC)) {
 }
 
 $validStatuses = ['Individual', 'AOP', 'Company'];
-
-$stmt = $pdo->prepare("INSERT INTO clients (name, email, contact_no, status, folder_link, fbr_username, fbr_password, it_pin_code, secp_password, secp_pin, kpra_username, kpra_password, kpra_pin, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-$svcStmt = $pdo->prepare("INSERT IGNORE INTO client_services (client_id, service_id, created_at, updated_at) VALUES (?, ?, ?, ?)");
+$rowNum = 0;
 
 while (($row = fgetcsv($handle)) !== false) {
+    $rowNum++;
     if (empty($row[0]) || trim($row[0]) === '') { $skipped++; continue; }
 
     $data = [];
@@ -49,24 +38,7 @@ while (($row = fgetcsv($handle)) !== false) {
     // Check if already exists
     $check = $pdo->prepare("SELECT id FROM clients WHERE name = ?");
     $check->execute([$name]);
-    $existing = $check->fetch(PDO::FETCH_ASSOC);
-    if ($existing) {
-        $clientId = $existing['id'];
-        // Still link services for existing
-        $activeServices = $data['Active Services'] ?? '';
-        if (!empty($activeServices) && $activeServices !== '[]') {
-            $activeServices = str_replace(['[', ']', '"', '""'], '', $activeServices);
-            $serviceNames = array_map('trim', explode(',', $activeServices));
-            foreach ($serviceNames as $svcName) {
-                if (empty($svcName) || $svcName === 'Not Active') continue;
-                if (isset($serviceMap[$svcName])) {
-                    try { $svcStmt->execute([$clientId, $serviceMap[$svcName], $now, $now]); } catch (Exception $e) {}
-                }
-            }
-        }
-        $skipped++;
-        continue;
-    }
+    if ($check->fetch()) { $skipped++; continue; }
 
     $status = $data['Status'] ?? 'Individual';
     if (!in_array($status, $validStatuses)) $status = 'Individual';
@@ -79,26 +51,26 @@ while (($row = fgetcsv($handle)) !== false) {
     if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) $email = '';
 
     try {
-        $stmt->execute([
-            $name,
-            $email,
-            $data['Contact No.'] ?? '',
-            $status,
-            !empty($data['Folder Link']) ? $data['Folder Link'] : null,
-            !empty($data['FBR Username']) ? $data['FBR Username'] : null,
-            !empty($data['FBR Password']) ? $data['FBR Password'] : null,
-            !empty($data['IT Pin Code']) ? $data['IT Pin Code'] : null,
-            !empty($data['SECP Password']) ? $data['SECP Password'] : null,
-            !empty($data['SECP Pin']) ? $data['SECP Pin'] : null,
-            !empty($data['KPRA Username']) ? $data['KPRA Username'] : null,
-            !empty($data['KPRA Password']) ? $data['KPRA Password'] : null,
-            !empty($data['KPRA Pin']) ? $data['KPRA Pin'] : null,
-            (!empty($data['Shareholders']) && $data['Shareholders'] !== '[]') ? "Shareholders: " . $data['Shareholders'] : null,
-            $now, $now
-        ]);
+        $pdo->exec("INSERT INTO clients (name, email, contact_no, status, folder_link, fbr_username, fbr_password, it_pin_code, secp_password, secp_pin, kpra_username, kpra_password, kpra_pin, notes, created_at, updated_at) VALUES (
+            " . $pdo->quote($name) . ",
+            " . $pdo->quote($email) . ",
+            " . $pdo->quote($data['Contact No.'] ?? '') . ",
+            " . $pdo->quote($status) . ",
+            " . (!empty($data['Folder Link']) ? $pdo->quote($data['Folder Link']) : 'NULL') . ",
+            " . (!empty($data['FBR Username']) ? $pdo->quote($data['FBR Username']) : 'NULL') . ",
+            " . (!empty($data['FBR Password']) ? $pdo->quote($data['FBR Password']) : 'NULL') . ",
+            " . (!empty($data['IT Pin Code']) ? $pdo->quote($data['IT Pin Code']) : 'NULL') . ",
+            " . (!empty($data['SECP Password']) ? $pdo->quote($data['SECP Password']) : 'NULL') . ",
+            " . (!empty($data['SECP Pin']) ? $pdo->quote($data['SECP Pin']) : 'NULL') . ",
+            " . (!empty($data['KPRA Username']) ? $pdo->quote($data['KPRA Username']) : 'NULL') . ",
+            " . (!empty($data['KPRA Password']) ? $pdo->quote($data['KPRA Password']) : 'NULL') . ",
+            " . (!empty($data['KPRA Pin']) ? $pdo->quote($data['KPRA Pin']) : 'NULL') . ",
+            " . ((!empty($data['Shareholders']) && $data['Shareholders'] !== '[]') ? $pdo->quote('Shareholders: ' . $data['Shareholders']) : 'NULL') . ",
+            '$now', '$now')");
+
         $clientId = $pdo->lastInsertId();
         $imported++;
-        echo "  OK: $name\n";
+        echo "  OK [$rowNum]: $name\n";
 
         // Link services
         $activeServices = $data['Active Services'] ?? '';
@@ -108,12 +80,12 @@ while (($row = fgetcsv($handle)) !== false) {
             foreach ($serviceNames as $svcName) {
                 if (empty($svcName) || $svcName === 'Not Active') continue;
                 if (isset($serviceMap[$svcName])) {
-                    try { $svcStmt->execute([$clientId, $serviceMap[$svcName], $now, $now]); } catch (Exception $e) {}
+                    try { $pdo->exec("INSERT IGNORE INTO client_services (client_id, service_id, created_at, updated_at) VALUES ($clientId, {$serviceMap[$svcName]}, '$now', '$now')"); } catch (Exception $e) {}
                 }
             }
         }
     } catch (Exception $e) {
-        echo "  ERROR: $name - " . $e->getMessage() . "\n";
+        echo "  ERROR [$rowNum]: $name - " . $e->getMessage() . "\n";
         $errors++;
     }
 }
@@ -125,7 +97,7 @@ echo "\n========================================\n";
 echo "IMPORT COMPLETE!\n";
 echo "========================================\n";
 echo "New imports: $imported\n";
-echo "Skipped (already existed): $skipped\n";
+echo "Skipped (existing/empty): $skipped\n";
 echo "Errors: $errors\n";
 echo "Total clients in database: $total\n";
-echo "\nDelete this file for security!\n</pre>";
+echo "\nDelete import files for security!\n</pre>";
