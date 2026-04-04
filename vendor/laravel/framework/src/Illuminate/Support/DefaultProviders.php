@@ -7,14 +7,14 @@ class DefaultProviders
     /**
      * The current providers.
      *
-     * @var array<class-string>
+     * @var array
      */
     protected $providers;
 
     /**
      * Create a new default provider collection.
      *
-     * @param  array<class-string>|null  $providers
+     * @return void
      */
     public function __construct(?array $providers = null)
     {
@@ -24,7 +24,6 @@ class DefaultProviders
             \Illuminate\Bus\BusServiceProvider::class,
             \Illuminate\Cache\CacheServiceProvider::class,
             \Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
-            \Illuminate\Concurrency\ConcurrencyServiceProvider::class,
             \Illuminate\Cookie\CookieServiceProvider::class,
             \Illuminate\Database\DatabaseServiceProvider::class,
             \Illuminate\Encryption\EncryptionServiceProvider::class,
@@ -48,7 +47,7 @@ class DefaultProviders
     /**
      * Merge the given providers into the provider collection.
      *
-     * @param  array<class-string>  $providers
+     * @param  array  $providers
      * @return static
      */
     public function merge(array $providers)
@@ -61,12 +60,12 @@ class DefaultProviders
     /**
      * Replace the given providers with other providers.
      *
-     * @param  array<class-string, class-string>  $replacements
+     * @param  array  $items
      * @return static
      */
     public function replace(array $replacements)
     {
-        $current = new Collection($this->providers);
+        $current = collect($this->providers);
 
         foreach ($replacements as $from => $to) {
             $key = $current->search($from);
@@ -80,21 +79,21 @@ class DefaultProviders
     /**
      * Disable the given providers.
      *
-     * @param  array<class-string>  $providers
+     * @param  array  $providers
      * @return static
      */
     public function except(array $providers)
     {
-        return new static((new Collection($this->providers))
-            ->reject(fn ($p) => in_array($p, $providers))
-            ->values()
-            ->toArray());
+        return new static(collect($this->providers)
+                ->reject(fn ($p) => in_array($p, $providers))
+                ->values()
+                ->toArray());
     }
 
     /**
      * Convert the provider collection to an array.
      *
-     * @return array<class-string>
+     * @return array
      */
     public function toArray()
     {

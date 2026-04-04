@@ -3,13 +3,13 @@
 namespace Illuminate\Database;
 
 use Exception;
+use Illuminate\Database\PDO\MySqlDriver;
 use Illuminate\Database\Query\Grammars\MySqlGrammar as QueryGrammar;
 use Illuminate\Database\Query\Processors\MySqlProcessor;
 use Illuminate\Database\Schema\Grammars\MySqlGrammar as SchemaGrammar;
 use Illuminate\Database\Schema\MySqlBuilder;
 use Illuminate\Database\Schema\MySqlSchemaState;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Str;
 use PDO;
 
 class MySqlConnection extends Connection
@@ -20,14 +20,6 @@ class MySqlConnection extends Connection
      * @var string|int|null
      */
     protected $lastInsertId;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDriverTitle()
-    {
-        return $this->isMaria() ? 'MariaDB' : 'MySQL';
-    }
 
     /**
      * Run an insert statement against the database.
@@ -79,24 +71,7 @@ class MySqlConnection extends Connection
      */
     protected function isUniqueConstraintError(Exception $exception)
     {
-        return (bool) preg_match('#Integrity constraint violation: 1062#i', $exception->getMessage());
-    }
-
-    /**
-     * Extract the index that caused a unique constraint violation.
-     *
-     * @param  Exception  $exception
-     * @return array{index: string|null, columns: list<string>}
-     */
-    protected function parseUniqueConstraintViolation(Exception $exception): array
-    {
-        preg_match(
-            '#Duplicate entry \'.*?\' for key \'(?:.*?\.)?(.+?)\'#i',
-            $exception->getMessage(),
-            $matches
-        );
-
-        return ['columns' => [], 'index' => $matches[1] ?? null];
+        return boolval(preg_match('#Integrity constraint violation: 1062#i', $exception->getMessage()));
     }
 
     /**
@@ -120,25 +95,15 @@ class MySqlConnection extends Connection
     }
 
     /**
-     * Get the server version for the connection.
-     *
-     * @return string
-     */
-    public function getServerVersion(): string
-    {
-        return str_contains($version = parent::getServerVersion(), 'MariaDB')
-            ? Str::between($version, '5.5.5-', '-MariaDB')
-            : $version;
-    }
-
-    /**
      * Get the default query grammar instance.
      *
      * @return \Illuminate\Database\Query\Grammars\MySqlGrammar
      */
     protected function getDefaultQueryGrammar()
     {
-        return new QueryGrammar($this);
+        ($grammar = new QueryGrammar)->setConnection($this);
+
+        return $this->withTablePrefix($grammar);
     }
 
     /**
@@ -162,7 +127,9 @@ class MySqlConnection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        return new SchemaGrammar($this);
+        ($grammar = new SchemaGrammar)->setConnection($this);
+
+        return $this->withTablePrefix($grammar);
     }
 
     /**
@@ -185,5 +152,15 @@ class MySqlConnection extends Connection
     protected function getDefaultPostProcessor()
     {
         return new MySqlProcessor;
+    }
+
+    /**
+     * Get the Doctrine DBAL driver.
+     *
+     * @return \Illuminate\Database\PDO\MySqlDriver
+     */
+    protected function getDoctrineDriver()
+    {
+        return new MySqlDriver;
     }
 }

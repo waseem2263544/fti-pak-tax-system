@@ -2,21 +2,13 @@
 
 namespace Illuminate\Console;
 
-use Illuminate\Console\Attributes\Aliases;
-use Illuminate\Console\Attributes\Description;
-use Illuminate\Console\Attributes\Help;
-use Illuminate\Console\Attributes\Hidden;
-use Illuminate\Console\Attributes\Signature;
-use Illuminate\Console\Attributes\Usage;
 use Illuminate\Console\View\Components\Factory;
 use Illuminate\Contracts\Console\Isolatable;
 use Illuminate\Support\Traits\Macroable;
-use ReflectionClass;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Throwable;
 
 class Command extends SymfonyCommand
 {
@@ -52,16 +44,16 @@ class Command extends SymfonyCommand
     /**
      * The console command description.
      *
-     * @var string
+     * @var string|null
      */
-    protected $description = '';
+    protected $description;
 
     /**
      * The console command help text.
      *
      * @var string
      */
-    protected $help = '';
+    protected $help;
 
     /**
      * Indicates whether the command should be shown in the Artisan command list.
@@ -80,24 +72,24 @@ class Command extends SymfonyCommand
     /**
      * The default exit code for isolated commands.
      *
-     * @var self::SUCCESS|self::FAILURE|self::INVALID
+     * @var int
      */
     protected $isolatedExitCode = self::SUCCESS;
 
     /**
      * The console command name aliases.
      *
-     * @var string[]
+     * @var array
      */
     protected $aliases;
 
     /**
      * Create a new console command instance.
+     *
+     * @return void
      */
     public function __construct()
     {
-        $this->configureFromAttributes();
-
         // We will go ahead and set the name, description, and parameters on console
         // commands just to make things a little easier on the developer. This is
         // so they don't have to all be manually specified in the constructors.
@@ -107,18 +99,16 @@ class Command extends SymfonyCommand
             parent::__construct($this->name);
         }
 
-        $this->configureUsageFromAttribute();
-
         // Once we have constructed the command, we'll set the description and other
         // related properties of the command. If a signature wasn't used to build
         // the command we'll set the arguments and the options on this command.
-        if (! empty($this->description)) {
-            $this->setDescription($this->description);
+        if (! isset($this->description)) {
+            $this->setDescription((string) static::getDefaultDescription());
+        } else {
+            $this->setDescription((string) $this->description);
         }
 
-        if (! empty($this->help)) {
-            $this->setHelp($this->help);
-        }
+        $this->setHelp((string) $this->help);
 
         $this->setHidden($this->isHidden());
 
@@ -132,64 +122,6 @@ class Command extends SymfonyCommand
 
         if ($this instanceof Isolatable) {
             $this->configureIsolation();
-        }
-    }
-
-    /**
-     * Configure the command from class attributes.
-     *
-     * @return void
-     */
-    protected function configureFromAttributes()
-    {
-        $reflection = new ReflectionClass($this);
-
-        $signature = $reflection->getAttributes(Signature::class);
-
-        if (count($signature) > 0) {
-            $signatureInstance = $signature[0]->newInstance();
-
-            $this->signature = $signatureInstance->signature;
-
-            if ($signatureInstance->aliases !== null) {
-                $this->aliases = $signatureInstance->aliases;
-            }
-        }
-
-        $description = $reflection->getAttributes(Description::class);
-
-        if (count($description) > 0) {
-            $this->description = $description[0]->newInstance()->description;
-        }
-
-        $help = $reflection->getAttributes(Help::class);
-
-        if (count($help) > 0) {
-            $this->help = $help[0]->newInstance()->help;
-        }
-
-        if (count($reflection->getAttributes(Hidden::class)) > 0) {
-            $this->hidden = true;
-        }
-
-        $aliases = $reflection->getAttributes(Aliases::class);
-
-        if (count($aliases) > 0) {
-            $this->aliases = $aliases[0]->newInstance()->aliases;
-        }
-    }
-
-    /**
-     * Configure usage examples for the command from class attributes.
-     *
-     * @return void
-     */
-    protected function configureUsageFromAttribute()
-    {
-        $reflection = new ReflectionClass($this);
-
-        foreach ($reflection->getAttributes(Usage::class) as $usage) {
-            $this->addUsage($usage->newInstance()->usage);
         }
     }
 
@@ -234,7 +166,6 @@ class Command extends SymfonyCommand
      * @param  \Symfony\Component\Console\Output\OutputInterface  $output
      * @return int
      */
-    #[\Override]
     public function run(InputInterface $input, OutputInterface $output): int
     {
         $this->output = $output instanceof OutputStyle ? $output : $this->laravel->make(
@@ -259,9 +190,9 @@ class Command extends SymfonyCommand
      *
      * @param  \Symfony\Component\Console\Input\InputInterface  $input
      * @param  \Symfony\Component\Console\Output\OutputInterface  $output
+     * @return int
      */
-    #[\Override]
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         if ($this instanceof Isolatable && $this->option('isolated') !== false &&
             ! $this->commandIsolationMutex()->create($this)) {
@@ -270,18 +201,14 @@ class Command extends SymfonyCommand
             ));
 
             return (int) (is_numeric($this->option('isolated'))
-                ? $this->option('isolated')
-                : $this->isolatedExitCode);
+                        ? $this->option('isolated')
+                        : $this->isolatedExitCode);
         }
 
         $method = method_exists($this, 'handle') ? 'handle' : '__invoke';
 
         try {
             return (int) $this->laravel->call([$this, $method]);
-        } catch (ManuallyFailedException $e) {
-            $this->components->error($e->getMessage());
-
-            return static::FAILURE;
         } finally {
             if ($this instanceof Isolatable && $this->option('isolated') !== false) {
                 $this->commandIsolationMutex()->forget($this);
@@ -329,32 +256,10 @@ class Command extends SymfonyCommand
     }
 
     /**
-     * Fail the command manually.
-     *
-     * @param  \Throwable|string|null  $exception
-     * @return never
-     *
-     * @throws \Illuminate\Console\ManuallyFailedException|\Throwable
-     */
-    public function fail(Throwable|string|null $exception = null)
-    {
-        if (is_null($exception)) {
-            $exception = 'Command failed manually.';
-        }
-
-        if (is_string($exception)) {
-            $exception = new ManuallyFailedException($exception);
-        }
-
-        throw $exception;
-    }
-
-    /**
      * {@inheritdoc}
      *
      * @return bool
      */
-    #[\Override]
     public function isHidden(): bool
     {
         return $this->hidden;
@@ -363,7 +268,6 @@ class Command extends SymfonyCommand
     /**
      * {@inheritdoc}
      */
-    #[\Override]
     public function setHidden(bool $hidden = true): static
     {
         parent::setHidden($this->hidden = $hidden);

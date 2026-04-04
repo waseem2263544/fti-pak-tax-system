@@ -8,9 +8,7 @@ use Illuminate\Contracts\Console\Application as ApplicationContract;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\ProcessUtils;
-use ReflectionClass;
 use Symfony\Component\Console\Application as SymfonyApplication;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -18,9 +16,7 @@ use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\BufferedOutput;
-
-use function Illuminate\Support\artisan_binary;
-use function Illuminate\Support\php_binary;
+use Symfony\Component\Process\PhpExecutableFinder;
 
 class Application extends SymfonyApplication implements ApplicationContract
 {
@@ -48,14 +44,14 @@ class Application extends SymfonyApplication implements ApplicationContract
     /**
      * The console application bootstrappers.
      *
-     * @var array<array-key, \Closure($this): void>
+     * @var array
      */
     protected static $bootstrappers = [];
 
     /**
      * A map of command names to classes.
      *
-     * @var array<string, \Illuminate\Console\Command|string>
+     * @var array
      */
     protected $commandMap = [];
 
@@ -65,6 +61,7 @@ class Application extends SymfonyApplication implements ApplicationContract
      * @param  \Illuminate\Contracts\Container\Container  $laravel
      * @param  \Illuminate\Contracts\Events\Dispatcher  $events
      * @param  string  $version
+     * @return void
      */
     public function __construct(Container $laravel, Dispatcher $events, $version)
     {
@@ -87,7 +84,7 @@ class Application extends SymfonyApplication implements ApplicationContract
      */
     public static function phpBinary()
     {
-        return ProcessUtils::escapeArgument(php_binary());
+        return ProcessUtils::escapeArgument((new PhpExecutableFinder)->find(false));
     }
 
     /**
@@ -97,7 +94,7 @@ class Application extends SymfonyApplication implements ApplicationContract
      */
     public static function artisanBinary()
     {
-        return ProcessUtils::escapeArgument(artisan_binary());
+        return ProcessUtils::escapeArgument(defined('ARTISAN_BINARY') ? ARTISAN_BINARY : 'artisan');
     }
 
     /**
@@ -114,7 +111,7 @@ class Application extends SymfonyApplication implements ApplicationContract
     /**
      * Register a console "starting" bootstrapper.
      *
-     * @param  \Closure($this): void  $callback
+     * @param  \Closure  $callback
      * @return void
      */
     public static function starting(Closure $callback)
@@ -147,7 +144,7 @@ class Application extends SymfonyApplication implements ApplicationContract
     /**
      * Run an Artisan console command by name.
      *
-     * @param  \Symfony\Component\Console\Command\Command|string  $command
+     * @param  string  $command
      * @param  array  $parameters
      * @param  \Symfony\Component\Console\Output\OutputInterface|null  $outputBuffer
      * @return int
@@ -170,18 +167,14 @@ class Application extends SymfonyApplication implements ApplicationContract
     /**
      * Parse the incoming Artisan command and its input.
      *
-     * @param  \Symfony\Component\Console\Command\Command|string  $command
+     * @param  string  $command
      * @param  array  $parameters
-     * @return array<string, \Symfony\Component\Console\Input\ArrayInput>
+     * @return array
      */
     protected function parseCommand($command, $parameters)
     {
         if (is_subclass_of($command, SymfonyCommand::class)) {
             $callingClass = true;
-
-            if (is_object($command)) {
-                $command = get_class($command);
-            }
 
             $command = $this->laravel->make($command)->getName();
         }
@@ -205,28 +198,17 @@ class Application extends SymfonyApplication implements ApplicationContract
     public function output()
     {
         return $this->lastOutput && method_exists($this->lastOutput, 'fetch')
-            ? $this->lastOutput->fetch()
-            : '';
-    }
-
-    /**
-     * Alias for addCommand() since Symfony's add() method was deprecated.
-     *
-     * @param  \Symfony\Component\Console\Command\Command  $command
-     * @return \Symfony\Component\Console\Command\Command|null
-     */
-    public function add(SymfonyCommand $command): ?SymfonyCommand
-    {
-        return $this->addCommand($command);
+                        ? $this->lastOutput->fetch()
+                        : '';
     }
 
     /**
      * Add a command to the console.
      *
-     * @param  \Symfony\Component\Console\Command\Command|callable  $command
-     * @return \Symfony\Component\Console\Command\Command|null
+     * @param  \Symfony\Component\Console\Command\Command  $command
+     * @return \Symfony\Component\Console\Command\Command
      */
-    public function addCommand(SymfonyCommand|callable $command): ?SymfonyCommand
+    public function add(SymfonyCommand $command)
     {
         if ($command instanceof Command) {
             $command->setLaravel($this->laravel);
@@ -238,12 +220,12 @@ class Application extends SymfonyApplication implements ApplicationContract
     /**
      * Add the command to the parent instance.
      *
-     * @param  \Symfony\Component\Console\Command\Command|callable  $command
+     * @param  \Symfony\Component\Console\Command\Command  $command
      * @return \Symfony\Component\Console\Command\Command
      */
-    protected function addToParent(SymfonyCommand|callable $command)
+    protected function addToParent(SymfonyCommand $command)
     {
-        return parent::addCommand($command);
+        return parent::add($command);
     }
 
     /**
@@ -254,31 +236,25 @@ class Application extends SymfonyApplication implements ApplicationContract
      */
     public function resolve($command)
     {
-        if (is_subclass_of($command, SymfonyCommand::class)) {
-            $attribute = (new ReflectionClass($command))->getAttributes(AsCommand::class);
-
-            $commandName = ! empty($attribute) ? $attribute[0]->newInstance()->name : null;
-
-            if (! is_null($commandName)) {
-                foreach (explode('|', $commandName) as $name) {
-                    $this->commandMap[$name] = $command;
-                }
-
-                return null;
+        if (is_subclass_of($command, SymfonyCommand::class) && ($commandName = $command::getDefaultName())) {
+            foreach (explode('|', $commandName) as $name) {
+                $this->commandMap[$name] = $command;
             }
+
+            return null;
         }
 
         if ($command instanceof Command) {
-            return $this->addCommand($command);
+            return $this->add($command);
         }
 
-        return $this->addCommand($this->laravel->make($command));
+        return $this->add($this->laravel->make($command));
     }
 
     /**
      * Resolve an array of commands through the application.
      *
-     * @param  mixed  $commands
+     * @param  array|mixed  $commands
      * @return $this
      */
     public function resolveCommands($commands)
@@ -311,7 +287,6 @@ class Application extends SymfonyApplication implements ApplicationContract
      *
      * @return \Symfony\Component\Console\Input\InputDefinition
      */
-    #[\Override]
     protected function getDefaultInputDefinition(): InputDefinition
     {
         return tap(parent::getDefaultInputDefinition(), function ($definition) {

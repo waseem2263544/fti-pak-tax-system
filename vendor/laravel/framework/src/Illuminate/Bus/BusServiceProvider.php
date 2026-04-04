@@ -3,7 +3,6 @@
 namespace Illuminate\Bus;
 
 use Aws\DynamoDb\DynamoDbClient;
-use Illuminate\Container\Container;
 use Illuminate\Contracts\Bus\Dispatcher as DispatcherContract;
 use Illuminate\Contracts\Bus\QueueingDispatcher as QueueingDispatcherContract;
 use Illuminate\Contracts\Queue\Factory as QueueFactoryContract;
@@ -21,8 +20,8 @@ class BusServiceProvider extends ServiceProvider implements DeferrableProvider
     public function register()
     {
         $this->app->singleton(Dispatcher::class, function ($app) {
-            return new Dispatcher($app, function ($connection = null) {
-                return Container::getInstance()->make(QueueFactoryContract::class)->connection($connection);
+            return new Dispatcher($app, function ($connection = null) use ($app) {
+                return $app[QueueFactoryContract::class]->connection($connection);
             });
         });
 
@@ -33,7 +32,7 @@ class BusServiceProvider extends ServiceProvider implements DeferrableProvider
         );
 
         $this->app->alias(
-            DispatcherContract::class, QueueingDispatcherContract::class
+            Dispatcher::class, QueueingDispatcherContract::class
         );
     }
 
@@ -70,11 +69,10 @@ class BusServiceProvider extends ServiceProvider implements DeferrableProvider
             ];
 
             if (! empty($config['key']) && ! empty($config['secret'])) {
-                $dynamoConfig['credentials'] = Arr::only($config, ['key', 'secret']);
-
-                if (! empty($config['token'])) {
-                    $dynamoConfig['credentials']['token'] = $config['token'];
-                }
+                $dynamoConfig['credentials'] = Arr::only(
+                    $config,
+                    ['key', 'secret', 'token']
+                );
             }
 
             return new DynamoBatchRepository(

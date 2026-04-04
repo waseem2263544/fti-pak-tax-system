@@ -4,9 +4,7 @@ namespace Illuminate\Database\Query\Grammars;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 class SQLiteGrammar extends Grammar
 {
@@ -42,51 +40,6 @@ class SQLiteGrammar extends Grammar
     protected function wrapUnion($sql)
     {
         return 'select * from ('.$sql.')';
-    }
-
-    /**
-     * Compile a "where like" clause.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  array  $where
-     * @return string
-     */
-    protected function whereLike(Builder $query, $where)
-    {
-        if ($where['caseSensitive'] == false) {
-            return parent::whereLike($query, $where);
-        }
-        $where['operator'] = $where['not'] ? 'not glob' : 'glob';
-
-        return $this->whereBasic($query, $where);
-    }
-
-    /**
-     * Convert a LIKE pattern to a GLOB pattern using simple string replacement.
-     *
-     * @param  string  $value
-     * @param  bool  $caseSensitive
-     * @return string
-     */
-    public function prepareWhereLikeBinding($value, $caseSensitive)
-    {
-        return $caseSensitive === false ? $value : str_replace(
-            ['*', '?', '%', '_'],
-            ['[*]', '[?]', '*', '?'],
-            $value
-        );
-    }
-
-    /**
-     * Compile a "where null safe equals" clause.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  array  $where
-     * @return string
-     */
-    protected function whereNullSafeEquals(Builder $query, $where)
-    {
-        return $this->wrap($where['column']).' is '.$this->parameter($where['value']);
     }
 
     /**
@@ -170,22 +123,12 @@ class SQLiteGrammar extends Grammar
      * @param  \Illuminate\Database\Query\Builder  $query
      * @param  \Illuminate\Database\Query\IndexHint  $indexHint
      * @return string
-     *
-     * @throws \InvalidArgumentException
      */
     protected function compileIndexHint(Builder $query, $indexHint)
     {
-        if ($indexHint->type !== 'force') {
-            return '';
-        }
-
-        $index = $indexHint->index;
-
-        if (! preg_match('/^[a-zA-Z0-9_$]+$/', $index)) {
-            throw new InvalidArgumentException('Index name contains invalid characters.');
-        }
-
-        return "indexed by {$index}";
+        return $indexHint->type === 'force'
+                ? "indexed by {$indexHint->index}"
+                : '';
     }
 
     /**
@@ -242,25 +185,6 @@ class SQLiteGrammar extends Grammar
     }
 
     /**
-     * Compile a group limit clause.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @return string
-     */
-    protected function compileGroupLimit(Builder $query)
-    {
-        $version = $query->getConnection()->getServerVersion();
-
-        if (version_compare($version, '3.25.0', '>=')) {
-            return parent::compileGroupLimit($query);
-        }
-
-        $query->groupLimit = null;
-
-        return $this->compileSelect($query);
-    }
-
-    /**
      * Compile an update statement into SQL.
      *
      * @param  \Illuminate\Database\Query\Builder  $query
@@ -289,25 +213,6 @@ class SQLiteGrammar extends Grammar
     }
 
     /**
-     * Compile an insert or ignore statement with a returning clause into SQL.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @param  array  $values
-     * @param  array  $returning
-     * @param  array|null  $uniqueBy
-     * @return string
-     */
-    public function compileInsertOrIgnoreReturning(Builder $query, array $values, array $returning, ?array $uniqueBy)
-    {
-        $insert = $this->compileInsert($query, $values);
-
-        return match ($uniqueBy) {
-            null => "{$insert} on conflict do nothing returning {$this->columnize($returning)}",
-            default => "{$insert} on conflict ({$this->columnize($uniqueBy)}) do nothing returning {$this->columnize($returning)}",
-        };
-    }
-
-    /**
      * Compile an insert ignore statement using a subquery into SQL.
      *
      * @param  \Illuminate\Database\Query\Builder  $query
@@ -331,17 +236,15 @@ class SQLiteGrammar extends Grammar
     {
         $jsonGroups = $this->groupJsonColumnsForUpdate($values);
 
-        return (new Collection($values))
-            ->reject(fn ($value, $key) => $this->isJsonSelector($key))
-            ->merge($jsonGroups)
-            ->map(function ($value, $key) use ($jsonGroups) {
-                $column = last(explode('.', $key));
+        return collect($values)->reject(function ($value, $key) {
+            return $this->isJsonSelector($key);
+        })->merge($jsonGroups)->map(function ($value, $key) use ($jsonGroups) {
+            $column = last(explode('.', $key));
 
-                $value = isset($jsonGroups[$key]) ? $this->compileJsonPatch($column, $value) : $this->parameter($value);
+            $value = isset($jsonGroups[$key]) ? $this->compileJsonPatch($column, $value) : $this->parameter($value);
 
-                return $this->wrap($column).' = '.$value;
-            })
-            ->implode(', ');
+            return $this->wrap($column).' = '.$value;
+        })->implode(', ');
     }
 
     /**
@@ -359,7 +262,7 @@ class SQLiteGrammar extends Grammar
 
         $sql .= ' on conflict ('.$this->columnize($uniqueBy).') do update set ';
 
-        $columns = (new Collection($update))->map(function ($value, $key) {
+        $columns = collect($update)->map(function ($value, $key) {
             return is_numeric($key)
                 ? $this->wrap($value).' = '.$this->wrapValue('excluded').'.'.$this->wrap($value)
                 : $this->wrap($key).' = '.$this->parameter($value);
@@ -426,20 +329,17 @@ class SQLiteGrammar extends Grammar
      * @param  array  $values
      * @return array
      */
-    #[\Override]
     public function prepareBindingsForUpdate(array $bindings, array $values)
     {
         $groups = $this->groupJsonColumnsForUpdate($values);
 
-        $values = (new Collection($values))
-            ->reject(fn ($value, $key) => $this->isJsonSelector($key))
-            ->merge($groups)
-            ->map(fn ($value) => is_array($value) ? json_encode($value) : $value)
-            ->all();
+        $values = collect($values)->reject(function ($value, $key) {
+            return $this->isJsonSelector($key);
+        })->merge($groups)->map(function ($value) {
+            return is_array($value) ? json_encode($value) : $value;
+        })->all();
 
         $cleanBindings = Arr::except($bindings, 'select');
-
-        $values = Arr::flatten(array_map(fn ($value) => value($value), $values));
 
         return array_values(
             array_merge($values, Arr::flatten($cleanBindings))
@@ -486,12 +386,8 @@ class SQLiteGrammar extends Grammar
      */
     public function compileTruncate(Builder $query)
     {
-        [$schema, $table] = $query->getConnection()->getSchemaBuilder()->parseSchemaAndTable($query->from);
-
-        $schema = $schema ? $this->wrapValue($schema).'.' : '';
-
         return [
-            'delete from '.$schema.'sqlite_sequence where name = ?' => [$query->getConnection()->getTablePrefix().$table],
+            'delete from sqlite_sequence where name = ?' => [$this->getTablePrefix().$query->from],
             'delete from '.$this->wrapTable($query->from) => [],
         ];
     }

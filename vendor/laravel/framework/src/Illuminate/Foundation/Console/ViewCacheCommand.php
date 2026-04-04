@@ -29,7 +29,7 @@ class ViewCacheCommand extends Command
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return mixed
      */
     public function handle()
     {
@@ -77,13 +77,13 @@ class ViewCacheCommand extends Command
      */
     protected function bladeFilesIn(array $paths)
     {
-        $extensions = (new Collection($this->laravel['view']->getExtensions()))
+        $extensions = collect($this->laravel['view']->getExtensions())
             ->filter(fn ($value) => $value === 'blade')
             ->keys()
             ->map(fn ($extension) => "*.{$extension}")
             ->all();
 
-        return new Collection(
+        return collect(
             Finder::create()
                 ->in($paths)
                 ->exclude('vendor')
@@ -101,12 +101,8 @@ class ViewCacheCommand extends Command
     {
         $finder = $this->laravel['view']->getFinder();
 
-        $paths = (new Collection($finder->getPaths()))->merge(
-            (new Collection($finder->getHints()))->flatten()
-        )->unique();
-
-        return $paths->reject(fn ($path) => $paths->contains(function ($existing) use ($path) {
-            return $existing !== $path && str_starts_with(realpath($path) ?: $path, realpath($existing) ?: $existing);
-        }))->values();
+        return collect($finder->getPaths())->merge(
+            collect($finder->getHints())->flatten()
+        );
     }
 }

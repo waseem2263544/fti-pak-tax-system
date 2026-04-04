@@ -5,11 +5,10 @@ namespace Illuminate\Auth;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Traits\Macroable;
 
 class TokenGuard implements Guard
 {
-    use GuardHelpers, Macroable;
+    use GuardHelpers;
 
     /**
      * The request instance.
@@ -47,14 +46,15 @@ class TokenGuard implements Guard
      * @param  string  $inputKey
      * @param  string  $storageKey
      * @param  bool  $hash
+     * @return void
      */
     public function __construct(
         UserProvider $provider,
         Request $request,
         $inputKey = 'api_token',
         $storageKey = 'api_token',
-        $hash = false,
-    ) {
+        $hash = false)
+    {
         $this->hash = $hash;
         $this->request = $request;
         $this->provider = $provider;
@@ -96,10 +96,21 @@ class TokenGuard implements Guard
      */
     public function getTokenForRequest()
     {
-        return $this->request->query($this->inputKey)
-            ?: $this->request->input($this->inputKey)
-            ?: $this->request->bearerToken()
-            ?: $this->request->getPassword();
+        $token = $this->request->query($this->inputKey);
+
+        if (empty($token)) {
+            $token = $this->request->input($this->inputKey);
+        }
+
+        if (empty($token)) {
+            $token = $this->request->bearerToken();
+        }
+
+        if (empty($token)) {
+            $token = $this->request->getPassword();
+        }
+
+        return $token;
     }
 
     /**
@@ -116,7 +127,11 @@ class TokenGuard implements Guard
 
         $credentials = [$this->storageKey => $credentials[$this->inputKey]];
 
-        return (bool) $this->provider->retrieveByCredentials($credentials);
+        if ($this->provider->retrieveByCredentials($credentials)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

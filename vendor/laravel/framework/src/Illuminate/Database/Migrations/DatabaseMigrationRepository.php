@@ -32,6 +32,7 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
      *
      * @param  \Illuminate\Database\ConnectionResolverInterface  $resolver
      * @param  string  $table
+     * @return void
      */
     public function __construct(Resolver $resolver, $table)
     {
@@ -42,38 +43,36 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
     /**
      * Get the completed migrations.
      *
-     * @return string[]
+     * @return array
      */
     public function getRan()
     {
         return $this->table()
-            ->orderBy('batch', 'asc')
-            ->orderBy('migration', 'asc')
-            ->pluck('migration')->all();
+                ->orderBy('batch', 'asc')
+                ->orderBy('migration', 'asc')
+                ->pluck('migration')->all();
     }
 
     /**
      * Get the list of migrations.
      *
      * @param  int  $steps
-     * @return array{id: int, migration: string, batch: int}[]
+     * @return array
      */
     public function getMigrations($steps)
     {
         $query = $this->table()->where('batch', '>=', '1');
 
         return $query->orderBy('batch', 'desc')
-            ->orderBy('migration', 'desc')
-            ->limit($steps)
-            ->get()
-            ->all();
+                     ->orderBy('migration', 'desc')
+                     ->take($steps)->get()->all();
     }
 
     /**
      * Get the list of the migrations by batch number.
      *
-     * @param  int  $batch
-     * @return array{id: int, migration: string, batch: int}[]
+     * @param  int  $batchNumber
+     * @return array
      */
     public function getMigrationsByBatch($batch)
     {
@@ -87,7 +86,7 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
     /**
      * Get the last migration batch.
      *
-     * @return array{id: int, migration: string, batch: int}[]
+     * @return array
      */
     public function getLast()
     {
@@ -99,14 +98,14 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
     /**
      * Get the completed migrations with their batch numbers.
      *
-     * @return array<int, string>[]
+     * @return array
      */
     public function getMigrationBatches()
     {
         return $this->table()
-            ->orderBy('batch', 'asc')
-            ->orderBy('migration', 'asc')
-            ->pluck('batch', 'migration')->all();
+                ->orderBy('batch', 'asc')
+                ->orderBy('migration', 'asc')
+                ->pluck('batch', 'migration')->all();
     }
 
     /**
@@ -126,7 +125,7 @@ class DatabaseMigrationRepository implements MigrationRepositoryInterface
     /**
      * Remove a migration from the log.
      *
-     * @param  object{id?: int, migration: string, batch?: int}  $migration
+     * @param  object  $migration
      * @return void
      */
     public function delete($migration)

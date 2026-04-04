@@ -5,7 +5,6 @@ namespace Illuminate\Support;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use InvalidArgumentException;
-use Throwable;
 
 abstract class Manager
 {
@@ -26,14 +25,14 @@ abstract class Manager
     /**
      * The registered custom driver creators.
      *
-     * @var array<string, \Closure>
+     * @var array
      */
     protected $customCreators = [];
 
     /**
      * The array of created "drivers".
      *
-     * @var array<string, mixed>
+     * @var array
      */
     protected $drivers = [];
 
@@ -41,6 +40,7 @@ abstract class Manager
      * Create a new manager instance.
      *
      * @param  \Illuminate\Contracts\Container\Container  $container
+     * @return void
      */
     public function __construct(Container $container)
     {
@@ -51,7 +51,7 @@ abstract class Manager
     /**
      * Get the default driver name.
      *
-     * @return string|null
+     * @return string
      */
     abstract public function getDefaultDriver();
 
@@ -76,7 +76,11 @@ abstract class Manager
         // If the given driver has not been created before, we will create the instances
         // here and cache it so we can return it next time very quickly. If there is
         // already a driver created by this name, we'll just return that instance.
-        return $this->drivers[$driver] ??= $this->createDriver($driver);
+        if (! isset($this->drivers[$driver])) {
+            $this->drivers[$driver] = $this->createDriver($driver);
+        }
+
+        return $this->drivers[$driver];
     }
 
     /**
@@ -121,19 +125,10 @@ abstract class Manager
      *
      * @param  string  $driver
      * @param  \Closure  $callback
-     *
-     * @param-closure-this  $this  $callback
-     *
      * @return $this
      */
     public function extend($driver, Closure $callback)
     {
-        try {
-            $callback = $callback->bindTo($this, static::class) ?? throw new RuntimeException;
-        } catch (Throwable) {
-            $callback = $callback->bindTo(null, static::class);
-        }
-
         $this->customCreators[$driver] = $callback;
 
         return $this;
@@ -142,7 +137,7 @@ abstract class Manager
     /**
      * Get all of the created "drivers".
      *
-     * @return array<string, mixed>
+     * @return array
      */
     public function getDrivers()
     {
@@ -188,7 +183,7 @@ abstract class Manager
      * Dynamically call the default driver instance.
      *
      * @param  string  $method
-     * @param  array<string, mixed>  $parameters
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)

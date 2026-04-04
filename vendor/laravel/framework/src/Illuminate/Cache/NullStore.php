@@ -37,7 +37,7 @@ class NullStore extends TaggableStore implements LockProvider
      *
      * @param  string  $key
      * @param  mixed  $value
-     * @return false
+     * @return bool
      */
     public function increment($key, $value = 1)
     {
@@ -49,7 +49,7 @@ class NullStore extends TaggableStore implements LockProvider
      *
      * @param  string  $key
      * @param  mixed  $value
-     * @return false
+     * @return bool
      */
     public function decrement($key, $value = 1)
     {
@@ -91,18 +91,6 @@ class NullStore extends TaggableStore implements LockProvider
     public function restoreLock($name, $owner)
     {
         return $this->lock($name, 0, $owner);
-    }
-
-    /**
-     * Adjust the expiration time of a cached item.
-     *
-     * @param  string  $key
-     * @param  int  $seconds
-     * @return bool
-     */
-    public function touch($key, $seconds)
-    {
-        return false;
     }
 
     /**

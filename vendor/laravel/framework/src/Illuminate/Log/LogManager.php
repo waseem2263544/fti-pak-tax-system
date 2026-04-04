@@ -3,8 +3,6 @@
 namespace Illuminate\Log;
 
 use Closure;
-use Illuminate\Contracts\Log\ContextLogProcessor;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Monolog\Formatter\LineFormatter;
@@ -22,8 +20,6 @@ use Monolog\Processor\ProcessorInterface;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Throwable;
-
-use function Illuminate\Support\enum_value;
 
 /**
  * @mixin \Illuminate\Log\Logger
@@ -71,6 +67,7 @@ class LogManager implements LoggerInterface
      * Create a new Log manager instance.
      *
      * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @return void
      */
     public function __construct($app)
     {
@@ -108,7 +105,7 @@ class LogManager implements LoggerInterface
     /**
      * Get a log channel instance.
      *
-     * @param  \UnitEnum|string|null  $channel
+     * @param  string|null  $channel
      * @return \Psr\Log\LoggerInterface
      */
     public function channel($channel = null)
@@ -119,12 +116,12 @@ class LogManager implements LoggerInterface
     /**
      * Get a log driver instance.
      *
-     * @param  \UnitEnum|string|null  $driver
+     * @param  string|null  $driver
      * @return \Psr\Log\LoggerInterface
      */
     public function driver($driver = null)
     {
-        return $this->get($this->parseDriver(enum_value($driver)));
+        return $this->get($this->parseDriver($driver));
     }
 
     /**
@@ -138,16 +135,7 @@ class LogManager implements LoggerInterface
     {
         try {
             return $this->channels[$name] ?? with($this->resolve($name, $config), function ($logger) use ($name) {
-                $loggerWithContext = $this->tap(
-                    $name,
-                    new Logger($logger, $this->app['events'])
-                )->withContext($this->sharedContext);
-
-                if (method_exists($loggerWithContext->getLogger(), 'pushProcessor')) {
-                    $loggerWithContext->pushProcessor($this->app->make(ContextLogProcessor::class));
-                }
-
-                return $this->channels[$name] = $loggerWithContext;
+                return $this->channels[$name] = $this->tap($name, new Logger($logger, $this->app['events']))->withContext($this->sharedContext);
             });
         } catch (Throwable $e) {
             return tap($this->createEmergencyLogger(), function ($logger) use ($e) {
@@ -273,21 +261,17 @@ class LogManager implements LoggerInterface
             $config['channels'] = explode(',', $config['channels']);
         }
 
-        $handlers = (new Collection($config['channels']))
-            ->flatMap(function ($channel) {
-                return $channel instanceof LoggerInterface
-                    ? $channel->getHandlers()
-                    : $this->channel($channel)->getHandlers();
-            })
-            ->all();
+        $handlers = collect($config['channels'])->flatMap(function ($channel) {
+            return $channel instanceof LoggerInterface
+                ? $channel->getHandlers()
+                : $this->channel($channel)->getHandlers();
+        })->all();
 
-        $processors = (new Collection($config['channels']))
-            ->flatMap(function ($channel) {
-                return $channel instanceof LoggerInterface
-                    ? $channel->getProcessors()
-                    : $this->channel($channel)->getProcessors();
-            })
-            ->all();
+        $processors = collect($config['channels'])->flatMap(function ($channel) {
+            return $channel instanceof LoggerInterface
+                ? $channel->getProcessors()
+                : $this->channel($channel)->getProcessors();
+        })->all();
 
         if ($config['ignore_exceptions'] ?? false) {
             $handlers = [new WhatFailureGroupHandler($handlers)];
@@ -402,7 +386,7 @@ class LogManager implements LoggerInterface
             );
         }
 
-        (new Collection($config['processors'] ?? []))->each(function ($processor) {
+        collect($config['processors'] ?? [])->each(function ($processor) {
             $processor = $processor['processor'] ?? $processor;
 
             if (! is_a($processor, ProcessorInterface::class, true)) {
@@ -422,7 +406,7 @@ class LogManager implements LoggerInterface
             $this->app->make($config['handler'], $with), $config
         );
 
-        $processors = (new Collection($config['processors'] ?? []))
+        $processors = collect($config['processors'] ?? [])
             ->map(fn ($processor) => $this->app->make($processor['processor'] ?? $processor, $processor['with'] ?? []))
             ->toArray();
 
@@ -520,14 +504,13 @@ class LogManager implements LoggerInterface
     /**
      * Flush the log context on all currently resolved channels.
      *
-     * @param  string[]|null  $keys
      * @return $this
      */
-    public function withoutContext(?array $keys = null)
+    public function withoutContext()
     {
         foreach ($this->channels as $channel) {
             if (method_exists($channel, 'withoutContext')) {
-                $channel->withoutContext($keys);
+                $channel->withoutContext();
             }
         }
 
@@ -560,7 +543,7 @@ class LogManager implements LoggerInterface
      * Get the log connection configuration.
      *
      * @param  string  $name
-     * @return array|null
+     * @return array
      */
     protected function configurationFor($name)
     {
@@ -593,9 +576,6 @@ class LogManager implements LoggerInterface
      *
      * @param  string  $driver
      * @param  \Closure  $callback
-     *
-     * @param-closure-this  $this  $callback
-     *
      * @return $this
      */
     public function extend($driver, Closure $callback)
@@ -634,11 +614,7 @@ class LogManager implements LoggerInterface
             $driver ??= 'null';
         }
 
-        if ($driver === null) {
-            return null;
-        }
-
-        return trim($driver);
+        return $driver;
     }
 
     /**
@@ -769,19 +745,6 @@ class LogManager implements LoggerInterface
     public function log($level, $message, array $context = []): void
     {
         $this->driver()->log($level, $message, $context);
-    }
-
-    /**
-     * Set the application instance used by the manager.
-     *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
-     * @return $this
-     */
-    public function setApplication($app)
-    {
-        $this->app = $app;
-
-        return $this;
     }
 
     /**

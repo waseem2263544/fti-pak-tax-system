@@ -2,8 +2,6 @@
 
 namespace Illuminate\Console\View\Components;
 
-use Illuminate\Console\View\TaskResult;
-use Illuminate\Support\InteractsWithTime;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
@@ -11,8 +9,6 @@ use function Termwind\terminal;
 
 class Task extends Component
 {
-    use InteractsWithTime;
-
     /**
      * Renders the component using the given arguments.
      *
@@ -20,8 +16,6 @@ class Task extends Component
      * @param  (callable(): bool)|null  $task
      * @param  int  $verbosity
      * @return void
-     *
-     * @throws \Throwable
      */
     public function render($description, $task = null, $verbosity = OutputInterface::VERBOSITY_NORMAL)
     {
@@ -37,15 +31,15 @@ class Task extends Component
 
         $startTime = microtime(true);
 
-        $result = TaskResult::Failure->value;
+        $result = false;
 
         try {
-            $result = ($task ?: fn () => TaskResult::Success->value)();
+            $result = ($task ?: fn () => true)();
         } catch (Throwable $e) {
             throw $e;
         } finally {
             $runTime = $task
-                ? (' '.$this->runTimeForHumans($startTime))
+                ? (' '.number_format((microtime(true) - $startTime) * 1000).'ms')
                 : '';
 
             $runTimeWidth = mb_strlen($runTime);
@@ -56,11 +50,7 @@ class Task extends Component
             $this->output->write("<fg=gray>$runTime</>", false, $verbosity);
 
             $this->output->writeln(
-                match ($result) {
-                    TaskResult::Failure->value => ' <fg=red;options=bold>FAIL</>',
-                    TaskResult::Skipped->value => ' <fg=yellow;options=bold>SKIPPED</>',
-                    default => ' <fg=green;options=bold>DONE</>'
-                },
+                $result !== false ? ' <fg=green;options=bold>DONE</>' : ' <fg=red;options=bold>FAIL</>',
                 $verbosity,
             );
         }

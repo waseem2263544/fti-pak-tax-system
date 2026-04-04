@@ -51,6 +51,7 @@ class WithoutOverlapping
      * @param  string  $key
      * @param  \DateTimeInterface|int|null  $releaseAfter
      * @param  \DateTimeInterface|int  $expiresAfter
+     * @return void
      */
     public function __construct($key = '', $releaseAfter = 0, $expiresAfter = 0)
     {
@@ -135,7 +136,7 @@ class WithoutOverlapping
     }
 
     /**
-     * Indicate that the lock key may be shared across jobs belonging to different classes.
+     * Indicate that the lock key should be shared across job classes.
      *
      * @return $this
      */
@@ -154,14 +155,8 @@ class WithoutOverlapping
      */
     public function getLockKey($job)
     {
-        if ($this->shareKey) {
-            return $this->prefix.$this->key;
-        }
-
-        $jobName = method_exists($job, 'displayName')
-            ? hash('xxh128', $job->displayName())
-            : get_class($job);
-
-        return $this->prefix.$jobName.':'.$this->key;
+        return $this->shareKey
+            ? $this->prefix.$this->key
+            : $this->prefix.get_class($job).':'.$this->key;
     }
 }

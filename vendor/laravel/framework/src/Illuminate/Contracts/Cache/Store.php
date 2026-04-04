@@ -7,7 +7,7 @@ interface Store
     /**
      * Retrieve an item from the cache by key.
      *
-     * @param  string  $key
+     * @param  string|array  $key
      * @return mixed
      */
     public function get($key);
@@ -67,15 +67,6 @@ interface Store
      * @return bool
      */
     public function forever($key, $value);
-
-    /**
-     * Set the expiration of a cached item.
-     *
-     * @param  string  $key
-     * @param  int  $seconds
-     * @return bool
-     */
-    public function touch($key, $seconds);
 
     /**
      * Remove an item from the cache.

@@ -50,8 +50,10 @@ abstract class Seeder
             $name = get_class($seeder);
 
             if ($silent === false && isset($this->command)) {
-                (new TwoColumnDetail($this->command->getOutput()))
-                    ->render($name, '<fg=yellow;options=bold>RUNNING</>');
+                with(new TwoColumnDetail($this->command->getOutput()))->render(
+                    $name,
+                    '<fg=yellow;options=bold>RUNNING</>'
+                );
             }
 
             $startTime = microtime(true);
@@ -61,8 +63,10 @@ abstract class Seeder
             if ($silent === false && isset($this->command)) {
                 $runTime = number_format((microtime(true) - $startTime) * 1000);
 
-                (new TwoColumnDetail($this->command->getOutput()))
-                    ->render($name, "<fg=gray>$runTime ms</> <fg=green;options=bold>DONE</>");
+                with(new TwoColumnDetail($this->command->getOutput()))->render(
+                    $name,
+                    "<fg=gray>$runTime ms</> <fg=green;options=bold>DONE</>"
+                );
 
                 $this->command->getOutput()->writeln('');
             }
@@ -106,15 +110,11 @@ abstract class Seeder
      */
     public function callOnce($class, $silent = false, array $parameters = [])
     {
-        $classes = Arr::wrap($class);
-
-        foreach ($classes as $class) {
-            if (in_array($class, static::$called)) {
-                continue;
-            }
-
-            $this->call($class, $silent, $parameters);
+        if (in_array($class, static::$called)) {
+            return;
         }
+
+        $this->call($class, $silent, $parameters);
     }
 
     /**
@@ -184,7 +184,9 @@ abstract class Seeder
             ? $this->container->call([$this, 'run'], $parameters)
             : $this->run(...$parameters);
 
-        if (isset(class_uses_recursive(static::class)[WithoutModelEvents::class])) {
+        $uses = array_flip(class_uses_recursive(static::class));
+
+        if (isset($uses[WithoutModelEvents::class])) {
             $callback = $this->withoutModelEvents($callback);
         }
 
