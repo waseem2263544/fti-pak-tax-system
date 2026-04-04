@@ -1,0 +1,8 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/$USER/public_html
+    - /bin/cp -R app/* $DEPLOYPATH/
+    - /bin/cp app/.env.example $DEPLOYPATH/.env.example
+    - /bin/cp app/.htaccess $DEPLOYPATH/.htaccess 2>/dev/null; true
+    - /bin/cp app/.editorconfig $DEPLOYPATH/.editorconfig 2>/dev/null; true
