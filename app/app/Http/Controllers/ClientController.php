@@ -1,0 +1,182 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Client;
+use App\Models\Service;
+use Illuminate\Http\Request;
+
+class ClientController extends Controller
+{
+    /**
+     * Display all clients.
+     */
+    public function index()
+    {
+        $clients = Client::orderBy('name')->paginate(15);
+        return view('clients.index', compact('clients'));
+    }
+
+    /**
+     * Show client creation form.
+     */
+    public function create()
+    {
+        $services = Service::all();
+        $potentialShareholders = Client::orderBy('name')->get();
+        return view('clients.create', compact('services', 'potentialShareholders'));
+    }
+
+    /**
+     * Store a newly created client.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:clients',
+            'contact_no' => 'required|string|max:20',
+            'status' => 'required|in:Individual,AOP,Company',
+            'notes' => 'nullable|string',
+            'fbr_username' => 'nullable|string',
+            'fbr_password' => 'nullable|string',
+            'it_pin_code' => 'nullable|string',
+            'kpra_username' => 'nullable|string',
+            'kpra_password' => 'nullable|string',
+            'kpra_pin' => 'nullable|string',
+            'secp_password' => 'nullable|string',
+            'secp_pin' => 'nullable|string',
+            'folder_link' => 'nullable|url',
+            'shareholders' => 'nullable|array',
+            'share_percentages' => 'nullable|array',
+            'services' => 'nullable|array',
+            'service_deadlines' => 'nullable|array',
+        ]);
+
+        $client = Client::create($validated);
+
+        // Attach shareholders
+        if ($request->shareholders) {
+            foreach ($request->shareholders as $i => $shareholderId) {
+                if ($shareholderId) {
+                    $sharePercentage = $request->share_percentages[$i] ?? null;
+                    $client->shareholders()->attach($shareholderId, [
+                        'share_percentage' => $sharePercentage
+                    ]);
+                }
+            }
+        }
+
+        // Attach active services
+        if ($request->services) {
+            $serviceData = [];
+            foreach ($request->services as $i => $serviceId) {
+                if ($serviceId) {
+                    $deadline = $request->service_deadlines[$i] ?? null;
+                    $service = Service::find($serviceId);
+                    $serviceData[$serviceId] = [
+                        'next_deadline' => $deadline,
+                        'reminder_days' => $service->default_reminder_days ?? 7,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+            $client->activeServices()->attach($serviceData);
+        }
+
+        return redirect()->route('clients.show', $client)->with('success', 'Client created successfully');
+    }
+
+    /**
+     * Show client details.
+     */
+    public function show(Client $client)
+    {
+        $client->load(['shareholders', 'activeServices', 'fbrNotices', 'tasks']);
+        return view('clients.show', compact('client'));
+    }
+
+    /**
+     * Show edit form.
+     */
+    public function edit(Client $client)
+    {
+        $services = Service::all();
+        $potentialShareholders = Client::where('id', '!=', $client->id)->orderBy('name')->get();
+        $client->load(['shareholders', 'activeServices']);
+        return view('clients.edit', compact('client', 'services', 'potentialShareholders'));
+    }
+
+    /**
+     * Update client.
+     */
+    public function update(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:clients,email,' . $client->id,
+            'contact_no' => 'required|string|max:20',
+            'status' => 'required|in:Individual,AOP,Company',
+            'notes' => 'nullable|string',
+            'fbr_username' => 'nullable|string',
+            'fbr_password' => 'nullable|string',
+            'it_pin_code' => 'nullable|string',
+            'kpra_username' => 'nullable|string',
+            'kpra_password' => 'nullable|string',
+            'kpra_pin' => 'nullable|string',
+            'secp_password' => 'nullable|string',
+            'secp_pin' => 'nullable|string',
+            'folder_link' => 'nullable|url',
+            'shareholders' => 'nullable|array',
+            'share_percentages' => 'nullable|array',
+            'services' => 'nullable|array',
+            'service_deadlines' => 'nullable|array',
+        ]);
+
+        $client->update($validated);
+
+        // Update shareholders
+        $client->shareholders()->detach();
+        if ($request->shareholders) {
+            foreach ($request->shareholders as $i => $shareholderId) {
+                if ($shareholderId) {
+                    $sharePercentage = $request->share_percentages[$i] ?? null;
+                    $client->shareholders()->attach($shareholderId, [
+                        'share_percentage' => $sharePercentage
+                    ]);
+                }
+            }
+        }
+
+        // Update services
+        $client->activeServices()->detach();
+        if ($request->services) {
+            $serviceData = [];
+            foreach ($request->services as $i => $serviceId) {
+                if ($serviceId) {
+                    $deadline = $request->service_deadlines[$i] ?? null;
+                    $service = Service::find($serviceId);
+                    $serviceData[$serviceId] = [
+                        'next_deadline' => $deadline,
+                        'reminder_days' => $service->default_reminder_days ?? 7,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+            }
+            $client->activeServices()->attach($serviceData);
+        }
+
+        return redirect()->route('clients.show', $client)->with('success', 'Client updated successfully');
+    }
+
+    /**
+     * Delete client.
+     */
+    public function destroy(Client $client)
+    {
+        $client->delete();
+        return redirect()->route('clients.index')->with('success', 'Client deleted successfully');
+    }
+}
