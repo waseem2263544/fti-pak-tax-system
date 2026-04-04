@@ -338,11 +338,11 @@
 </head>
 <body>
     @auth
-    <div class="d-flex">
+    <div>
         <div class="sidebar">
             <div class="sidebar-brand">
-                <div class="logo">
-                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 180px; height: auto; filter: brightness(0) invert(1);">
+                <div class="logo" style="background: #fff; border-radius: 10px; padding: 10px 14px; display: inline-block;">
+                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 170px; height: auto; display: block;">
                 </div>
             </div>
 
@@ -359,6 +359,10 @@
                 </a>
                 <a href="{{ route('fbr-notices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'fbr-notices.')) active @endif">
                     <i class="bi bi-envelope-paper-fill"></i> FBR Notices
+                </a>
+
+                <a href="{{ route('files.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'files.')) active @endif">
+                    <i class="bi bi-folder-fill"></i> Files
                 </a>
 
                 <div class="sidebar-section-label">Operations</div>

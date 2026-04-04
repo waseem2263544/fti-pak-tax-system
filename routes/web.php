@@ -10,6 +10,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProceedingController;
 use App\Http\Controllers\AutomatedTaskController;
+use App\Http\Controllers\FileController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -45,6 +46,13 @@ Route::middleware(['auth'])->group(function () {
     // Automate Tasks
     Route::resource('automated-tasks', AutomatedTaskController::class)->except(['show']);
     Route::post('automated-tasks/{automated_task}/toggle', [AutomatedTaskController::class, 'toggle'])->name('automated-tasks.toggle');
+
+    // File Management
+    Route::get('files', [FileController::class, 'index'])->name('files.index');
+    Route::get('files/create', [FileController::class, 'create'])->name('files.create');
+    Route::post('files', [FileController::class, 'store'])->name('files.store');
+    Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');
+    Route::delete('files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
