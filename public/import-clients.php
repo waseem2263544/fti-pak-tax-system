@@ -14,9 +14,9 @@ if (!file_exists($csvFile)) {
 $handle = fopen($csvFile, 'r');
 // Skip BOM and header
 $header = fgetcsv($handle);
-// Clean BOM from first header
+// Clean BOM and quotes from headers
 $header[0] = preg_replace('/[\x{FEFF}]/u', '', $header[0]);
-$header = array_map('trim', $header);
+$header = array_map(function($h) { return trim($h, " \t\n\r\0\x0B\"'"); }, $header);
 
 echo "CSV Headers: " . implode(' | ', $header) . "\n\n";
 
