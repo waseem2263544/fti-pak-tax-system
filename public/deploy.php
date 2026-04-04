@@ -4,10 +4,10 @@ $secret = 'fti2026deploy';
 if (!isset($_GET['secret']) || $_GET['secret'] !== $secret) { http_response_code(403); die('Forbidden'); }
 
 echo "<pre>Deploying...\n\n";
+ob_flush(); flush();
 
 $basePath = dirname(__DIR__);
 $zipFile = $basePath . '/storage/deploy-temp.zip';
-$extractPath = $basePath . '/storage/deploy-extract';
 
 // Download
 $zipUrl = 'https://github.com/waseem2263544/fti-pak-tax-system/archive/refs/heads/main.zip';
@@ -22,41 +22,35 @@ curl_close($ch);
 
 if (!$data || $httpCode !== 200) { die("Download failed (HTTP $httpCode)\n"); }
 file_put_contents($zipFile, $data);
-echo "Downloaded (" . round(strlen($data)/1024/1024, 1) . " MB)\n";
+echo "Downloaded.\n";
+ob_flush(); flush();
 
-// Extract
+// Extract only app code, skip vendor/
 $zip = new ZipArchive;
 if ($zip->open($zipFile) !== true) { die("Cannot open zip\n"); }
 
-$prefix = $zip->getNameIndex(0); // e.g. "fti-pak-tax-system-main/"
-$skip = ['.env', 'storage/logs/', 'storage/framework/sessions/', 'deploy.php'];
+$prefix = $zip->getNameIndex(0);
+$skip = ['.env', 'vendor/', 'storage/logs/', 'storage/framework/sessions/', 'storage/framework/views/', 'node_modules/'];
 
 $count = 0;
 for ($i = 0; $i < $zip->numFiles; $i++) {
     $name = $zip->getNameIndex($i);
     $relativePath = substr($name, strlen($prefix));
-
     if ($relativePath === '' || $relativePath === false) continue;
 
-    // Skip protected files
     $skipThis = false;
     foreach ($skip as $s) {
-        if ($relativePath === $s || strpos($relativePath, $s) === 0) {
-            $skipThis = true;
-            break;
-        }
+        if ($relativePath === $s || strpos($relativePath, $s) === 0) { $skipThis = true; break; }
     }
     if ($skipThis) continue;
 
     $targetPath = $basePath . '/' . $relativePath;
 
-    // Directory
     if (substr($name, -1) === '/') {
         if (!is_dir($targetPath)) mkdir($targetPath, 0755, true);
         continue;
     }
 
-    // File
     $dir = dirname($targetPath);
     if (!is_dir($dir)) mkdir($dir, 0755, true);
 
@@ -70,6 +64,4 @@ for ($i = 0; $i < $zip->numFiles; $i++) {
 $zip->close();
 unlink($zipFile);
 
-echo "Synced $count files.\n\n";
-echo "DEPLOY COMPLETE!\n";
-echo "</pre>";
+echo "Synced $count files.\n\nDEPLOY COMPLETE!\n</pre>";

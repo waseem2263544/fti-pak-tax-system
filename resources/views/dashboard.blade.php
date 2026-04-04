@@ -3,131 +3,160 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
-<div class="row">
-    <!-- Stats Cards -->
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Total Clients</h6>
-                <h3 class="text-primary">{{ $totalClients }}</h3>
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="d-flex align-items-center">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(48,58,80,0.08); display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+                    <i class="bi bi-people-fill" style="font-size: 1.3rem; color: var(--primary);"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ $totalClients }}</div>
+                    <div class="stat-label">Clients</div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Active Services</h6>
-                <h3 class="text-success">{{ $activeServices }}</h3>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="d-flex align-items-center">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(215,223,39,0.15); display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+                    <i class="bi bi-briefcase-fill" style="font-size: 1.3rem; color: #8b9a00;"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ $activeServices }}</div>
+                    <div class="stat-label">Active Services</div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">Pending Tasks</h6>
-                <h3 class="text-warning">{{ $pendingTasks }}</h3>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="d-flex align-items-center">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245,158,11,0.1); display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+                    <i class="bi bi-clock-fill" style="font-size: 1.3rem; color: #f59e0b;"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ $pendingTasks }}</div>
+                    <div class="stat-label">Pending Tasks</div>
+                </div>
             </div>
         </div>
     </div>
-
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title text-muted">FBR Notices (New)</h6>
-                <h3 class="text-danger">{{ $newFbrNotices }}</h3>
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="d-flex align-items-center">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(239,68,68,0.1); display: flex; align-items: center; justify-content: center; margin-right: 16px;">
+                    <i class="bi bi-envelope-exclamation-fill" style="font-size: 1.3rem; color: #ef4444;"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ $newFbrNotices }}</div>
+                    <div class="stat-label">New FBR Notices</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <!-- My Tasks -->
-    <div class="col-md-6 mb-3">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="bi bi-check-square"></i> My Tasks</h6>
+<!-- My Tasks & FBR Notices -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-check2-square me-2" style="color: var(--accent);"></i>My Tasks</span>
+                <a href="{{ route('tasks.index') }}" class="small text-decoration-none" style="color: var(--primary);">View all</a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 @forelse($myTasks as $task)
-                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
                     <div>
-                        <p class="mb-0"><strong>{{ $task->title }}</strong></p>
-                        <small class="text-muted">{{ $task->client?->name }}</small>
+                        <div class="fw-500" style="font-size: 0.875rem;">{{ $task->title }}</div>
+                        <small class="text-muted">{{ $task->client?->name }} {{ $task->due_date ? '- Due ' . $task->due_date->format('M d') : '' }}</small>
                     </div>
-                    <span class="badge bg-info">{{ $task->status }}</span>
+                    @if($task->status == 'pending')
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    @elseif($task->status == 'in_progress')
+                        <span class="badge" style="background: var(--primary); color: #fff;">In Progress</span>
+                    @else
+                        <span class="badge bg-danger">Overdue</span>
+                    @endif
                 </div>
                 @empty
-                <p class="text-muted mb-0">No tasks assigned</p>
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.3;"></i>
+                    <p class="mt-2 mb-0 small">No pending tasks</p>
+                </div>
                 @endforelse
             </div>
         </div>
     </div>
 
-    <!-- Recent FBR Notices -->
-    <div class="col-md-6 mb-3">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="bi bi-envelope"></i> Recent FBR Notices</h6>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-envelope-paper-fill me-2" style="color: var(--accent);"></i>Recent FBR Notices</span>
+                <a href="{{ route('fbr-notices.index') }}" class="small text-decoration-none" style="color: var(--primary);">View all</a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 @forelse($recentNotices as $notice)
-                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 {{ !$loop->last ? 'border-bottom' : '' }} {{ $notice->is_escalated ? 'escalated' : '' }}">
                     <div>
-                        <p class="mb-0"><strong>{{ Str::limit($notice->subject, 30) }}</strong></p>
-                        <small class="text-muted">{{ $notice->notice_section }} ({{ $notice->tax_year }})</small>
+                        <div class="fw-500" style="font-size: 0.875rem;">{{ Str::limit($notice->subject, 35) }}</div>
+                        <small class="text-muted">{{ $notice->notice_section }} {{ $notice->tax_year ? '(' . $notice->tax_year . ')' : '' }}</small>
                     </div>
-                    <span class="badge @if($notice->is_escalated) bg-danger @else bg-warning @endif">{{ $notice->status }}</span>
+                    @if($notice->status == 'new')
+                        <span class="badge" style="background: var(--accent); color: var(--primary);">New</span>
+                    @elseif($notice->is_escalated)
+                        <span class="badge bg-danger">Escalated</span>
+                    @else
+                        <span class="badge bg-secondary">{{ ucfirst($notice->status) }}</span>
+                    @endif
                 </div>
                 @empty
-                <p class="text-muted mb-0">No recent notices</p>
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-envelope-check" style="font-size: 2rem; opacity: 0.3;"></i>
+                    <p class="mt-2 mb-0 small">No notices</p>
+                </div>
                 @endforelse
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <!-- Recent Clients -->
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="bi bi-people"></i> Recent Clients</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Services</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recentClients as $client)
-                            <tr>
-                                <td><strong>{{ $client->name }}</strong></td>
-                                <td>{{ $client->email }}</td>
-                                <td><span class="badge bg-info">{{ $client->status }}</span></td>
-                                <td>{{ $client->activeServices()->count() }} active</td>
-                                <td>
-                                    <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-primary">View</a>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">No clients yet</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<!-- Recent Clients -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people-fill me-2" style="color: var(--accent);"></i>Recent Clients</span>
+        <a href="{{ route('clients.index') }}" class="small text-decoration-none" style="color: var(--primary);">View all</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Type</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($recentClients as $client)
+                <tr>
+                    <td class="fw-500">{{ $client->name }}</td>
+                    <td>{{ $client->email }}</td>
+                    <td><span class="badge" style="background: rgba(48,58,80,0.08); color: var(--primary);">{{ $client->status }}</span></td>
+                    <td>
+                        <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-primary">View</a>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">No clients yet. <a href="{{ route('clients.create') }}">Add your first client</a></td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection
