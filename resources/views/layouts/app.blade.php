@@ -325,42 +325,13 @@
 
         /* ── GUEST ── */
         .guest-wrapper {
-            min-height: 100vh; display: flex;
-        }
-
-        .guest-left {
-            flex: 1; background: var(--primary);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            padding: 60px; position: relative; overflow: hidden;
-        }
-
-        .guest-left::before {
-            content: '';
-            position: absolute; top: -30%; right: -20%;
-            width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(215,223,39,0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .guest-left::after {
-            content: '';
-            position: absolute; bottom: -20%; left: -10%;
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, rgba(215,223,39,0.05) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .guest-right {
-            width: 480px; background: #fff;
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 60px;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
         }
 
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main-wrapper { margin-left: 0; }
-            .guest-left { display: none; }
-            .guest-right { width: 100%; }
         }
     </style>
     @yield('styles')
@@ -371,11 +342,7 @@
         <div class="sidebar">
             <div class="sidebar-brand">
                 <div class="logo">
-                    <div class="logo-icon">FT</div>
-                    <div class="logo-text">
-                        <h5>FTI Pak</h5>
-                        <span>Tax Management</span>
-                    </div>
+                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 180px; height: auto; filter: brightness(0) invert(1);">
                 </div>
             </div>
 
@@ -392,6 +359,17 @@
                 </a>
                 <a href="{{ route('fbr-notices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'fbr-notices.')) active @endif">
                     <i class="bi bi-envelope-paper-fill"></i> FBR Notices
+                </a>
+
+                <div class="sidebar-section-label">Operations</div>
+                <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
+                    <i class="bi bi-arrow-repeat"></i> Processes
+                </a>
+                <a href="{{ route('proceedings.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'proceedings.')) active @endif">
+                    <i class="bi bi-bank2"></i> Proceedings
+                </a>
+                <a href="{{ route('automated-tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'automated-tasks.')) active @endif">
+                    <i class="bi bi-lightning-charge-fill"></i> Automate Tasks
                 </a>
 
                 @if(Auth::user()->hasRole('admin'))
