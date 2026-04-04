@@ -12,6 +12,10 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+Route::get('/test-deploy', function () {
+    return 'Deploy working! ' . now();
+});
+
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
