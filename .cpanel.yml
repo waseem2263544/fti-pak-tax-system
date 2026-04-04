@@ -1,8 +1,0 @@
----
-deployment:
-  tasks:
-    - export DEPLOYPATH=/home/fairtax1/domains/app.fairtaxint.com/public_html
-    - /bin/cp -R app/* $DEPLOYPATH/
-    - /bin/cp -R app/.env.example $DEPLOYPATH/.env.example
-    - /bin/cp -R app/.htaccess $DEPLOYPATH/.htaccess 2>/dev/null; true
-    - /bin/cp -R app/.editorconfig $DEPLOYPATH/.editorconfig 2>/dev/null; true
