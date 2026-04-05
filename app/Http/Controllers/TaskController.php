@@ -79,7 +79,7 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        $task->load('createdBy', 'client', 'assignedUsers');
+        $task->load('createdBy', 'client', 'assignedUsers', 'comments.user');
         return view('tasks.show', compact('task'));
     }
 

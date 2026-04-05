@@ -56,6 +56,15 @@
                     </select>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Due Date (days from creation)</label>
+                    <div class="input-group">
+                        <input type="number" name="due_in_days" class="form-control" value="{{ old('due_in_days', $automatedTask->due_in_days ?? 15) }}" min="1" max="365">
+                        <span class="input-group-text" style="font-size: 0.82rem;">days after task is created</span>
+                    </div>
+                </div>
+            </div>
             <div class="mb-3">
                 <label class="form-label">Task Title Template</label>
                 <input type="text" name="task_template" class="form-control" value="{{ old('task_template', $automatedTask->task_template) }}" required>

@@ -35,6 +35,7 @@
                     </div>
                     <div style="font-size: 0.78rem; color: #9ca3af; margin-top: 4px;">
                         Task: "{{ $auto->task_template }}"
+                        &middot; Due in {{ $auto->due_in_days ?? '?' }} days
                         &middot; Priority: {{ ['Low', 'Medium', 'High'][$auto->priority] }}
                         @if($auto->last_run_at) &middot; Last run: {{ $auto->last_run_at->diffForHumans() }} @endif
                     </div>

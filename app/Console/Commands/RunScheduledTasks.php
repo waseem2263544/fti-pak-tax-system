@@ -79,9 +79,11 @@ class RunScheduledTasks extends Command
                 continue; // Don't create duplicate
             }
 
-            // Calculate due date from service default deadline
+            // Calculate due date
             $dueDate = null;
-            if ($service->default_deadline_days) {
+            if ($rule->due_in_days) {
+                $dueDate = now()->addDays($rule->due_in_days)->toDateString();
+            } elseif ($service->default_deadline_days) {
                 $dueDate = now()->addDays($service->default_deadline_days)->toDateString();
             }
 

@@ -67,7 +67,7 @@ class ProceedingController extends Controller
 
     public function show(Proceeding $proceeding)
     {
-        $proceeding->load('client', 'assignedTo');
+        $proceeding->load('client', 'assignedTo', 'comments.user');
         return view('proceedings.show', compact('proceeding'));
     }
 

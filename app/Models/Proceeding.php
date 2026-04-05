@@ -19,4 +19,5 @@ class Proceeding extends Model
 
     public function client() { return $this->belongsTo(Client::class); }
     public function assignedTo() { return $this->belongsTo(User::class, 'assigned_to'); }
+    public function comments() { return $this->morphMany(Comment::class, 'commentable')->orderBy('created_at', 'desc'); }
 }

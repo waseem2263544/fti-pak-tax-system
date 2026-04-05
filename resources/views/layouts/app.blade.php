@@ -425,6 +425,20 @@
             <div class="top-nav">
                 <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
                 <div class="top-nav-actions">
+                    <!-- Global Search -->
+                    <div style="position: relative;" id="search-wrapper">
+                        <form action="{{ route('search') }}" method="GET" style="margin: 0;">
+                            <div style="position: relative;">
+                                <i class="bi bi-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 0.85rem;"></i>
+                                <input type="text" name="q" id="global-search" placeholder="Search clients, tasks, proceedings..." autocomplete="off"
+                                    style="width: 280px; padding: 8px 12px 8px 36px; border: 1.5px solid #edf0f2; border-radius: 10px; font-size: 0.82rem; background: #f8f9fb; transition: all 0.2s; outline: none;"
+                                    onfocus="this.style.width='340px'; this.style.borderColor='var(--accent)'; this.style.background='#fff'; this.style.boxShadow='0 0 0 4px rgba(215,223,39,0.12)'"
+                                    onblur="setTimeout(function(){document.getElementById('global-search').style.width='280px'; document.getElementById('global-search').style.borderColor='#edf0f2'; document.getElementById('global-search').style.background='#f8f9fb'; document.getElementById('global-search').style.boxShadow='none'; document.getElementById('search-dropdown').style.display='none';}, 200)"
+                                    oninput="searchSuggest(this.value)">
+                            </div>
+                        </form>
+                        <div id="search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 6px; background: #fff; border-radius: 12px; border: 1.5px solid #e8eaed; box-shadow: 0 8px 30px rgba(0,0,0,0.1); z-index: 1000; max-height: 320px; overflow-y: auto;"></div>
+                    </div>
                     <a href="{{ route('notifications.index') }}" class="nav-icon-btn" title="Notifications" style="text-decoration: none;">
                         <i class="bi bi-bell"></i>
                         <div class="notification-badge" id="notif-count" style="display: none;">0</div>
@@ -492,6 +506,33 @@
         }
         setInterval(loadNotifications, 60000);
         loadNotifications();
+    </script>
+    @endauth
+    @auth
+    <script>
+    var searchTimer;
+    function searchSuggest(q) {
+        clearTimeout(searchTimer);
+        var dd = document.getElementById('search-dropdown');
+        if (q.length < 2) { dd.style.display = 'none'; return; }
+        searchTimer = setTimeout(function() {
+            fetch('/search/suggest?q=' + encodeURIComponent(q))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        dd.innerHTML = '<div style="padding: 16px; text-align: center; color: #9ca3af; font-size: 0.82rem;">No results for "'+q+'"</div>';
+                    } else {
+                        dd.innerHTML = data.map(function(item) {
+                            return '<a href="'+item.url+'" style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; text-decoration: none; color: var(--primary); border-bottom: 1px solid #f5f6f8; font-size: 0.85rem; transition: background 0.1s;" onmouseover="this.style.background=\'#f8f9fb\'" onmouseout="this.style.background=\'#fff\'">'
+                                + '<i class="bi '+item.icon+'" style="color: #9ca3af; font-size: 1rem; width: 20px; text-align: center;"></i>'
+                                + '<div><div style="font-weight: 600;">'+item.title+'</div><div style="font-size: 0.72rem; color: #9ca3af;">'+item.type+'</div></div></a>';
+                        }).join('');
+                        dd.innerHTML += '<a href="/search?q='+encodeURIComponent(q)+'" style="display: block; padding: 10px 16px; text-align: center; font-size: 0.8rem; color: var(--primary); font-weight: 600; text-decoration: none; background: #fafbfc;">View all results <i class="bi bi-arrow-right"></i></a>';
+                    }
+                    dd.style.display = 'block';
+                }).catch(function() { dd.style.display = 'none'; });
+        }, 250);
+    }
     </script>
     @endauth
     @yield('scripts')

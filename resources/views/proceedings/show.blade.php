@@ -53,5 +53,46 @@
         @endif
     </div>
 </div>
+<!-- Comments -->
+<div class="card mt-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-chat-dots" style="color: var(--accent);"></i>
+        <span style="font-weight: 700;">Comments ({{ $proceeding->comments->count() }})</span>
+    </div>
+    <div class="card-body" style="padding: 20px;">
+        <form method="POST" action="{{ route('comments.store') }}" class="mb-4">
+            @csrf
+            <input type="hidden" name="commentable_type" value="proceeding">
+            <input type="hidden" name="commentable_id" value="{{ $proceeding->id }}">
+            <div class="d-flex gap-3">
+                <div style="width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</div>
+                <div style="flex: 1;">
+                    <textarea name="body" class="form-control" rows="2" placeholder="Add a comment or update..." required style="resize: none;"></textarea>
+                    <button type="submit" class="btn btn-accent btn-sm mt-2"><i class="bi bi-send me-1"></i>Post</button>
+                </div>
+            </div>
+        </form>
+        @forelse($proceeding->comments as $comment)
+        <div class="d-flex gap-3 mb-3 pb-3" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+            <div style="width: 36px; height: 36px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($comment->user->name, 0, 2)) }}</div>
+            <div style="flex: 1;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">{{ $comment->user->name }}</span>
+                        <span style="font-size: 0.75rem; color: #9ca3af; margin-left: 8px;">{{ $comment->created_at->diffForHumans() }}</span>
+                    </div>
+                    @if($comment->user_id === auth()->id())
+                    <form method="POST" action="{{ route('comments.destroy', $comment) }}" class="d-inline" onsubmit="return confirm('Delete?')">@csrf @method('DELETE')<button class="btn btn-sm" style="color: #d1d5db;"><i class="bi bi-trash" style="font-size: 0.75rem;"></i></button></form>
+                    @endif
+                </div>
+                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #4b5563; line-height: 1.6;">{{ $comment->body }}</p>
+            </div>
+        </div>
+        @empty
+        <div class="text-center py-3" style="color: #d1d5db; font-size: 0.85rem;">No comments yet.</div>
+        @endforelse
+    </div>
+</div>
+
 <a href="{{ route('proceedings.index', ['tab' => $proceeding->stage]) }}" class="btn btn-outline-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Back</a>
 @endsection

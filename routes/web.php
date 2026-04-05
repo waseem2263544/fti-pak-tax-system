@@ -11,6 +11,8 @@ use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProceedingController;
 use App\Http\Controllers\AutomatedTaskController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MicrosoftAuthController;
 
@@ -77,6 +79,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('auth/microsoft/disconnect', [MicrosoftAuthController::class, 'disconnect'])->name('auth.microsoft.disconnect');
     Route::get('auth/microsoft/test', [MicrosoftAuthController::class, 'testFetch'])->name('auth.microsoft.test');
     Route::get('auth/microsoft/refresh', [MicrosoftAuthController::class, 'refreshToken'])->name('auth.microsoft.refresh');
+
+    // Comments
+    Route::post('comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
+
+    // Search
+    Route::get('search', [SearchController::class, 'index'])->name('search');
+    Route::get('search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 
     Route::get('/mini-apps', function () {
         return view('mini-apps.index');

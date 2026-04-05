@@ -49,4 +49,9 @@ class Task extends Model
     {
         return $this->hasMany(Notification::class, 'related_task_id');
     }
+
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable')->orderBy('created_at', 'desc');
+    }
 }
