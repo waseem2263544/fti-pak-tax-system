@@ -3,13 +3,8 @@
 @section('page-title', 'Edit Client')
 
 @section('content')
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card">
-            <div class="card-header" style="background: #fff;">
-                <h5 class="mb-0" style="font-weight: 700; color: var(--primary);">Edit: {{ $client->name }}</h5>
-            </div>
-            <div class="card-body" style="padding: 24px;">
+<div class="card">
+    <div class="card-body" style="padding: 28px;">
                 <form action="{{ route('clients.update', $client) }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -174,8 +169,6 @@
                         <a href="{{ route('clients.show', $client) }}" class="btn btn-outline-primary">Cancel</a>
                     </div>
                 </form>
-            </div>
-        </div>
     </div>
 </div>
 
