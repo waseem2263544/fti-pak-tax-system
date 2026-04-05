@@ -8,9 +8,6 @@
         <h4 style="font-weight: 800; color: var(--primary); margin: 0;">Good {{ date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening') }}, {{ explode(' ', Auth::user()->name)[0] }}</h4>
         <p style="color: #9ca3af; font-size: 0.85rem; margin: 4px 0 0;">Here's what's happening with your practice today.</p>
     </div>
-    <a href="{{ route('clients.create') }}" class="btn btn-accent">
-        <i class="bi bi-plus-lg me-1"></i> New Client
-    </a>
 </div>
 
 <!-- Stats -->
