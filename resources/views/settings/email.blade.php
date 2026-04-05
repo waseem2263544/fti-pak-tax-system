@@ -66,6 +66,7 @@
 
                     <div class="d-flex gap-2">
                         <a href="{{ route('auth.microsoft.test') }}" class="btn btn-accent btn-sm"><i class="bi bi-lightning-charge me-1"></i>Test Connection</a>
+                        <a href="{{ route('auth.microsoft.refresh') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>Refresh Token</a>
                         <a href="{{ route('auth.microsoft.redirect') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Reconnect</a>
                         <form method="POST" action="{{ route('auth.microsoft.disconnect') }}" onsubmit="return confirm('Disconnect Microsoft email?')">
                             @csrf

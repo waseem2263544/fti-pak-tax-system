@@ -89,6 +89,37 @@ class MicrosoftAuthController extends Controller
         return redirect()->route('settings.email')->with('success', 'Microsoft email disconnected');
     }
 
+    public function refreshToken()
+    {
+        $settings = MicrosoftEmailSettings::where('user_id', auth()->id())->first();
+        if (!$settings) {
+            return redirect()->route('settings.email')->with('error', 'No email connected');
+        }
+
+        $config = $this->getConfig();
+
+        $response = Http::asForm()->post("https://login.microsoftonline.com/{$config['tenant']}/oauth2/v2.0/token", [
+            'client_id' => $config['client_id'],
+            'client_secret' => $config['client_secret'],
+            'refresh_token' => $settings->refresh_token,
+            'grant_type' => 'refresh_token',
+            'scope' => 'openid profile email Mail.Read offline_access',
+        ]);
+
+        if (!$response->successful()) {
+            return redirect()->route('settings.email')->with('error', 'Token refresh failed. Please reconnect your Microsoft account.');
+        }
+
+        $data = $response->json();
+        $settings->update([
+            'access_token' => $data['access_token'],
+            'refresh_token' => $data['refresh_token'] ?? $settings->refresh_token,
+            'token_expires_at' => Carbon::now()->addSeconds($data['expires_in']),
+        ]);
+
+        return redirect()->route('settings.email')->with('success', 'Token refreshed successfully! New expiry: ' . Carbon::now()->addSeconds($data['expires_in'])->format('M d, Y H:i'));
+    }
+
     public function testFetch()
     {
         $settings = MicrosoftEmailSettings::where('user_id', auth()->id())->first();
@@ -97,7 +128,30 @@ class MicrosoftAuthController extends Controller
             return redirect()->route('settings.email')->with('error', 'No email connected');
         }
 
-        // Try fetching recent emails
+        // Auto-refresh if expired
+        if ($settings->isTokenExpired()) {
+            $config = $this->getConfig();
+            $response = Http::asForm()->post("https://login.microsoftonline.com/{$config['tenant']}/oauth2/v2.0/token", [
+                'client_id' => $config['client_id'],
+                'client_secret' => $config['client_secret'],
+                'refresh_token' => $settings->refresh_token,
+                'grant_type' => 'refresh_token',
+                'scope' => 'openid profile email Mail.Read offline_access',
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $settings->update([
+                    'access_token' => $data['access_token'],
+                    'refresh_token' => $data['refresh_token'] ?? $settings->refresh_token,
+                    'token_expires_at' => Carbon::now()->addSeconds($data['expires_in']),
+                ]);
+                $settings->refresh();
+            } else {
+                return redirect()->route('settings.email')->with('error', 'Token expired and refresh failed. Please reconnect.');
+            }
+        }
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $settings->access_token,
         ])->get('https://graph.microsoft.com/v1.0/me/mailfolders/inbox/messages', [
@@ -107,14 +161,10 @@ class MicrosoftAuthController extends Controller
         ]);
 
         if (!$response->successful()) {
-            return redirect()->route('settings.email')->with('error', 'Failed to fetch emails. Token may have expired - try reconnecting.');
+            return redirect()->route('settings.email')->with('error', 'Failed to fetch emails. Try reconnecting.');
         }
 
         $emails = $response->json()['value'] ?? [];
-        $emailList = collect($emails)->map(function ($e) {
-            return $e['subject'] . ' (from: ' . ($e['from']['emailAddress']['address'] ?? '?') . ')';
-        })->implode("\n");
-
-        return redirect()->route('settings.email')->with('success', 'Connection working! Latest ' . count($emails) . ' emails fetched successfully.');
+        return redirect()->route('settings.email')->with('success', 'Connection working! Latest ' . count($emails) . ' emails fetched. Token valid until ' . $settings->token_expires_at->format('M d, H:i'));
     }
 }

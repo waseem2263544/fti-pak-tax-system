@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('auth/microsoft/callback', [MicrosoftAuthController::class, 'callback'])->name('auth.microsoft.callback');
     Route::post('auth/microsoft/disconnect', [MicrosoftAuthController::class, 'disconnect'])->name('auth.microsoft.disconnect');
     Route::get('auth/microsoft/test', [MicrosoftAuthController::class, 'testFetch'])->name('auth.microsoft.test');
+    Route::get('auth/microsoft/refresh', [MicrosoftAuthController::class, 'refreshToken'])->name('auth.microsoft.refresh');
 
     Route::get('/mini-apps', function () {
         return view('mini-apps.index');
