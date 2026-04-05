@@ -18,6 +18,34 @@ use Carbon\Carbon;
 $settings = MicrosoftEmailSettings::first();
 if (!$settings) { die("No email connected.\n"); }
 
+// Auto-refresh token if expired
+if ($settings->isTokenExpired()) {
+    echo "Token expired, refreshing...\n";
+    $config = [
+        'client_id' => env('MICROSOFT_CLIENT_ID', ''),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET', ''),
+    ];
+    $tokenResponse = Http::asForm()->post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
+        'client_id' => $config['client_id'],
+        'client_secret' => $config['client_secret'],
+        'refresh_token' => $settings->refresh_token,
+        'grant_type' => 'refresh_token',
+        'scope' => 'openid profile email Mail.Read offline_access',
+    ]);
+    if ($tokenResponse->successful()) {
+        $tokenData = $tokenResponse->json();
+        $settings->update([
+            'access_token' => $tokenData['access_token'],
+            'refresh_token' => $tokenData['refresh_token'] ?? $settings->refresh_token,
+            'token_expires_at' => Carbon::now()->addSeconds($tokenData['expires_in']),
+        ]);
+        $settings->refresh();
+        echo "Token refreshed!\n\n";
+    } else {
+        die("Token refresh failed. Please reconnect at Settings > Email Integration.\n" . $tokenResponse->body());
+    }
+}
+
 echo "Email: {$settings->email_address}\n";
 echo "FBR Sender: {$settings->fbr_sender_email}\n\n";
 
