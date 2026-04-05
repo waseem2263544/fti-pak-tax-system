@@ -11,10 +11,34 @@ class ClientController extends Controller
     /**
      * Display all clients.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $clients = Client::orderBy('name')->paginate(15);
-        return view('clients.index', compact('clients'));
+        $query = Client::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('contact_no', 'like', "%{$search}%")
+                  ->orWhere('fbr_username', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('service')) {
+            $query->whereHas('activeServices', function ($q) use ($request) {
+                $q->where('services.id', $request->service);
+            });
+        }
+
+        $clients = $query->orderBy('name')->paginate(20)->withQueryString();
+        $services = Service::orderBy('display_name')->get();
+
+        return view('clients.index', compact('clients', 'services'));
     }
 
     /**
