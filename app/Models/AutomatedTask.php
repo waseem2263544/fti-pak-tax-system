@@ -27,8 +27,14 @@ class AutomatedTask extends Model
 
         switch ($this->trigger_type) {
             case 'monthly':
-                // trigger_value = day of month (1-28)
-                return (int) $today->day === (int) $this->trigger_value;
+                // trigger_value = day of month (1-31)
+                $targetDay = (int) $this->trigger_value;
+                $lastDay = (int) $today->daysInMonth;
+                // If target day exceeds month's days, run on last day
+                if ($targetDay > $lastDay) {
+                    return (int) $today->day === $lastDay;
+                }
+                return (int) $today->day === $targetDay;
 
             case 'yearly':
                 // trigger_value = "MM-DD" e.g. "09-30" for Sept 30

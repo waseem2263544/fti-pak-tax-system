@@ -26,10 +26,11 @@
                     <label class="form-label" id="triggerLabel">Day of Month</label>
                     <div id="triggerMonthly">
                         <select name="trigger_value" class="form-select">
-                            @for($i = 1; $i <= 28; $i++)
-                                <option value="{{ $i }}">{{ $i }}</option>
+                            @for($i = 1; $i <= 31; $i++)
+                                <option value="{{ $i }}">{{ $i }}{{ $i > 28 ? ' *' : '' }}</option>
                             @endfor
                         </select>
+                        <small class="text-muted">* If month has fewer days, runs on last day.</small>
                     </div>
                 </div>
             </div>
@@ -67,12 +68,13 @@
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Run At Time</label>
                     <select name="run_at_time" class="form-select">
-                        <option value="08:00" selected>8:00 AM</option>
-                        <option value="09:00">9:00 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <option value="06:00">6:00 AM</option>
-                        <option value="07:00">7:00 AM</option>
-                        <option value="12:00">12:00 PM</option>
+                        @for($h = 0; $h < 24; $h++)
+                            @php
+                                $val = str_pad($h, 2, '0', STR_PAD_LEFT) . ':00';
+                                $label = ($h == 0 ? '12:00 AM' : ($h < 12 ? $h . ':00 AM' : ($h == 12 ? '12:00 PM' : ($h - 12) . ':00 PM')));
+                            @endphp
+                            <option value="{{ $val }}" {{ $val == '08:00' ? 'selected' : '' }}>{{ $label }}</option>
+                        @endfor
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
@@ -125,8 +127,8 @@ function updateTriggerValue() {
     if (type === 'monthly') {
         label.textContent = 'Day of Month';
         var opts = '';
-        for (var i = 1; i <= 28; i++) opts += '<option value="'+i+'">'+i+'</option>';
-        container.innerHTML = '<select name="trigger_value" class="form-select">'+opts+'</select>';
+        for (var i = 1; i <= 31; i++) opts += '<option value="'+i+'">'+i+(i>28?' *':'')+'</option>';
+        container.innerHTML = '<select name="trigger_value" class="form-select">'+opts+'</select><small class="text-muted">* If month has fewer days, runs on last day.</small>';
     } else if (type === 'weekly') {
         label.textContent = 'Day of Week';
         container.innerHTML = '<select name="trigger_value" class="form-select"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select>';
