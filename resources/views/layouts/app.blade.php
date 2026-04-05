@@ -405,6 +405,7 @@
                 <a href="{{ route('settings.email') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'settings.')) active @endif">
                     <i class="bi bi-envelope-at"></i> Email Integration
                 </a>
+                @endif
             </div>
 
             <div class="sidebar-user">
