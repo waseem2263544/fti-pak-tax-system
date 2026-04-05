@@ -377,7 +377,7 @@
                     <i class="bi bi-check2-square"></i> Tasks
                 </a>
                 <a href="{{ route('fbr-notices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'fbr-notices.')) active @endif">
-                    <i class="bi bi-envelope-paper-fill"></i> FBR Notices
+                    <i class="bi bi-envelope-paper-fill"></i> FBR Notifications
                 </a>
 
                 <a href="{{ route('files.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'files.')) active @endif">

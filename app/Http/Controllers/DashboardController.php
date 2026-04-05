@@ -43,15 +43,21 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Get recent clients
-        $recentClients = Client::orderBy('created_at', 'desc')
-            ->limit(5)
+        // Get upcoming proceedings
+        $upcomingProceedings = \App\Models\Proceeding::with('client', 'assignedTo')
+            ->whereIn('status', ['pending', 'adjourned'])
+            ->where(function ($q) {
+                $q->whereNull('hearing_date')
+                  ->orWhere('hearing_date', '>=', now()->subDays(7));
+            })
+            ->orderByRaw('hearing_date IS NULL, hearing_date ASC')
+            ->limit(10)
             ->get();
 
         return view('dashboard', compact(
             'totalClients', 'pendingProceedings', 'pendingTasks', 'overdueTasks',
             'newFbrNotices', 'escalatedNotices', 'myTasks', 'recentNotices',
-            'unreadNotifications', 'recentClients'
+            'unreadNotifications', 'upcomingProceedings'
         ));
     }
 }

@@ -62,7 +62,7 @@
                 </div>
                 <div>
                     <div class="stat-value">{{ $newFbrNotices }}</div>
-                    <div class="stat-label">Unread Notices</div>
+                    <div class="stat-label">FBR Notifications</div>
                 </div>
             </div>
         </div>
@@ -113,7 +113,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                     <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></div>
-                    Recent FBR Notices
+                    Recent FBR Notifications
                 </div>
                 <a href="{{ route('fbr-notices.index') }}" style="color: var(--primary); font-size: 0.78rem; font-weight: 600; text-decoration: none;">View All <i class="bi bi-chevron-right" style="font-size: 0.65rem;"></i></a>
             </div>
@@ -143,44 +143,76 @@
     </div>
 </div>
 
-<!-- Recent Clients -->
+<!-- Upcoming Proceedings -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-2">
             <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></div>
-            Recent Clients
+            Upcoming Proceedings
         </div>
-        <a href="{{ route('clients.index') }}" style="color: var(--primary); font-size: 0.78rem; font-weight: 600; text-decoration: none;">View All <i class="bi bi-chevron-right" style="font-size: 0.65rem;"></i></a>
+        <a href="{{ route('proceedings.index') }}" style="color: var(--primary); font-size: 0.78rem; font-weight: 600; text-decoration: none;">View All <i class="bi bi-chevron-right" style="font-size: 0.65rem;"></i></a>
     </div>
     <div class="table-responsive">
         <table class="table mb-0">
             <thead>
                 <tr>
+                    <th>Case</th>
                     <th>Client</th>
-                    <th>Email</th>
-                    <th>Type</th>
+                    <th>Stage</th>
+                    <th>Hearing Date</th>
+                    <th>Assigned</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($recentClients as $client)
+                @forelse($upcomingProceedings as $proc)
                 <tr>
                     <td>
+                        <a href="{{ route('proceedings.show', $proc) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 0.88rem;">{{ Str::limit($proc->title, 40) }}</a>
+                        @if($proc->section)<div style="font-size: 0.72rem; color: #9ca3af;">Section {{ $proc->section }}</div>@endif
+                    </td>
+                    <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div style="width: 34px; height: 34px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: var(--primary);">{{ strtoupper(substr($client->name, 0, 2)) }}</div>
-                            <span style="font-weight: 600;">{{ $client->name }}</span>
+                            <div style="width: 28px; height: 28px; background: rgba(48,58,80,0.06); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6rem; color: var(--primary);">{{ strtoupper(substr($proc->client->name, 0, 2)) }}</div>
+                            <span style="font-size: 0.85rem;">{{ Str::limit($proc->client->name, 20) }}</span>
                         </div>
                     </td>
-                    <td style="color: #6b7280;">{{ $client->email }}</td>
-                    <td><span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $client->status }}</span></td>
+                    <td>
+                        @if($proc->stage == 'department')
+                            <span class="badge" style="background: #dbeafe; color: #1e40af;">Department</span>
+                        @elseif($proc->stage == 'commissioner_appeals')
+                            <span class="badge" style="background: #fef3c7; color: #92400e;">Comm. Appeals</span>
+                        @else
+                            <span class="badge" style="background: #fce7f3; color: #9d174d;">Tribunal</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($proc->hearing_date)
+                            @php $days = now()->startOfDay()->diffInDays($proc->hearing_date, false); @endphp
+                            <span style="font-size: 0.85rem; {{ $days < 0 ? 'color: #dc2626; font-weight: 600;' : ($days <= 3 ? 'color: #d97706;' : 'color: #6b7280;') }}">
+                                {{ $proc->hearing_date->format('M d, Y') }}
+                            </span>
+                            @if($days < 0)
+                                <span class="badge ms-1" style="background: #fef2f2; color: #dc2626;">Overdue</span>
+                            @elseif($days == 0)
+                                <span class="badge ms-1" style="background: #fef3c7; color: #92400e;">Today</span>
+                            @elseif($days <= 3)
+                                <span class="badge ms-1" style="background: #fef3c7; color: #92400e;">{{ $days }}d</span>
+                            @endif
+                        @else
+                            <span style="color: #d1d5db; font-size: 0.85rem;">Not set</span>
+                        @endif
+                    </td>
+                    <td style="font-size: 0.85rem; color: #6b7280;">{{ $proc->assignedTo->name ?? '-' }}</td>
                     <td class="text-end">
-                        <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.78rem;">View</a>
+                        <a href="{{ route('proceedings.edit', $proc) }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem;"><i class="bi bi-pencil"></i></a>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="text-center py-5" style="color: #9ca3af;">
-                        No clients yet. <a href="{{ route('clients.create') }}" style="color: var(--primary); font-weight: 600;">Add your first client</a>
+                    <td colspan="6" class="text-center py-5" style="color: #9ca3af;">
+                        <i class="bi bi-bank2" style="font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
+                        No pending proceedings.
                     </td>
                 </tr>
                 @endforelse

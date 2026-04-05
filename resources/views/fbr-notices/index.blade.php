@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'FBR Notices')
-@section('page-title', 'FBR Notices')
+@section('title', 'FBR Notifications')
+@section('page-title', 'FBR Notifications')
 
 @section('styles')
 <style>
