@@ -84,7 +84,7 @@
                         <div style="width: 8px; height: 8px; border-radius: 50%; background: {{ $task->status == 'overdue' ? '#ef4444' : ($task->status == 'in_progress' ? 'var(--accent)' : '#d1d5db') }};"></div>
                         <div>
                             <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">{{ $task->title }}</div>
-                            <div style="font-size: 0.75rem; color: #9ca3af;">{{ $task->client?->name }}{{ $task->due_date ? ' &middot; Due ' . $task->due_date->format('M d') : '' }}</div>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">{{ $task->client?->name }}{{ $task->due_date ? ' · Due ' . $task->due_date->format('M d') : '' }}</div>
                         </div>
                     </div>
                     @if($task->status == 'pending')
@@ -119,7 +119,7 @@
                 <div class="d-flex justify-content-between align-items-center px-3 py-3 {{ $notice->is_escalated ? 'escalated' : '' }}" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">{{ Str::limit($notice->subject, 40) }}</div>
-                        <div style="font-size: 0.75rem; color: #9ca3af;">{{ $notice->notice_section }}{{ $notice->tax_year ? ' &middot; ' . $notice->tax_year : '' }}</div>
+                        <div style="font-size: 0.75rem; color: #9ca3af;">{{ $notice->notice_section }}{{ $notice->tax_year ? ' · ' . $notice->tax_year : '' }}</div>
                     </div>
                     @if($notice->status == 'new')
                         <span class="badge" style="background: var(--accent); color: var(--primary); font-weight: 700;">New</span>
@@ -155,7 +155,7 @@
         <a href="{{ $article->url }}" target="_blank" class="d-flex justify-content-between align-items-center px-3 py-2 text-decoration-none" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
             <div>
                 <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">{{ Str::limit($article->title, 60) }}</div>
-                <div style="font-size: 0.72rem; color: #9ca3af;">{{ $article->source }} &middot; {{ $article->published_at->diffForHumans() }}</div>
+                <div style="font-size: 0.72rem; color: #9ca3af;">{{ $article->source }} · {{ $article->published_at->diffForHumans() }}</div>
             </div>
             <span class="badge" style="background: #f3f4f6; color: #6b7280; font-size: 0.65rem; flex-shrink: 0;">{{ $article->category }}</span>
         </a>
