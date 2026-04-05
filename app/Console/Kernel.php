@@ -27,6 +27,14 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Reminder processing failed');
             });
+
+        // Run scheduled task rules daily at 8am
+        $schedule->command('app:run-scheduled-tasks')
+            ->dailyAt('08:00')
+            ->withoutOverlapping()
+            ->onFailure(function () {
+                \Log::error('Scheduled tasks execution failed');
+            });
     }
 
     /**

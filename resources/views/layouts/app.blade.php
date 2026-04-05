@@ -403,10 +403,6 @@
                 <a href="{{ route('mini-apps.index') }}" class="@if(Route::currentRouteName() == 'mini-apps.index') active @endif">
                     <i class="bi bi-puzzle-fill"></i> Mini Apps
                 </a>
-                <a href="{{ route('notifications.index') }}" class="@if(Route::currentRouteName() == 'notifications.index') active @endif">
-                    <i class="bi bi-bell-fill"></i> Notifications
-                </a>
-
                 <div class="sidebar-section-label">Settings</div>
                 <a href="{{ route('settings.email') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'settings.')) active @endif">
                     <i class="bi bi-envelope-at"></i> Email Integration
@@ -429,10 +425,10 @@
             <div class="top-nav">
                 <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
                 <div class="top-nav-actions">
-                    <div class="nav-icon-btn" onclick="loadNotifications()" title="Notifications">
+                    <a href="{{ route('notifications.index') }}" class="nav-icon-btn" title="Notifications" style="text-decoration: none;">
                         <i class="bi bi-bell"></i>
                         <div class="notification-badge" id="notif-count" style="display: none;">0</div>
-                    </div>
+                    </a>
                     <button class="btn-logout-nav" onclick="document.getElementById('logout-form').submit();">
                         <i class="bi bi-box-arrow-right"></i> Logout
                     </button>
