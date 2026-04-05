@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('fbr-notices/{fbr_notice}/status', [FbrNoticeController::class, 'updateStatus'])->name('fbr-notices.updateStatus');
     Route::post('fbr-notices/{fbr_notice}/escalate', [FbrNoticeController::class, 'escalate'])->name('fbr-notices.escalate');
     Route::post('fbr-notices/{fbr_notice}/assign-client', [FbrNoticeController::class, 'assignClient'])->name('fbr-notices.assignClient');
+    Route::get('fbr-notices/fetch-now', [FbrNoticeController::class, 'fetchNow'])->name('fbr-notices.fetch');
     Route::post('fbr-notices/{fbr_notice}/dismiss', [FbrNoticeController::class, 'dismiss'])->name('fbr-notices.dismiss');
     Route::post('fbr-notices/{fbr_notice}/mark-read', [FbrNoticeController::class, 'markRead'])->name('fbr-notices.markRead');
     Route::get('fbr-notices/{fbr_notice}/download', [FbrNoticeController::class, 'download'])->name('fbr-notices.download');

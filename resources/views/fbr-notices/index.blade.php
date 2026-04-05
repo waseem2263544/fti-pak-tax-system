@@ -36,7 +36,7 @@
                 <i class="bi bi-list me-1"></i> All
             </a>
         </div>
-        <a href="/fetch-fbr-now.php" class="btn btn-accent btn-sm"><i class="bi bi-cloud-download me-1"></i>Fetch Now</a>
+        <a href="{{ route('fbr-notices.fetch') }}" class="btn btn-accent btn-sm"><i class="bi bi-cloud-download me-1"></i>Fetch Now</a>
     </div>
     <!-- Filters row -->
     <div style="padding: 12px 20px;">
