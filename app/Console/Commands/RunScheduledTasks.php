@@ -25,6 +25,8 @@ class RunScheduledTasks extends Command
 
         $totalCreated = 0;
 
+        $currentHour = now()->format('H:00');
+
         foreach ($rules as $rule) {
             if (!$rule->shouldRunToday()) {
                 continue;
@@ -32,6 +34,12 @@ class RunScheduledTasks extends Command
 
             if ($rule->hasRunToday()) {
                 $this->info("  Skipping \"{$rule->name}\" - already ran today");
+                continue;
+            }
+
+            // Check if current hour matches the rule's run time
+            $ruleTime = $rule->run_at_time ?? '08:00';
+            if ($currentHour !== substr($ruleTime, 0, 5)) {
                 continue;
             }
 
