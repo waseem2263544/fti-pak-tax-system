@@ -45,7 +45,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('processes/{process}/stage', [ProcessController::class, 'updateStage'])->name('processes.updateStage');
 
     // Pending Proceedings
-    Route::resource('proceedings', ProceedingController::class);
+    Route::resource('proceedings', ProceedingController::class)->parameters(['proceedings' => 'proceeding']);
 
     // Scheduled Tasks (Settings)
     Route::resource('scheduled-tasks', AutomatedTaskController::class)->except(['show'])->parameters(['scheduled-tasks' => 'automated_task']);
