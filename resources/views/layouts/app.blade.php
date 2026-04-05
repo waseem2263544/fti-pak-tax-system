@@ -591,9 +591,12 @@
     var mentionActiveIdx = 0;
 
     function initMentions() {
-        document.querySelectorAll('textarea[name="body"]').forEach(function(ta) {
+        var textareas = document.querySelectorAll('textarea[name="body"]');
+        console.log('Mention init: found ' + textareas.length + ' textareas');
+        textareas.forEach(function(ta) {
             if (ta.dataset.mentionInit) return;
             ta.dataset.mentionInit = '1';
+            console.log('Mention: initialized textarea');
 
             // Wrap textarea in a positioned container
             var wrapper = document.createElement('div');
@@ -631,7 +634,8 @@
     }
 
     function mentionFetch(q, dd, ta) {
-        fetch('/api/users/search?q=' + encodeURIComponent(q))
+        console.log('Mention: fetching users for "' + q + '"');
+        fetch('/mentions/users?q=' + encodeURIComponent(q))
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 mentionItems = data;
