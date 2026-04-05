@@ -360,8 +360,8 @@
     <div>
         <div class="sidebar">
             <div class="sidebar-brand">
-                <div class="logo" style="background: #fff; border-radius: 10px; padding: 10px 14px; display: inline-block;">
-                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 170px; height: auto; display: block;">
+                <div class="logo">
+                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 180px; height: auto; display: block; filter: drop-shadow(0 0 1px rgba(255,255,255,0.8)) brightness(1.5);">
                 </div>
             </div>
 
