@@ -54,10 +54,12 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        $latestNews = \App\Models\NewsArticle::orderBy('published_at', 'desc')->limit(5)->get();
+
         return view('dashboard', compact(
             'totalClients', 'pendingProceedings', 'pendingTasks', 'overdueTasks',
             'newFbrNotices', 'escalatedNotices', 'myTasks', 'recentNotices',
-            'unreadNotifications', 'upcomingProceedings'
+            'unreadNotifications', 'upcomingProceedings', 'latestNews'
         ));
     }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\ProceedingController;
 use App\Http\Controllers\AutomatedTaskController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MicrosoftAuthController;
@@ -79,6 +80,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('auth/microsoft/disconnect', [MicrosoftAuthController::class, 'disconnect'])->name('auth.microsoft.disconnect');
     Route::get('auth/microsoft/test', [MicrosoftAuthController::class, 'testFetch'])->name('auth.microsoft.test');
     Route::get('auth/microsoft/refresh', [MicrosoftAuthController::class, 'refreshToken'])->name('auth.microsoft.refresh');
+
+    // News
+    Route::get('news', [NewsController::class, 'index'])->name('news.index');
+    Route::get('news/fetch', [NewsController::class, 'fetchNow'])->name('news.fetch');
+    Route::post('news/{newsArticle}/pin', [NewsController::class, 'togglePin'])->name('news.pin');
+    Route::delete('news/{newsArticle}', [NewsController::class, 'destroy'])->name('news.destroy');
 
     // Comments
     Route::post('comments', [CommentController::class, 'store'])->name('comments.store');

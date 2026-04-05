@@ -384,6 +384,10 @@
                     <i class="bi bi-folder-fill"></i> File Management
                 </a>
 
+                <a href="{{ route('news.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'news.')) active @endif">
+                    <i class="bi bi-newspaper"></i> Tax News
+                </a>
+
                 <div class="sidebar-section-label">Operations</div>
                 <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
                     <i class="bi bi-arrow-repeat"></i> Processes

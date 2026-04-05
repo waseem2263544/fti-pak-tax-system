@@ -28,6 +28,11 @@ class Kernel extends ConsoleKernel
                 \Log::error('Reminder processing failed');
             });
 
+        // Fetch tax news daily at 9am
+        $schedule->command('app:fetch-tax-news')
+            ->dailyAt('09:00')
+            ->withoutOverlapping();
+
         // Run scheduled task rules every hour (command checks which rules are due)
         $schedule->command('app:run-scheduled-tasks')
             ->hourly()
