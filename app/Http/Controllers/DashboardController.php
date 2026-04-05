@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $pendingProceedings = \App\Models\Proceeding::whereIn('status', ['pending', 'adjourned'])->count();
         $pendingTasks = Task::where('status', 'pending')->count();
         $overdueTasks = Task::where('status', 'overdue')->count();
-        $newFbrNotices = FbrNotice::where('status', 'new')->count();
+        $newFbrNotices = FbrNotice::whereIn('status', ['new', 'reviewed'])->count();
         $escalatedNotices = FbrNotice::where('is_escalated', true)->count();
 
         // Get user's assigned tasks

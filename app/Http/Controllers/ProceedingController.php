@@ -47,6 +47,17 @@ class ProceedingController extends Controller
         ]);
 
         Proceeding::create($validated);
+
+        // If created from an FBR notice, mark the notice as actioned
+        if ($request->filled('fbr_notice_id')) {
+            \App\Models\FbrNotice::where('id', $request->fbr_notice_id)->update(['status' => 'resolved']);
+        }
+
+        // Redirect back to FBR notices if came from there
+        if ($request->filled('from_fbr')) {
+            return redirect()->route('fbr-notices.index')->with('success', 'Proceeding created and notice marked as actioned');
+        }
+
         return redirect()->route('proceedings.index', ['tab' => $validated['stage']])->with('success', 'Proceeding added successfully');
     }
 
