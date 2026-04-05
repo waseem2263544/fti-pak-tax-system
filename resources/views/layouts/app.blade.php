@@ -586,105 +586,90 @@
         }
     </style>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('textarea[name="body"]').forEach(function(textarea) {
-            setupMentions(textarea);
-        });
-    });
+    // @Mention system - init all textareas now and any added later
+    var mentionItems = [];
+    var mentionActiveIdx = 0;
 
-    function setupMentions(textarea) {
-        var container = textarea.parentElement;
-        container.classList.add('mention-container');
+    function initMentions() {
+        document.querySelectorAll('textarea[name="body"]').forEach(function(ta) {
+            if (ta.dataset.mentionInit) return;
+            ta.dataset.mentionInit = '1';
 
-        var dropdown = document.createElement('div');
-        dropdown.className = 'mention-dropdown';
-        container.appendChild(dropdown);
+            // Wrap textarea in a positioned container
+            var wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.style.flex = '1';
+            ta.parentNode.insertBefore(wrapper, ta);
+            wrapper.appendChild(ta);
 
-        var mentionStart = -1;
-        var mentionQuery = '';
-        var activeIndex = 0;
-        var items = [];
+            var dd = document.createElement('div');
+            dd.className = 'mention-dropdown';
+            wrapper.appendChild(dd);
 
-        textarea.addEventListener('input', function() {
-            var val = textarea.value;
-            var pos = textarea.selectionStart;
-            var before = val.substring(0, pos);
-
-            var atIndex = before.lastIndexOf('@');
-            if (atIndex >= 0 && (atIndex === 0 || before[atIndex - 1] === ' ' || before[atIndex - 1] === '\n')) {
-                var query = before.substring(atIndex + 1);
-                if (query.length >= 1 && !query.includes(' ')) {
-                    mentionStart = atIndex;
-                    mentionQuery = query;
-                    fetchUsers(query, dropdown, textarea);
-                    return;
+            ta.addEventListener('input', function() {
+                var val = ta.value, pos = ta.selectionStart;
+                var before = val.substring(0, pos);
+                var atIdx = before.lastIndexOf('@');
+                if (atIdx >= 0 && (atIdx === 0 || ' \n'.includes(before[atIdx - 1]))) {
+                    var q = before.substring(atIdx + 1);
+                    if (q.length >= 1 && !q.includes(' ') && !q.includes('\n')) {
+                        mentionFetch(q, dd, ta);
+                        return;
+                    }
                 }
-            }
-            dropdown.classList.remove('show');
-        });
+                dd.classList.remove('show');
+            });
 
-        textarea.addEventListener('keydown', function(e) {
-            if (!dropdown.classList.contains('show')) return;
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                activeIndex = Math.min(activeIndex + 1, items.length - 1);
-                updateActive(dropdown);
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                activeIndex = Math.max(activeIndex - 1, 0);
-                updateActive(dropdown);
-            } else if (e.key === 'Enter' || e.key === 'Tab') {
-                if (items.length > 0) {
-                    e.preventDefault();
-                    selectMention(items[activeIndex], textarea, dropdown);
-                }
-            } else if (e.key === 'Escape') {
-                dropdown.classList.remove('show');
-            }
+            ta.addEventListener('keydown', function(e) {
+                if (!dd.classList.contains('show')) return;
+                if (e.key === 'ArrowDown') { e.preventDefault(); mentionActiveIdx = Math.min(mentionActiveIdx + 1, mentionItems.length - 1); mentionHighlight(dd); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); mentionActiveIdx = Math.max(mentionActiveIdx - 1, 0); mentionHighlight(dd); }
+                else if (e.key === 'Enter' || e.key === 'Tab') { if (mentionItems.length > 0) { e.preventDefault(); mentionSelect(mentionItems[mentionActiveIdx], ta, dd); } }
+                else if (e.key === 'Escape') { dd.classList.remove('show'); }
+            });
         });
     }
 
-    function fetchUsers(query, dropdown, textarea) {
-        fetch('/api/users/search?q=' + encodeURIComponent(query))
+    function mentionFetch(q, dd, ta) {
+        fetch('/api/users/search?q=' + encodeURIComponent(q))
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                items = data;
-                activeIndex = 0;
-                if (data.length === 0) { dropdown.classList.remove('show'); return; }
-                dropdown.innerHTML = data.map(function(user, i) {
-                    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '" data-id="' + user.id + '" data-name="' + user.name + '">'
-                        + '<div class="avatar">' + user.initials + '</div>'
-                        + '<span style="font-weight: 600; color: var(--primary);">' + user.name + '</span></div>';
+                mentionItems = data;
+                mentionActiveIdx = 0;
+                if (!data.length) { dd.classList.remove('show'); return; }
+                dd.innerHTML = data.map(function(u, i) {
+                    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '">'
+                        + '<div class="avatar">' + u.initials + '</div>'
+                        + '<span style="font-weight:600;color:var(--primary);">' + u.name + '</span></div>';
                 }).join('');
-                dropdown.classList.add('show');
-
-                dropdown.querySelectorAll('.mention-item').forEach(function(item, idx) {
-                    item.addEventListener('click', function() {
-                        selectMention(data[idx], textarea, dropdown);
-                    });
+                dd.classList.add('show');
+                dd.querySelectorAll('.mention-item').forEach(function(el, i) {
+                    el.addEventListener('mousedown', function(e) { e.preventDefault(); mentionSelect(data[i], ta, dd); });
                 });
-            });
+            }).catch(function() { dd.classList.remove('show'); });
     }
 
-    function selectMention(user, textarea, dropdown) {
-        var val = textarea.value;
-        var pos = textarea.selectionStart;
+    function mentionSelect(user, ta, dd) {
+        var val = ta.value, pos = ta.selectionStart;
         var before = val.substring(0, pos);
-        var atIndex = before.lastIndexOf('@');
+        var atIdx = before.lastIndexOf('@');
         var after = val.substring(pos);
-
-        textarea.value = val.substring(0, atIndex) + '@[user:' + user.id + ']' + user.name + ' ' + after;
-        textarea.focus();
-        var newPos = atIndex + ('@[user:' + user.id + ']' + user.name + ' ').length;
-        textarea.setSelectionRange(newPos, newPos);
-        dropdown.classList.remove('show');
+        var insert = '@[user:' + user.id + ']' + user.name + ' ';
+        ta.value = val.substring(0, atIdx) + insert + after;
+        var np = atIdx + insert.length;
+        ta.focus();
+        ta.setSelectionRange(np, np);
+        dd.classList.remove('show');
     }
 
-    function updateActive(dropdown) {
-        dropdown.querySelectorAll('.mention-item').forEach(function(item, i) {
-            item.classList.toggle('active', i === activeIndex);
-        });
+    function mentionHighlight(dd) {
+        dd.querySelectorAll('.mention-item').forEach(function(el, i) { el.classList.toggle('active', i === mentionActiveIdx); });
     }
+
+    // Run on load and after any dynamic content
+    document.addEventListener('DOMContentLoaded', initMentions);
+    setTimeout(initMentions, 500);
+    setTimeout(initMentions, 1500);
     </script>
     @endauth
     @yield('scripts')
