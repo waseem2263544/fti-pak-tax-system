@@ -670,12 +670,10 @@
         dd.querySelectorAll('.mention-item').forEach(function(el, i) { el.classList.toggle('active', i === mentionActiveIdx); });
     }
 
-    // Will be called after page content renders
+    // Run after full page load (including yield scripts content)
+    window.addEventListener('load', initMentions);
     </script>
     @endauth
     @yield('scripts')
-    @auth
-    <script>initMentions();</script>
-    @endauth
 </body>
 </html>
