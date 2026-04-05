@@ -2,77 +2,76 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClientFile;
+use App\Models\FileNumber;
+use App\Models\LetterNumber;
 use App\Models\Client;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class FileController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ClientFile::with('client', 'uploadedBy');
+        $tab = $request->get('tab', 'files');
 
-        if ($request->client_id) {
-            $query->where('client_id', $request->client_id);
-        }
-        if ($request->category) {
-            $query->where('category', $request->category);
-        }
-
-        $files = $query->orderBy('created_at', 'desc')->paginate(20);
+        $fileNumbers = FileNumber::with('client')->orderBy('file_no', 'desc')->paginate(20, ['*'], 'files_page');
+        $letterNumbers = LetterNumber::with('client')->orderBy('date', 'desc')->paginate(20, ['*'], 'letters_page');
         $clients = Client::orderBy('name')->get();
-        $categories = ClientFile::distinct()->whereNotNull('category')->pluck('category');
 
-        return view('files.index', compact('files', 'clients', 'categories'));
+        $nextFileNo = FileNumber::nextNumber();
+        $nextLetterRef = LetterNumber::generateReference();
+
+        return view('files.index', compact('fileNumbers', 'letterNumbers', 'clients', 'tab', 'nextFileNo', 'nextLetterRef'));
     }
 
-    public function create()
-    {
-        $clients = Client::orderBy('name')->get();
-        return view('files.create', compact('clients'));
-    }
-
-    public function store(Request $request)
+    public function storeFile(Request $request)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'file' => 'required|file|max:20480',
-            'category' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'description' => 'nullable|string|max:500',
         ]);
 
-        $uploaded = $request->file('file');
-        $filename = time() . '_' . $uploaded->getClientOriginalName();
-        $uploaded->storeAs('client-files', $filename, 'local');
-
-        ClientFile::create([
+        FileNumber::create([
+            'file_no' => FileNumber::nextNumber(),
             'client_id' => $request->client_id,
-            'uploaded_by' => auth()->id(),
-            'filename' => $filename,
-            'original_name' => $uploaded->getClientOriginalName(),
-            'mime_type' => $uploaded->getMimeType(),
-            'size' => $uploaded->getSize(),
-            'category' => $request->category,
-            'notes' => $request->notes,
+            'description' => $request->description,
         ]);
 
-        return redirect()->route('files.index')->with('success', 'File uploaded successfully');
+        return redirect()->route('files.index', ['tab' => 'files'])->with('success', 'File number created');
     }
 
-    public function download(ClientFile $file)
+    public function storeLetter(Request $request)
     {
-        $path = storage_path('app/client-files/' . $file->filename);
-        if (!file_exists($path)) {
-            return back()->with('error', 'File not found');
-        }
-        return response()->download($path, $file->original_name);
+        $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'description' => 'required|string|max:500',
+            'date' => 'required|date',
+        ]);
+
+        $year = now()->year;
+        $seq = LetterNumber::nextSequence();
+        $reference = 'FTI/' . str_pad($seq, 3, '0', STR_PAD_LEFT) . '/' . $year;
+
+        LetterNumber::create([
+            'date' => $request->date,
+            'reference' => $reference,
+            'sequence_no' => $seq,
+            'year' => $year,
+            'client_id' => $request->client_id,
+            'description' => $request->description,
+        ]);
+
+        return redirect()->route('files.index', ['tab' => 'letters'])->with('success', 'Letter number created: ' . $reference);
     }
 
-    public function destroy(ClientFile $file)
+    public function destroyFile(FileNumber $fileNumber)
     {
-        Storage::disk('local')->delete('client-files/' . $file->filename);
-        $file->delete();
-        return redirect()->route('files.index')->with('success', 'File deleted');
+        $fileNumber->delete();
+        return redirect()->route('files.index', ['tab' => 'files'])->with('success', 'File number deleted');
+    }
+
+    public function destroyLetter(LetterNumber $letterNumber)
+    {
+        $letterNumber->delete();
+        return redirect()->route('files.index', ['tab' => 'letters'])->with('success', 'Letter number deleted');
     }
 }

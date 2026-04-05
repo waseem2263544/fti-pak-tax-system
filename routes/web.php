@@ -52,11 +52,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('scheduled-tasks/{automated_task}/toggle', [AutomatedTaskController::class, 'toggle'])->name('scheduled-tasks.toggle');
 
     // File Management
-    Route::get('files', [FileController::class, 'index'])->name('files.index');
-    Route::get('files/create', [FileController::class, 'create'])->name('files.create');
-    Route::post('files', [FileController::class, 'store'])->name('files.store');
-    Route::get('files/{file}/download', [FileController::class, 'download'])->name('files.download');
-    Route::delete('files/{file}', [FileController::class, 'destroy'])->name('files.destroy');
+    Route::get('file-management', [FileController::class, 'index'])->name('files.index');
+    Route::post('file-management/files', [FileController::class, 'storeFile'])->name('files.store-file');
+    Route::post('file-management/letters', [FileController::class, 'storeLetter'])->name('files.store-letter');
+    Route::delete('file-management/files/{fileNumber}', [FileController::class, 'destroyFile'])->name('files.destroy-file');
+    Route::delete('file-management/letters/{letterNumber}', [FileController::class, 'destroyLetter'])->name('files.destroy-letter');
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');

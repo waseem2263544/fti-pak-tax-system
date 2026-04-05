@@ -381,7 +381,7 @@
                 </a>
 
                 <a href="{{ route('files.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'files.')) active @endif">
-                    <i class="bi bi-folder-fill"></i> Files
+                    <i class="bi bi-folder-fill"></i> File Management
                 </a>
 
                 <div class="sidebar-section-label">Operations</div>
