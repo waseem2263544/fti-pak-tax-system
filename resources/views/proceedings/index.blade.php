@@ -85,7 +85,13 @@
                     </td>
                     <td>{{ $proceeding->assignedTo->name ?? '-' }}</td>
                     <td class="text-end">
-                        <a href="{{ route('proceedings.edit', $proceeding) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <div class="d-flex gap-1 justify-content-end">
+                            <a href="{{ route('proceedings.edit', $proceeding) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                            <form action="{{ route('proceedings.destroy', $proceeding) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this proceeding?')">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
