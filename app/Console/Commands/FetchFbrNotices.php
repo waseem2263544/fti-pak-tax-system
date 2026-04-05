@@ -90,6 +90,10 @@ class FetchFbrNotices extends Command
                 if (strpos($from, 'fbr.gov.pk') === false) {
                     continue;
                 }
+                // Skip known spam/system emails
+                if (stripos($email['subject'] ?? '', 'Format for Sub User DI CRM') !== false) {
+                    continue;
+                }
                 $this->processEmail($email, $user, $settings);
             }
 

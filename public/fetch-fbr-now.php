@@ -50,6 +50,13 @@ foreach ($emails as $email) {
         continue;
     }
 
+    // Skip known spam/system emails
+    $subject = $email['subject'] ?? '';
+    if (stripos($subject, 'Format for Sub User DI CRM') !== false) {
+        $skipped++;
+        continue;
+    }
+
     // Check if already imported
     if (FbrNotice::where('email_message_id', $email['id'])->exists()) {
         $existing++;
