@@ -261,28 +261,9 @@
     </div>
     <div class="p-0">
         @forelse($client->activeServices as $service)
-        <div class="d-flex justify-content-between align-items-center px-4 py-3" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
-            <div class="d-flex align-items-center gap-3">
-                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></div>
-                <div>
-                    <div style="font-weight: 600; font-size: 0.88rem; color: var(--primary);">{{ $service->display_name }}</div>
-                </div>
-            </div>
-            <div>
-                @if($service->pivot->next_deadline)
-                    @php $days = now()->diffInDays(\Carbon\Carbon::parse($service->pivot->next_deadline), false); @endphp
-                    <span style="font-size: 0.82rem; color: #6b7280;">{{ \Carbon\Carbon::parse($service->pivot->next_deadline)->format('M d, Y') }}</span>
-                    @if($days < 0)
-                        <span class="badge ms-1" style="background: #fef2f2; color: #dc2626;">Overdue</span>
-                    @elseif($days <= 7)
-                        <span class="badge ms-1" style="background: #fef3c7; color: #92400e;">{{ $days }}d left</span>
-                    @else
-                        <span class="badge ms-1" style="background: #d1fae5; color: #065f46;">On track</span>
-                    @endif
-                @else
-                    <span style="color: #d1d5db; font-size: 0.82rem;">No deadline</span>
-                @endif
-            </div>
+        <div class="d-flex align-items-center gap-3 px-4 py-3" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+            <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></div>
+            <div style="font-weight: 600; font-size: 0.88rem; color: var(--primary);">{{ $service->display_name }}</div>
         </div>
         @empty
         <div class="text-center py-4" style="color: #9ca3af;">No active services</div>

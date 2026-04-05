@@ -4,11 +4,11 @@
 
 @section('styles')
 <style>
-    .kanban { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 16px; min-height: calc(100vh - 180px); }
-    .kanban-col { flex: 1; min-width: 280px; max-width: 340px; display: flex; flex-direction: column; }
+    .kanban { display: flex; gap: 12px; min-height: calc(100vh - 180px); }
+    .kanban-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     .kanban-header {
         padding: 12px 16px; border-radius: 12px 12px 0 0;
-        font-weight: 700; font-size: 0.82rem; text-transform: uppercase;
+        font-weight: 700; font-size: 0.78rem; text-transform: uppercase;
         letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;
     }
     .kanban-header .count {
@@ -20,28 +20,32 @@
         flex: 1; padding: 8px; border-radius: 0 0 12px 12px;
         background: rgba(0,0,0,0.02); overflow-y: auto;
         display: flex; flex-direction: column; gap: 8px;
+        min-height: 100px;
     }
     .kanban-card {
         background: #fff; border-radius: 10px; padding: 14px 16px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        cursor: pointer; transition: all 0.2s;
+        cursor: grab; transition: all 0.2s;
         border-left: 3px solid transparent;
         text-decoration: none; color: inherit; display: block;
     }
+    .kanban-card:active { cursor: grabbing; }
     .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); color: inherit; }
+    .kanban-card.dragging { opacity: 0.5; transform: rotate(2deg); }
     .kanban-card.priority-high { border-left-color: #ef4444; }
     .kanban-card.priority-medium { border-left-color: #f59e0b; }
     .kanban-card.priority-low { border-left-color: #d1d5db; }
-    .kanban-card .task-title { font-weight: 600; font-size: 0.85rem; color: var(--primary); margin-bottom: 6px; line-height: 1.3; }
-    .kanban-card .task-meta { font-size: 0.72rem; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .kanban-card .task-assignees { display: flex; gap: -4px; margin-top: 8px; }
+    .kanban-card .task-title { font-weight: 600; font-size: 0.82rem; color: var(--primary); margin-bottom: 6px; line-height: 1.3; }
+    .kanban-card .task-meta { font-size: 0.7rem; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .kanban-card .task-assignees { display: flex; margin-top: 8px; }
     .kanban-card .task-avatar {
-        width: 24px; height: 24px; border-radius: 6px;
+        width: 22px; height: 22px; border-radius: 6px;
         background: rgba(48,58,80,0.08); display: flex; align-items: center; justify-content: center;
-        font-size: 0.55rem; font-weight: 700; color: var(--primary); margin-right: 4px;
+        font-size: 0.5rem; font-weight: 700; color: var(--primary); margin-right: 3px;
     }
     .kanban-empty { text-align: center; padding: 32px 16px; color: #d1d5db; font-size: 0.82rem; }
     .kanban-empty i { font-size: 1.5rem; display: block; margin-bottom: 8px; }
+    .kanban-body.drag-over { background: rgba(215,223,39,0.06); border: 2px dashed var(--accent); border-radius: 0 0 12px 12px; }
 
     .col-overdue .kanban-header { background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); color: #991b1b; }
     .col-overdue .kanban-header .count { background: #fee2e2; color: #dc2626; }
@@ -87,19 +91,20 @@
 <!-- Kanban Board -->
 <div class="kanban">
     <!-- Overdue -->
-    @if($overdue->count())
-    <div class="kanban-col col-overdue">
+    <div class="kanban-col col-overdue" style="{{ $overdue->count() == 0 ? 'display:none;' : '' }}">
         <div class="kanban-header">
             <span><i class="bi bi-exclamation-triangle me-1"></i>Overdue</span>
             <div class="count">{{ $overdue->count() }}</div>
         </div>
-        <div class="kanban-body">
+        <div class="kanban-body" data-status="overdue">
             @foreach($overdue as $task)
-            @include('tasks._kanban_card', ['task' => $task])
+            <div class="kanban-card priority-{{ $task->priority == 2 ? 'high' : ($task->priority == 1 ? 'medium' : 'low') }}" draggable="true" data-id="{{ $task->id }}">
+                <a href="{{ route('tasks.show', $task) }}" class="task-title" style="text-decoration: none; color: var(--primary); display: block;">{{ Str::limit($task->title, 50) }}</a>
+                @include('tasks._kanban_meta', ['task' => $task])
+            </div>
             @endforeach
         </div>
     </div>
-    @endif
 
     <!-- Pending -->
     <div class="kanban-col col-pending">
@@ -107,9 +112,12 @@
             <span><i class="bi bi-circle me-1"></i>Pending</span>
             <div class="count">{{ $pending->count() }}</div>
         </div>
-        <div class="kanban-body">
+        <div class="kanban-body" data-status="pending">
             @forelse($pending as $task)
-            @include('tasks._kanban_card', ['task' => $task])
+            <div class="kanban-card priority-{{ $task->priority == 2 ? 'high' : ($task->priority == 1 ? 'medium' : 'low') }}" draggable="true" data-id="{{ $task->id }}">
+                <a href="{{ route('tasks.show', $task) }}" class="task-title" style="text-decoration: none; color: var(--primary); display: block;">{{ Str::limit($task->title, 50) }}</a>
+                @include('tasks._kanban_meta', ['task' => $task])
+            </div>
             @empty
             <div class="kanban-empty"><i class="bi bi-inbox"></i>No pending tasks</div>
             @endforelse
@@ -122,9 +130,12 @@
             <span><i class="bi bi-arrow-right-circle me-1"></i>In Progress</span>
             <div class="count">{{ $inProgress->count() }}</div>
         </div>
-        <div class="kanban-body">
+        <div class="kanban-body" data-status="in_progress">
             @forelse($inProgress as $task)
-            @include('tasks._kanban_card', ['task' => $task])
+            <div class="kanban-card priority-{{ $task->priority == 2 ? 'high' : ($task->priority == 1 ? 'medium' : 'low') }}" draggable="true" data-id="{{ $task->id }}">
+                <a href="{{ route('tasks.show', $task) }}" class="task-title" style="text-decoration: none; color: var(--primary); display: block;">{{ Str::limit($task->title, 50) }}</a>
+                @include('tasks._kanban_meta', ['task' => $task])
+            </div>
             @empty
             <div class="kanban-empty"><i class="bi bi-arrow-right-circle"></i>No tasks in progress</div>
             @endforelse
@@ -137,13 +148,90 @@
             <span><i class="bi bi-check-circle me-1"></i>Completed</span>
             <div class="count">{{ $completed->count() }}</div>
         </div>
-        <div class="kanban-body">
+        <div class="kanban-body" data-status="completed">
             @forelse($completed as $task)
-            @include('tasks._kanban_card', ['task' => $task])
+            <div class="kanban-card priority-{{ $task->priority == 2 ? 'high' : ($task->priority == 1 ? 'medium' : 'low') }}" draggable="true" data-id="{{ $task->id }}">
+                <a href="{{ route('tasks.show', $task) }}" class="task-title" style="text-decoration: none; color: var(--primary); display: block;">{{ Str::limit($task->title, 50) }}</a>
+                @include('tasks._kanban_meta', ['task' => $task])
+            </div>
             @empty
             <div class="kanban-empty"><i class="bi bi-check-circle"></i>No completed tasks</div>
             @endforelse
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+// Drag and Drop
+var draggedCard = null;
+
+document.querySelectorAll('.kanban-card').forEach(function(card) {
+    card.addEventListener('dragstart', function(e) {
+        draggedCard = card;
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', function() {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.kanban-body').forEach(function(b) { b.classList.remove('drag-over'); });
+    });
+});
+
+document.querySelectorAll('.kanban-body').forEach(function(body) {
+    body.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        body.classList.add('drag-over');
+    });
+    body.addEventListener('dragleave', function() {
+        body.classList.remove('drag-over');
+    });
+    body.addEventListener('drop', function(e) {
+        e.preventDefault();
+        body.classList.remove('drag-over');
+        if (!draggedCard) return;
+
+        var newStatus = body.dataset.status;
+        var taskId = draggedCard.dataset.id;
+
+        // Remove empty message if exists
+        var empty = body.querySelector('.kanban-empty');
+        if (empty) empty.remove();
+
+        // Move card to new column
+        body.appendChild(draggedCard);
+
+        // Update status via AJAX
+        fetch('/tasks/' + taskId + '/status', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        }).then(function(response) {
+            if (response.ok) {
+                // Update counts
+                updateCounts();
+            }
+        });
+    });
+});
+
+function updateCounts() {
+    document.querySelectorAll('.kanban-col').forEach(function(col) {
+        var count = col.querySelectorAll('.kanban-card').length;
+        var badge = col.querySelector('.count');
+        if (badge) badge.textContent = count;
+
+        // Hide overdue column if empty
+        if (col.classList.contains('col-overdue')) {
+            col.style.display = count === 0 ? 'none' : '';
+        }
+    });
+}
+</script>
 @endsection

@@ -49,14 +49,13 @@
                         <label class="form-label">Active Services</label>
                         <div class="row">
                             @foreach($services as $service)
-                            <div class="col-md-6 mb-2">
+                            <div class="col-md-4 mb-2">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="services[]" value="{{ $service->id }}" id="service{{ $service->id }}">
                                     <label class="form-check-label" for="service{{ $service->id }}">
                                         {{ $service->display_name }}
                                     </label>
                                 </div>
-                                <input type="date" class="form-control form-control-sm mt-1" name="service_deadlines[]" placeholder="Deadline">
                             </div>
                             @endforeach
                         </div>

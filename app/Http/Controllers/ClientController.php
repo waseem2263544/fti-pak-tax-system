@@ -74,7 +74,6 @@ class ClientController extends Controller
             'shareholders' => 'nullable|array',
             'share_percentages' => 'nullable|array',
             'services' => 'nullable|array',
-            'service_deadlines' => 'nullable|array',
         ]);
 
         $client = Client::create($validated);
@@ -93,20 +92,10 @@ class ClientController extends Controller
 
         // Attach active services
         if ($request->services) {
-            $serviceData = [];
-            foreach ($request->services as $i => $serviceId) {
-                if ($serviceId) {
-                    $deadline = $request->service_deadlines[$i] ?? null;
-                    $service = Service::find($serviceId);
-                    $serviceData[$serviceId] = [
-                        'next_deadline' => $deadline,
-                        'reminder_days' => $service->default_reminder_days ?? 7,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-            }
-            $client->activeServices()->attach($serviceData);
+            $client->activeServices()->attach($request->services, [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return redirect()->route('clients.show', $client)->with('success', 'Client created successfully');
@@ -155,7 +144,6 @@ class ClientController extends Controller
             'shareholders' => 'nullable|array',
             'share_percentages' => 'nullable|array',
             'services' => 'nullable|array',
-            'service_deadlines' => 'nullable|array',
         ]);
 
         $client->update($validated);
@@ -176,20 +164,10 @@ class ClientController extends Controller
         // Update services
         $client->activeServices()->detach();
         if ($request->services) {
-            $serviceData = [];
-            foreach ($request->services as $i => $serviceId) {
-                if ($serviceId) {
-                    $deadline = $request->service_deadlines[$i] ?? null;
-                    $service = Service::find($serviceId);
-                    $serviceData[$serviceId] = [
-                        'next_deadline' => $deadline,
-                        'reminder_days' => $service->default_reminder_days ?? 7,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
-            }
-            $client->activeServices()->attach($serviceData);
+            $client->activeServices()->attach($request->services, [
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
         return redirect()->route('clients.show', $client)->with('success', 'Client updated successfully');
