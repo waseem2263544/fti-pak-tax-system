@@ -12,14 +12,14 @@ class AutomatedTaskController extends Controller
     public function index()
     {
         $automations = AutomatedTask::with('service')->orderBy('name')->paginate(15);
-        return view('automated-tasks.index', compact('automations'));
+        return view('scheduled-tasks.index', compact('automations'));
     }
 
     public function create()
     {
         $services = Service::orderBy('display_name')->get();
         $roles = Role::all();
-        return view('automated-tasks.create', compact('services', 'roles'));
+        return view('scheduled-tasks.create', compact('services', 'roles'));
     }
 
     public function store(Request $request)
@@ -39,14 +39,14 @@ class AutomatedTaskController extends Controller
         $validated['is_active'] = $request->has('is_active');
 
         AutomatedTask::create($validated);
-        return redirect()->route('automated-tasks.index')->with('success', 'Automation created successfully');
+        return redirect()->route('scheduled-tasks.index')->with('success', 'Automation created successfully');
     }
 
     public function edit(AutomatedTask $automatedTask)
     {
         $services = Service::orderBy('display_name')->get();
         $roles = Role::all();
-        return view('automated-tasks.edit', compact('automatedTask', 'services', 'roles'));
+        return view('scheduled-tasks.edit', compact('automatedTask', 'services', 'roles'));
     }
 
     public function update(Request $request, AutomatedTask $automatedTask)
@@ -66,13 +66,13 @@ class AutomatedTaskController extends Controller
         $validated['is_active'] = $request->has('is_active');
 
         $automatedTask->update($validated);
-        return redirect()->route('automated-tasks.index')->with('success', 'Automation updated successfully');
+        return redirect()->route('scheduled-tasks.index')->with('success', 'Automation updated successfully');
     }
 
     public function destroy(AutomatedTask $automatedTask)
     {
         $automatedTask->delete();
-        return redirect()->route('automated-tasks.index')->with('success', 'Automation deleted successfully');
+        return redirect()->route('scheduled-tasks.index')->with('success', 'Automation deleted successfully');
     }
 
     public function toggle(AutomatedTask $automatedTask)

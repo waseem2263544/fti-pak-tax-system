@@ -5,7 +5,7 @@
 @section('content')
 <div class="card">
     <div class="card-body" style="padding: 28px;">
-        <form method="POST" action="{{ route('automated-tasks.update', $automatedTask) }}">
+        <form method="POST" action="{{ route('scheduled-tasks.update', $automatedTask) }}">
             @csrf @method('PUT')
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -73,7 +73,7 @@
             </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-accent">Update Automation</button>
-                <a href="{{ route('automated-tasks.index') }}" class="btn btn-outline-primary">Cancel</a>
+                <a href="{{ route('scheduled-tasks.index') }}" class="btn btn-outline-primary">Cancel</a>
             </div>
         </form>
     </div>

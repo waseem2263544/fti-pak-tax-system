@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Automate Tasks')
-@section('page-title', 'Automate Tasks')
+@section('title', 'Scheduled Tasks')
+@section('page-title', 'Scheduled Tasks')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Configure rules to auto-create tasks based on deadlines, schedules, or events.</p>
-    <a href="{{ route('automated-tasks.create') }}" class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> New Automation</a>
+    <a href="{{ route('scheduled-tasks.create') }}" class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> New Automation</a>
 </div>
 
 @forelse($automations as $auto)
@@ -39,8 +39,8 @@
                     {{ $auto->is_active ? 'Active' : 'Paused' }}
                 </span>
                 <div class="d-flex gap-1">
-                    <a href="{{ route('automated-tasks.edit', $auto) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                    <form action="{{ route('automated-tasks.destroy', $auto) }}" method="POST" onsubmit="return confirm('Delete this automation?')">
+                    <a href="{{ route('scheduled-tasks.edit', $auto) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                    <form action="{{ route('scheduled-tasks.destroy', $auto) }}" method="POST" onsubmit="return confirm('Delete this automation?')">
                         @csrf @method('DELETE')
                         <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                     </form>
@@ -63,7 +63,7 @@
         <i class="bi bi-lightning-charge" style="font-size: 3rem; color: #e5e7eb;"></i>
         <h5 class="mt-3" style="color: var(--primary); font-weight: 700;">No automations yet</h5>
         <p style="color: #9ca3af; font-size: 0.85rem;">Create your first automation to auto-generate tasks based on deadlines or schedules.</p>
-        <a href="{{ route('automated-tasks.create') }}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i> Create Automation</a>
+        <a href="{{ route('scheduled-tasks.create') }}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i> Create Automation</a>
     </div>
 </div>
 @endforelse
@@ -74,7 +74,7 @@
 @section('scripts')
 <script>
 function toggleAutomation(id) {
-    fetch('/automated-tasks/' + id + '/toggle', {
+    fetch('/scheduled-tasks/' + id + '/toggle', {
         method: 'POST',
         headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json'}
     }).then(() => location.reload());

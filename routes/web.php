@@ -43,9 +43,9 @@ Route::middleware(['auth'])->group(function () {
     // Pending Proceedings
     Route::resource('proceedings', ProceedingController::class);
 
-    // Automate Tasks
-    Route::resource('automated-tasks', AutomatedTaskController::class)->except(['show']);
-    Route::post('automated-tasks/{automated_task}/toggle', [AutomatedTaskController::class, 'toggle'])->name('automated-tasks.toggle');
+    // Scheduled Tasks (Settings)
+    Route::resource('scheduled-tasks', AutomatedTaskController::class)->except(['show'])->parameters(['scheduled-tasks' => 'automated_task']);
+    Route::post('scheduled-tasks/{automated_task}/toggle', [AutomatedTaskController::class, 'toggle'])->name('scheduled-tasks.toggle');
 
     // File Management
     Route::get('files', [FileController::class, 'index'])->name('files.index');

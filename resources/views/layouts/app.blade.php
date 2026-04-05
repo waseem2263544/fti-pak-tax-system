@@ -372,9 +372,6 @@
                 <a href="{{ route('proceedings.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'proceedings.')) active @endif">
                     <i class="bi bi-bank2"></i> Proceedings
                 </a>
-                <a href="{{ route('automated-tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'automated-tasks.')) active @endif">
-                    <i class="bi bi-lightning-charge-fill"></i> Automate Tasks
-                </a>
 
                 @if(Auth::user()->hasRole('admin'))
                 <div class="sidebar-section-label">Administration</div>
@@ -389,6 +386,11 @@
                 </a>
                 <a href="{{ route('notifications.index') }}" class="@if(Route::currentRouteName() == 'notifications.index') active @endif">
                     <i class="bi bi-bell-fill"></i> Notifications
+                </a>
+
+                <div class="sidebar-section-label">Settings</div>
+                <a href="{{ route('scheduled-tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'scheduled-tasks.')) active @endif">
+                    <i class="bi bi-clock-history"></i> Scheduled Tasks
                 </a>
             </div>
 
