@@ -31,12 +31,12 @@
     <div class="col-md-3">
         <div class="card stat-card">
             <div class="d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background: var(--accent-glow);">
-                    <i class="bi bi-briefcase-fill" style="color: #8b9a00;"></i>
+                <div class="stat-icon" style="background: rgba(139,92,246,0.08);">
+                    <i class="bi bi-bank2" style="color: #7c3aed;"></i>
                 </div>
                 <div>
-                    <div class="stat-value">{{ $activeServices }}</div>
-                    <div class="stat-label">Active Services</div>
+                    <div class="stat-value">{{ $pendingProceedings }}</div>
+                    <div class="stat-label">Pending Proceedings</div>
                 </div>
             </div>
         </div>
@@ -62,7 +62,7 @@
                 </div>
                 <div>
                     <div class="stat-value">{{ $newFbrNotices }}</div>
-                    <div class="stat-label">FBR Notices</div>
+                    <div class="stat-label">Unread Notices</div>
                 </div>
             </div>
         </div>

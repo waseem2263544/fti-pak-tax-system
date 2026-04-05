@@ -19,7 +19,7 @@ class DashboardController extends Controller
 
         // Get dashboard stats
         $totalClients = Client::count();
-        $activeServices = \App\Models\ClientService::distinct('client_id')->count();
+        $pendingProceedings = \App\Models\Proceeding::whereIn('status', ['pending', 'adjourned'])->count();
         $pendingTasks = Task::where('status', 'pending')->count();
         $overdueTasks = Task::where('status', 'overdue')->count();
         $newFbrNotices = FbrNotice::where('status', 'new')->count();
@@ -49,7 +49,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboard', compact(
-            'totalClients', 'activeServices', 'pendingTasks', 'overdueTasks',
+            'totalClients', 'pendingProceedings', 'pendingTasks', 'overdueTasks',
             'newFbrNotices', 'escalatedNotices', 'myTasks', 'recentNotices',
             'unreadNotifications', 'recentClients'
         ));
