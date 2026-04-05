@@ -14,27 +14,27 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Task::with('createdBy', 'client', 'assignedUsers');
-
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
+        $baseQuery = Task::with('createdBy', 'client', 'assignedUsers');
 
         if ($request->client_id) {
-            $query->where('client_id', $request->client_id);
+            $baseQuery->where('client_id', $request->client_id);
         }
 
         if ($request->assigned_to) {
-            $query->whereHas('assignedUsers', function ($q) {
+            $baseQuery->whereHas('assignedUsers', function ($q) {
                 $q->where('user_id', request('assigned_to'));
             });
         }
 
-        $tasks = $query->orderBy('due_date')->paginate(15);
+        $pending = (clone $baseQuery)->where('status', 'pending')->orderBy('priority', 'desc')->orderBy('due_date')->get();
+        $inProgress = (clone $baseQuery)->where('status', 'in_progress')->orderBy('priority', 'desc')->orderBy('due_date')->get();
+        $completed = (clone $baseQuery)->where('status', 'completed')->orderByDesc('updated_at')->limit(20)->get();
+        $overdue = (clone $baseQuery)->where('status', 'overdue')->orderBy('due_date')->get();
+
         $clients = Client::orderBy('name')->get();
         $users = User::orderBy('name')->get();
 
-        return view('tasks.index', compact('tasks', 'clients', 'users'));
+        return view('tasks.index', compact('pending', 'inProgress', 'completed', 'overdue', 'clients', 'users'));
     }
 
     /**
