@@ -38,7 +38,7 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-2">
                     <label class="form-label">File No.</label>
-                    <input type="text" class="form-control" value="{{ $nextFileNo }}" disabled style="font-weight: 700; font-size: 1.1rem; text-align: center; background: #f8f9fb; color: var(--primary);">
+                    <input type="text" name="file_no" class="form-control" value="{{ $nextFileNo }}" placeholder="{{ $nextFileNo }}" style="font-weight: 700; font-size: 1.1rem; text-align: center; color: var(--primary);">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Client Name</label>
@@ -122,7 +122,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Reference</label>
-                    <input type="text" class="form-control" value="{{ $nextLetterRef }}" disabled style="font-weight: 700; font-family: monospace; background: #f8f9fb; color: var(--primary);">
+                    <input type="text" name="reference" class="form-control" value="{{ $nextLetterRef }}" placeholder="{{ $nextLetterRef }}" style="font-weight: 700; font-family: monospace; color: var(--primary);">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Client Name</label>

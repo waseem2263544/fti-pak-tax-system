@@ -27,11 +27,12 @@ class FileController extends Controller
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
+            'file_no' => 'nullable|integer',
             'description' => 'nullable|string|max:500',
         ]);
 
         FileNumber::create([
-            'file_no' => FileNumber::nextNumber(),
+            'file_no' => $request->file_no ?: FileNumber::nextNumber(),
             'client_id' => $request->client_id,
             'description' => $request->description,
         ]);
@@ -45,11 +46,23 @@ class FileController extends Controller
             'client_id' => 'required|exists:clients,id',
             'description' => 'required|string|max:500',
             'date' => 'required|date',
+            'reference' => 'nullable|string|max:255',
         ]);
 
+        $reference = $request->reference;
         $year = now()->year;
         $seq = LetterNumber::nextSequence();
-        $reference = 'FTI/' . str_pad($seq, 3, '0', STR_PAD_LEFT) . '/' . $year;
+
+        if (empty($reference)) {
+            $reference = 'FTI/' . str_pad($seq, 3, '0', STR_PAD_LEFT) . '/' . $year;
+        } else {
+            // Try to extract seq and year from custom reference
+            if (preg_match('/(\d+)\/(\d{2,4})$/', $reference, $m)) {
+                $seq = intval($m[1]);
+                $year = intval($m[2]);
+                if ($year < 100) $year += 2000;
+            }
+        }
 
         LetterNumber::create([
             'date' => $request->date,
