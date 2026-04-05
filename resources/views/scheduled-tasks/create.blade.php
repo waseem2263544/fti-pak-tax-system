@@ -39,18 +39,23 @@
                 <input type="text" name="description" class="form-control" value="{{ old('description') }}" placeholder="What this rule does...">
             </div>
 
+            <!-- Info box -->
+            <div class="mb-3" style="background: var(--accent-glow); border-radius: 10px; padding: 14px 18px; border: 1px solid rgba(215,223,39,0.2);">
+                <div style="font-size: 0.85rem; color: var(--primary);"><i class="bi bi-info-circle me-1"></i> <strong>How it works:</strong> On the scheduled day, the system will find <strong>all clients</strong> that have the selected service as an <strong>active service</strong>, then auto-create a task for each client and assign it to the selected employee.</div>
+            </div>
+
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Service</label>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Service to look for</label>
                     <select name="service_id" class="form-select" required>
                         <option value="">Select Service</option>
                         @foreach($services as $service)
                             <option value="{{ $service->id }}">{{ $service->display_name }}</option>
                         @endforeach
                     </select>
-                    <small class="text-muted">Tasks will be created for all clients with this active service.</small>
+                    <small class="text-muted">Clients with this active service will get a task.</small>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
                     <label class="form-label">Assign Tasks To</label>
                     <select name="assign_to_user" class="form-select" required>
                         <option value="">Select Employee</option>
@@ -59,7 +64,18 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Run At Time</label>
+                    <select name="run_at_time" class="form-select">
+                        <option value="08:00" selected>8:00 AM</option>
+                        <option value="09:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="06:00">6:00 AM</option>
+                        <option value="07:00">7:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
                     <label class="form-label">Priority</label>
                     <select name="priority" class="form-select" required>
                         <option value="0">Low</option>

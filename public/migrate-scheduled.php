@@ -15,4 +15,11 @@ try {
 $pdo->exec("ALTER TABLE automated_tasks MODIFY trigger_type ENUM('monthly','yearly','weekly','daily','deadline_based','date_based','recurring','event_based') NOT NULL DEFAULT 'monthly'");
 echo "Updated trigger_type enum.\n";
 
+try {
+    $pdo->exec("ALTER TABLE automated_tasks ADD COLUMN run_at_time VARCHAR(10) DEFAULT '08:00' AFTER assign_to_user");
+    echo "Added run_at_time column.\n";
+} catch (Exception $e) {
+    echo "run_at_time: " . $e->getMessage() . "\n";
+}
+
 echo "Done!\n</pre>";

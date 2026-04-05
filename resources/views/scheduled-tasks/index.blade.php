@@ -29,8 +29,9 @@
                         @else
                             <i class="bi bi-calendar-day me-1"></i>Every day
                         @endif
-                        &middot; <strong>{{ $auto->service->display_name ?? 'All' }}</strong>
-                        &middot; Assigned to <strong>{{ $auto->assignedUser->name ?? '-' }}</strong>
+                        at <strong>{{ $auto->run_at_time ?? '08:00' }}</strong>
+                        &middot; Looks for clients with <strong>{{ $auto->service->display_name ?? 'All' }}</strong>
+                        &middot; Assigns to <strong>{{ $auto->assignedUser->name ?? '-' }}</strong>
                     </div>
                     <div style="font-size: 0.78rem; color: #9ca3af; margin-top: 4px;">
                         Task: "{{ $auto->task_template }}"

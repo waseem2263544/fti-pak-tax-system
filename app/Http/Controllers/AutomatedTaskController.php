@@ -33,6 +33,7 @@ class AutomatedTaskController extends Controller
             'task_template' => 'required|string|max:255',
             'priority' => 'required|in:0,1,2',
             'assign_to_user' => 'required|exists:users,id',
+            'run_at_time' => 'nullable|string|max:10',
         ]);
 
         $validated['is_active'] = $request->has('is_active');

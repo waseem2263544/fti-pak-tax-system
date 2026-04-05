@@ -9,7 +9,7 @@ class AutomatedTask extends Model
     protected $fillable = [
         'name', 'description', 'trigger_type', 'trigger_value',
         'service_id', 'task_template', 'priority', 'assign_to_user',
-        'is_active', 'last_run_at', 'next_run_at',
+        'run_at_time', 'is_active', 'last_run_at', 'next_run_at',
     ];
 
     protected $casts = [
