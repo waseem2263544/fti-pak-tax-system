@@ -12,6 +12,7 @@ use App\Http\Controllers\ProceedingController;
 use App\Http\Controllers\AutomatedTaskController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ClientDocumentController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
@@ -80,6 +81,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('auth/microsoft/disconnect', [MicrosoftAuthController::class, 'disconnect'])->name('auth.microsoft.disconnect');
     Route::get('auth/microsoft/test', [MicrosoftAuthController::class, 'testFetch'])->name('auth.microsoft.test');
     Route::get('auth/microsoft/refresh', [MicrosoftAuthController::class, 'refreshToken'])->name('auth.microsoft.refresh');
+
+    // Client Documents
+    Route::get('client-documents', [ClientDocumentController::class, 'index'])->name('client-documents.index');
+    Route::post('client-documents/{client}/update-link', [ClientDocumentController::class, 'updateLink'])->name('client-documents.update-link');
+    Route::post('client-documents/link-folder', [ClientDocumentController::class, 'linkFolder'])->name('client-documents.link-folder');
 
     // News
     Route::get('news', [NewsController::class, 'index'])->name('news.index');

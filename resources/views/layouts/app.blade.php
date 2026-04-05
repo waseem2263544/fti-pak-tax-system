@@ -406,6 +406,9 @@
                 <a href="{{ route('fbr-notices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'fbr-notices.')) active @endif">
                     <i class="bi bi-envelope-paper-fill"></i> FBR Notifications
                 </a>
+                <a href="{{ route('client-documents.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'client-documents.')) active @endif">
+                    <i class="bi bi-cloud-fill"></i> Client Documents
+                </a>
                 <a href="{{ route('files.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'files.')) active @endif">
                     <i class="bi bi-folder-fill"></i> File Management
                 </a>
