@@ -1,6 +1,6 @@
 <?php
-set_time_limit(120);
-echo "<pre><h2>Manual FBR Notice Fetch</h2>\n";
+set_time_limit(300);
+echo "<pre><h2>Fetching FBR Notices</h2>\n";
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
@@ -9,23 +9,24 @@ $kernel->bootstrap();
 
 use App\Models\MicrosoftEmailSettings;
 use App\Models\FbrNotice;
+use App\Models\Client;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 $settings = MicrosoftEmailSettings::first();
 if (!$settings) { die("No email connected.\n"); }
 
 echo "Email: {$settings->email_address}\n";
-echo "FBR Sender filter: {$settings->fbr_sender_email}\n";
-echo "Token expires: {$settings->token_expires_at}\n\n";
+echo "FBR Sender: {$settings->fbr_sender_email}\n\n";
 
-// First, let's see ALL recent emails (not just FBR)
-echo "=== Last 10 emails in inbox ===\n\n";
-
+// Fetch last 50 emails (no filter - filter in PHP)
 $response = Http::withHeaders([
     'Authorization' => 'Bearer ' . $settings->access_token,
 ])->get('https://graph.microsoft.com/v1.0/me/mailfolders/inbox/messages', [
-    '$select' => 'id,subject,receivedDateTime,from',
-    '$top' => 10,
+    '$select' => 'id,subject,bodyPreview,body,receivedDateTime,from',
+    '$top' => 50,
     '$orderby' => 'receivedDateTime desc',
 ]);
 
@@ -34,40 +35,126 @@ if (!$response->successful()) {
 }
 
 $emails = $response->json()['value'] ?? [];
-foreach ($emails as $i => $email) {
-    $from = $email['from']['emailAddress']['address'] ?? 'unknown';
-    $subject = $email['subject'] ?? 'No subject';
-    $date = $email['receivedDateTime'] ?? '';
-    echo ($i+1) . ". FROM: $from\n   SUBJECT: $subject\n   DATE: $date\n\n";
-}
+echo "Fetched " . count($emails) . " emails from inbox.\n\n";
 
-// Now try to fetch FBR-specific emails
-echo "\n=== Emails from FBR ({$settings->fbr_sender_email}) ===\n\n";
+$imported = 0;
+$skipped = 0;
+$existing = 0;
 
-$fbrResponse = Http::withHeaders([
-    'Authorization' => 'Bearer ' . $settings->access_token,
-])->get('https://graph.microsoft.com/v1.0/me/mailfolders/inbox/messages', [
-    '$filter' => "from/emailAddress/address eq '{$settings->fbr_sender_email}'",
-    '$select' => 'id,subject,receivedDateTime,from',
-    '$top' => 10,
-    '$orderby' => 'receivedDateTime desc',
-]);
+foreach ($emails as $email) {
+    $from = strtolower($email['from']['emailAddress']['address'] ?? '');
 
-if (!$fbrResponse->successful()) {
-    echo "Filter error: " . $fbrResponse->body() . "\n";
-    echo "\nTrying without filter...\n";
-} else {
-    $fbrEmails = $fbrResponse->json()['value'] ?? [];
-    if (empty($fbrEmails)) {
-        echo "No emails found from {$settings->fbr_sender_email}\n";
-        echo "Check if FBR sends from a different email address.\n";
-        echo "You can update the sender email in Settings > Email Integration.\n";
-    } else {
-        foreach ($fbrEmails as $i => $email) {
-            echo ($i+1) . ". " . $email['subject'] . " (" . $email['receivedDateTime'] . ")\n";
+    // Only process FBR emails
+    if (strpos($from, 'fbr.gov.pk') === false) {
+        $skipped++;
+        continue;
+    }
+
+    // Check if already imported
+    if (FbrNotice::where('email_message_id', $email['id'])->exists()) {
+        $existing++;
+        continue;
+    }
+
+    $subject = $email['subject'] ?? '';
+    $bodyPreview = $email['bodyPreview'] ?? '';
+    $bodyContent = $email['body']['content'] ?? $bodyPreview;
+    $receivedDate = Carbon::parse($email['receivedDateTime']);
+
+    // Extract notice section from subject
+    $noticeSection = 'General';
+    $patterns = [
+        '/Income Tax/i' => 'Income Tax',
+        '/Sales Tax/i' => 'Sales Tax',
+        '/KPRA/i' => 'KPRA',
+        '/SECP/i' => 'SECP',
+        '/Withholding/i' => 'Withholding Tax',
+        '/GST/i' => 'GST',
+        '/Assessment/i' => 'Assessment',
+        '/Audit/i' => 'Audit',
+        '/122\(9\)/i' => 'Section 122(9)',
+        '/122\(5A\)/i' => 'Section 122(5A)',
+        '/114\(\d+\)/i' => 'Section 114',
+        '/111\(\d+\)/i' => 'Section 111',
+        '/137\(\d+\)/i' => 'Section 137',
+        '/205/i' => 'Section 205',
+        '/CVT/i' => 'CVT',
+    ];
+    foreach ($patterns as $pattern => $section) {
+        if (preg_match($pattern, $subject)) {
+            $noticeSection = $section;
+            break;
         }
     }
+
+    // Extract tax year
+    $taxYear = null;
+    if (preg_match('/(\d{4})-(\d{2,4})/', $bodyPreview . $bodyContent, $matches)) {
+        $taxYear = $matches[1] . '-' . $matches[2];
+    } else {
+        $month = now()->month;
+        $year = now()->year;
+        if ($month < 7) $year--;
+        $taxYear = $year . '-' . str_pad($year + 1 - 2000, 2, '0', STR_PAD_LEFT);
+    }
+
+    // Try to match client by NTN/name in subject or body
+    $clientId = null;
+    $allContent = $subject . ' ' . $bodyPreview . ' ' . $bodyContent;
+    $clients = Client::all();
+    foreach ($clients as $client) {
+        if (!empty($client->fbr_username) && stripos($allContent, $client->fbr_username) !== false) {
+            $clientId = $client->id;
+            break;
+        }
+        if (stripos($allContent, $client->name) !== false) {
+            $clientId = $client->id;
+            break;
+        }
+    }
+
+    // Create notice
+    $notice = FbrNotice::create([
+        'email_message_id' => $email['id'],
+        'subject' => $subject,
+        'body' => $bodyPreview,
+        'raw_content' => $bodyContent,
+        'notice_section' => $noticeSection,
+        'tax_year' => $taxYear,
+        'notice_date' => $receivedDate->toDateString(),
+        'email_received_at' => $receivedDate->toDateString(),
+        'sender_email' => $from,
+        'client_id' => $clientId,
+        'status' => 'new',
+    ]);
+
+    $clientName = $clientId ? Client::find($clientId)->name : 'Unassigned';
+    echo "  IMPORTED: {$subject}\n";
+    echo "    Section: {$noticeSection} | Tax Year: {$taxYear} | Client: {$clientName}\n\n";
+
+    // Notify admins
+    $admins = User::whereHas('roles', fn($q) => $q->where('name', 'admin'))->get();
+    foreach ($admins as $admin) {
+        Notification::create([
+            'user_id' => $admin->id,
+            'client_id' => $clientId,
+            'title' => 'New FBR Notice: ' . $noticeSection,
+            'message' => 'Subject: ' . $subject . ' (Tax Year: ' . $taxYear . ')',
+            'type' => 'fbr_notice',
+            'priority' => 'high',
+            'related_fbr_notice_id' => $notice->id,
+        ]);
+    }
+
+    $imported++;
 }
 
-echo "\nExisting notices in DB: " . FbrNotice::count() . "\n";
+$settings->update(['last_synced_at' => now()]);
+
+echo "========================================\n";
+echo "FETCH COMPLETE!\n";
+echo "Imported: $imported\n";
+echo "Already existed: $existing\n";
+echo "Non-FBR emails skipped: $skipped\n";
+echo "Total notices in DB: " . FbrNotice::count() . "\n";
 echo "</pre>";

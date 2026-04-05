@@ -69,12 +69,11 @@ class FetchFbrNotices extends Command
     private function fetchAndProcessEmails($settings, $user)
     {
         try {
-            // Fetch emails from FBR sender
+            // Fetch recent emails (filter in PHP, not Graph API)
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $settings->access_token,
             ])->get('https://graph.microsoft.com/v1.0/me/mailfolders/inbox/messages', [
-                '$filter' => "from/emailAddress/address eq '{$settings->fbr_sender_email}'",
-                '$select' => 'id,subject,bodyPreview,receivedDateTime,sender,body',
+                '$select' => 'id,subject,bodyPreview,receivedDateTime,from,body',
                 '$top' => 50,
                 '$orderby' => 'receivedDateTime desc',
             ]);
@@ -87,6 +86,10 @@ class FetchFbrNotices extends Command
             $emails = $response->json()['value'] ?? [];
 
             foreach ($emails as $email) {
+                $from = strtolower($email['from']['emailAddress']['address'] ?? '');
+                if (strpos($from, 'fbr.gov.pk') === false) {
+                    continue;
+                }
                 $this->processEmail($email, $user, $settings);
             }
 
