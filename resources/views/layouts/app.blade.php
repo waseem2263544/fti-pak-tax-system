@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #303a50;
@@ -329,6 +330,24 @@
             display: flex; align-items: center; justify-content: center;
         }
 
+        /* ── TOM SELECT ── */
+        .ts-wrapper { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .ts-wrapper .ts-control {
+            border: 1.5px solid #e5e7eb !important;
+            border-radius: 10px !important;
+            padding: 7px 12px !important;
+            font-size: 0.85rem !important;
+            min-height: 40px !important;
+            background: #fff !important;
+        }
+        .ts-wrapper.focus .ts-control { border-color: var(--accent) !important; box-shadow: 0 0 0 4px rgba(215,223,39,0.12) !important; }
+        .ts-wrapper .ts-dropdown { border-radius: 10px !important; border: 1.5px solid #e5e7eb !important; box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important; margin-top: 4px !important; }
+        .ts-wrapper .ts-dropdown .option { font-size: 0.85rem !important; padding: 8px 14px !important; }
+        .ts-wrapper .ts-dropdown .option.active { background: var(--accent-glow) !important; color: var(--primary) !important; }
+        .ts-wrapper .ts-dropdown .option:hover { background: #f8f9fb !important; }
+        .ts-wrapper .ts-control > input { font-size: 0.85rem !important; }
+        .ts-wrapper.form-select-sm .ts-control { min-height: 32px !important; padding: 4px 10px !important; font-size: 0.82rem !important; }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main-wrapper { margin-left: 0; }
@@ -447,6 +466,22 @@
     @endguest
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('select.searchable, select[name="client_id"], select[name="service_id"], select[name="assigned_to"], select[name="assigned_users[]"], select[name="stage"], select[name="status"], select[name="trigger_type"], select[name="service"], select[name="roles[]"], select[name="shareholders[]"], select[name="services[]"]').forEach(function(el) {
+                if (el.tomselect) return;
+                new TomSelect(el, {
+                    allowEmptyOption: true,
+                    placeholder: el.options[0] && el.options[0].value === '' ? el.options[0].text : 'Select...',
+                    controlInput: '<input>',
+                    render: {
+                        no_results: function() { return '<div class="no-results" style="padding:10px;color:#9ca3af;font-size:0.85rem;">No match found</div>'; }
+                    }
+                });
+            });
+        });
+    </script>
     @auth
     <script>
         function loadNotifications() {
