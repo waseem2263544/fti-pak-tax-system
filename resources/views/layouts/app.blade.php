@@ -376,14 +376,15 @@
                 <a href="{{ route('tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'tasks.')) active @endif">
                     <i class="bi bi-check2-square"></i> Tasks
                 </a>
+                <a href="{{ route('proceedings.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'proceedings.')) active @endif">
+                    <i class="bi bi-bank2"></i> Proceedings
+                </a>
                 <a href="{{ route('fbr-notices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'fbr-notices.')) active @endif">
                     <i class="bi bi-envelope-paper-fill"></i> FBR Notifications
                 </a>
-
                 <a href="{{ route('files.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'files.')) active @endif">
                     <i class="bi bi-folder-fill"></i> File Management
                 </a>
-
                 <a href="{{ route('news.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'news.')) active @endif">
                     <i class="bi bi-newspaper"></i> Tax News
                 </a>
@@ -392,8 +393,8 @@
                 <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
                     <i class="bi bi-arrow-repeat"></i> Processes
                 </a>
-                <a href="{{ route('proceedings.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'proceedings.')) active @endif">
-                    <i class="bi bi-bank2"></i> Proceedings
+                <a href="{{ route('mini-apps.index') }}" class="@if(Route::currentRouteName() == 'mini-apps.index') active @endif">
+                    <i class="bi bi-puzzle-fill"></i> Mini Apps
                 </a>
 
                 @if(Auth::user()->hasRole('admin'))
@@ -401,18 +402,8 @@
                 <a href="{{ route('employees.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'employees.')) active @endif">
                     <i class="bi bi-person-badge-fill"></i> Employees
                 </a>
-                @endif
-
-                <div class="sidebar-section-label">Workspace</div>
-                <a href="{{ route('mini-apps.index') }}" class="@if(Route::currentRouteName() == 'mini-apps.index') active @endif">
-                    <i class="bi bi-puzzle-fill"></i> Mini Apps
-                </a>
-                <div class="sidebar-section-label">Settings</div>
                 <a href="{{ route('settings.email') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'settings.')) active @endif">
                     <i class="bi bi-envelope-at"></i> Email Integration
-                </a>
-                <a href="{{ route('scheduled-tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'scheduled-tasks.')) active @endif">
-                    <i class="bi bi-clock-history"></i> Scheduled Tasks
                 </a>
             </div>
 

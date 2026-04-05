@@ -21,9 +21,14 @@
             </select>
         </form>
     </div>
-    <a href="{{ route('tasks.create') }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus"></i> New Task
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('scheduled-tasks.index') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-clock-history"></i> Scheduled
+        </a>
+        <a href="{{ route('tasks.create') }}" class="btn btn-accent btn-sm">
+            <i class="bi bi-plus-lg"></i> New Task
+        </a>
+    </div>
 </div>
 
 <div class="card">
