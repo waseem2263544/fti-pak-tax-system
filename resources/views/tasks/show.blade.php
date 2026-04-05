@@ -108,7 +108,7 @@
                     </form>
                     @endif
                 </div>
-                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #4b5563; line-height: 1.6;">{!! $comment->rendered_body !!}</p>
+                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #4b5563; line-height: 1.6;">{{ $comment->body }}</p>
             </div>
         </div>
         @empty

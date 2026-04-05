@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;">
-    <title>@yield('title', 'FTI Pak Tax Management')</title>
+<title>@yield('title', 'FTI Pak Tax Management')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -338,8 +337,10 @@
 
         /* Pagination */
         .pagination { gap: 4px; }
-        .page-link { border-radius: 8px !important; border: 1px solid #e8eaed; color: var(--primary); font-size: 0.82rem; font-weight: 500; }
+        .page-link { border-radius: 8px !important; border: 1px solid #e8eaed; color: var(--primary); font-size: 0.82rem; font-weight: 500; padding: 6px 12px; }
         .page-item.active .page-link { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .page-link svg { width: 14px; height: 14px; }
+        .page-item.disabled .page-link { color: #d1d5db; }
 
         /* ── SCROLLBAR ── */
         ::-webkit-scrollbar { width: 5px; }
@@ -559,121 +560,6 @@
     }
     </script>
 
-    <!-- @Mention System -->
-    <style>
-        .mention-container { position: relative; }
-        .mention-dropdown {
-            display: none; position: absolute; bottom: 100%; left: 0; right: 0;
-            background: #fff; border-radius: 10px; border: 1.5px solid #e5e7eb;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 1000;
-            max-height: 200px; overflow-y: auto; margin-bottom: 4px;
-        }
-        .mention-dropdown.show { display: block; }
-        .mention-item {
-            display: flex; align-items: center; gap: 10px; padding: 8px 14px;
-            cursor: pointer; font-size: 0.85rem; transition: background 0.1s;
-        }
-        .mention-item:hover, .mention-item.active { background: rgba(215,223,39,0.08); }
-        .mention-item .avatar {
-            width: 28px; height: 28px; border-radius: 6px;
-            background: linear-gradient(135deg, var(--accent) 0%, #a8b01a 100%);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.6rem; color: var(--primary);
-        }
-        .mention-tag {
-            background: rgba(215,223,39,0.15); color: var(--primary);
-            padding: 1px 6px; border-radius: 4px; font-weight: 600;
-            font-size: 0.85rem;
-        }
-    </style>
-    <script>
-    // @Mention system - init all textareas now and any added later
-    var mentionItems = [];
-    var mentionActiveIdx = 0;
-
-    function initMentions() {
-        var textareas = document.querySelectorAll('textarea[name="body"]');
-        console.log('Mention init: found ' + textareas.length + ' textareas');
-        textareas.forEach(function(ta) {
-            if (ta.dataset.mentionInit) return;
-            ta.dataset.mentionInit = '1';
-            console.log('Mention: initialized textarea');
-
-            // Wrap textarea in a positioned container
-            var wrapper = document.createElement('div');
-            wrapper.style.position = 'relative';
-            wrapper.style.flex = '1';
-            ta.parentNode.insertBefore(wrapper, ta);
-            wrapper.appendChild(ta);
-
-            var dd = document.createElement('div');
-            dd.className = 'mention-dropdown';
-            wrapper.appendChild(dd);
-
-            ta.addEventListener('input', function() {
-                var val = ta.value, pos = ta.selectionStart;
-                var before = val.substring(0, pos);
-                var atIdx = before.lastIndexOf('@');
-                if (atIdx >= 0 && (atIdx === 0 || ' \n'.includes(before[atIdx - 1]))) {
-                    var q = before.substring(atIdx + 1);
-                    if (q.length >= 1 && !q.includes(' ') && !q.includes('\n')) {
-                        mentionFetch(q, dd, ta);
-                        return;
-                    }
-                }
-                dd.classList.remove('show');
-            });
-
-            ta.addEventListener('keydown', function(e) {
-                if (!dd.classList.contains('show')) return;
-                if (e.key === 'ArrowDown') { e.preventDefault(); mentionActiveIdx = Math.min(mentionActiveIdx + 1, mentionItems.length - 1); mentionHighlight(dd); }
-                else if (e.key === 'ArrowUp') { e.preventDefault(); mentionActiveIdx = Math.max(mentionActiveIdx - 1, 0); mentionHighlight(dd); }
-                else if (e.key === 'Enter' || e.key === 'Tab') { if (mentionItems.length > 0) { e.preventDefault(); mentionSelect(mentionItems[mentionActiveIdx], ta, dd); } }
-                else if (e.key === 'Escape') { dd.classList.remove('show'); }
-            });
-        });
-    }
-
-    function mentionFetch(q, dd, ta) {
-        console.log('Mention: fetching users for "' + q + '"');
-        fetch('/mentions/users?q=' + encodeURIComponent(q))
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                mentionItems = data;
-                mentionActiveIdx = 0;
-                if (!data.length) { dd.classList.remove('show'); return; }
-                dd.innerHTML = data.map(function(u, i) {
-                    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '">'
-                        + '<div class="avatar">' + u.initials + '</div>'
-                        + '<span style="font-weight:600;color:var(--primary);">' + u.name + '</span></div>';
-                }).join('');
-                dd.classList.add('show');
-                dd.querySelectorAll('.mention-item').forEach(function(el, i) {
-                    el.addEventListener('mousedown', function(e) { e.preventDefault(); mentionSelect(data[i], ta, dd); });
-                });
-            }).catch(function() { dd.classList.remove('show'); });
-    }
-
-    function mentionSelect(user, ta, dd) {
-        var val = ta.value, pos = ta.selectionStart;
-        var before = val.substring(0, pos);
-        var atIdx = before.lastIndexOf('@');
-        var after = val.substring(pos);
-        var insert = '@[user:' + user.id + ']' + user.name + ' ';
-        ta.value = val.substring(0, atIdx) + insert + after;
-        var np = atIdx + insert.length;
-        ta.focus();
-        ta.setSelectionRange(np, np);
-        dd.classList.remove('show');
-    }
-
-    function mentionHighlight(dd) {
-        dd.querySelectorAll('.mention-item').forEach(function(el, i) { el.classList.toggle('active', i === mentionActiveIdx); });
-    }
-
-    // Run after full page load (including yield scripts content)
-    window.addEventListener('load', initMentions);
-    </script>
     @endauth
     @yield('scripts')
 </body>

@@ -54,7 +54,6 @@ class Client extends Model
     public function activeServices()
     {
         return $this->belongsToMany(Service::class, 'client_services')
-            ->withPivot('next_deadline', 'reminder_days')
             ->withTimestamps();
     }
 

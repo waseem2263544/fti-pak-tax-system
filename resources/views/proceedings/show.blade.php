@@ -85,7 +85,7 @@
                     <form method="POST" action="{{ route('comments.destroy', $comment) }}" class="d-inline" onsubmit="return confirm('Delete?')">@csrf @method('DELETE')<button class="btn btn-sm" style="color: #d1d5db;"><i class="bi bi-trash" style="font-size: 0.75rem;"></i></button></form>
                     @endif
                 </div>
-                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #4b5563; line-height: 1.6;">{!! $comment->rendered_body !!}</p>
+                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #4b5563; line-height: 1.6;">{{ $comment->body }}</p>
             </div>
         </div>
         @empty
