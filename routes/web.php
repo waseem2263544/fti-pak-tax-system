@@ -11,6 +11,8 @@ use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\ProceedingController;
 use App\Http\Controllers\AutomatedTaskController;
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\MicrosoftAuthController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -60,6 +62,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('notifications/latest', [NotificationController::class, 'latest'])->name('notifications.latest');
     Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+
+    // Settings
+    Route::get('settings/email', [SettingsController::class, 'email'])->name('settings.email');
+    Route::post('settings/email/update-sender', [SettingsController::class, 'updateSender'])->name('settings.email.update-sender');
+
+    // Microsoft Auth
+    Route::get('auth/microsoft', [MicrosoftAuthController::class, 'redirect'])->name('auth.microsoft.redirect');
+    Route::get('auth/microsoft/callback', [MicrosoftAuthController::class, 'callback'])->name('auth.microsoft.callback');
+    Route::post('auth/microsoft/disconnect', [MicrosoftAuthController::class, 'disconnect'])->name('auth.microsoft.disconnect');
+    Route::get('auth/microsoft/test', [MicrosoftAuthController::class, 'testFetch'])->name('auth.microsoft.test');
 
     Route::get('/mini-apps', function () {
         return view('mini-apps.index');

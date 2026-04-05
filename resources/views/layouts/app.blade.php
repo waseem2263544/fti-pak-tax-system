@@ -389,6 +389,9 @@
                 </a>
 
                 <div class="sidebar-section-label">Settings</div>
+                <a href="{{ route('settings.email') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'settings.')) active @endif">
+                    <i class="bi bi-envelope-at"></i> Email Integration
+                </a>
                 <a href="{{ route('scheduled-tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'scheduled-tasks.')) active @endif">
                     <i class="bi bi-clock-history"></i> Scheduled Tasks
                 </a>
