@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Process;
+use App\Models\Task;
+use App\Models\Notification;
 use App\Models\Client;
 use App\Models\Service;
 use App\Models\User;
@@ -52,7 +54,8 @@ class ProcessController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        Process::create($validated);
+        $process = Process::create($validated);
+        $this->createTaskForAssignment($process);
         return redirect()->route('processes.index')->with('success', 'Process created successfully');
     }
 
@@ -85,7 +88,13 @@ class ProcessController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        $oldAssignedTo = $process->assigned_to;
         $process->update($validated);
+
+        if ($validated['assigned_to'] && $validated['assigned_to'] != $oldAssignedTo) {
+            $this->createTaskForAssignment($process);
+        }
+
         return redirect()->route('processes.show', $process)->with('success', 'Process updated successfully');
     }
 
@@ -93,6 +102,34 @@ class ProcessController extends Controller
     {
         $process->delete();
         return redirect()->route('processes.index')->with('success', 'Process deleted successfully');
+    }
+
+    private function createTaskForAssignment($process)
+    {
+        if (!$process->assigned_to) return;
+
+        $process->load('client', 'service');
+        $task = Task::create([
+            'title' => "[Process] {$process->title}",
+            'description' => "Process assigned to you.\nService: {$process->service->display_name}\nClient: {$process->client->name}\nStage: " . ucfirst(str_replace('_', ' ', $process->stage)),
+            'client_id' => $process->client_id,
+            'created_by' => auth()->id(),
+            'status' => 'pending',
+            'due_date' => $process->due_date,
+            'priority' => 1,
+        ]);
+
+        $task->assignedUsers()->attach($process->assigned_to);
+
+        Notification::create([
+            'user_id' => $process->assigned_to,
+            'client_id' => $process->client_id,
+            'title' => 'New Process Assigned',
+            'message' => "{$process->title} - {$process->service->display_name}",
+            'type' => 'task',
+            'priority' => 'medium',
+            'related_task_id' => $task->id,
+        ]);
     }
 
     public function updateStage(Request $request, Process $process)
