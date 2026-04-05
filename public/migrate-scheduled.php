@@ -29,6 +29,16 @@ try {
     echo "due_in_days: " . $e->getMessage() . "\n";
 }
 
+try {
+    $pdo->exec("ALTER TABLE automated_tasks ADD COLUMN run_months JSON NULL AFTER due_in_days");
+    echo "Added run_months column.\n";
+} catch (Exception $e) {
+    echo "run_months: " . $e->getMessage() . "\n";
+}
+
+$pdo->exec("ALTER TABLE automated_tasks MODIFY trigger_type ENUM('monthly','quarterly','yearly','weekly','daily','deadline_based','date_based','recurring','event_based') NOT NULL DEFAULT 'monthly'");
+echo "Updated trigger_type enum with quarterly.\n";
+
 $pdo->exec("CREATE TABLE IF NOT EXISTS `comments` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NOT NULL,

@@ -16,6 +16,7 @@
                     <label class="form-label">Frequency</label>
                     <select name="trigger_type" class="form-select" required>
                         <option value="monthly" {{ $automatedTask->trigger_type == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                        <option value="quarterly" {{ $automatedTask->trigger_type == 'quarterly' ? 'selected' : '' }}>Quarterly (Jan, Apr, Jul, Oct)</option>
                         <option value="yearly" {{ $automatedTask->trigger_type == 'yearly' ? 'selected' : '' }}>Yearly</option>
                         <option value="weekly" {{ $automatedTask->trigger_type == 'weekly' ? 'selected' : '' }}>Weekly</option>
                         <option value="daily" {{ $automatedTask->trigger_type == 'daily' ? 'selected' : '' }}>Daily</option>
@@ -26,6 +27,20 @@
                     <input type="text" name="trigger_value" class="form-control" value="{{ old('trigger_value', $automatedTask->trigger_value) }}" placeholder="Day or date">
                 </div>
             </div>
+            @if($automatedTask->trigger_type == 'monthly')
+            <div class="mb-3">
+                <label class="form-label">Run in specific months only <small class="text-muted">(optional)</small></label>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] as $i => $month)
+                    <div class="form-check" style="min-width: 80px;">
+                        <input type="checkbox" name="run_months[]" value="{{ $i + 1 }}" class="form-check-input" id="month{{ $i + 1 }}"
+                            {{ in_array($i + 1, $automatedTask->run_months ?? []) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="month{{ $i + 1 }}" style="font-size: 0.85rem;">{{ $month }}</label>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
             <div class="mb-3">
                 <label class="form-label">Description</label>
                 <input type="text" name="description" class="form-control" value="{{ old('description', $automatedTask->description) }}">

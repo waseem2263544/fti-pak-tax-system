@@ -9,10 +9,11 @@ class AutomatedTask extends Model
     protected $fillable = [
         'name', 'description', 'trigger_type', 'trigger_value',
         'service_id', 'task_template', 'priority', 'assign_to_user',
-        'run_at_time', 'due_in_days', 'is_active', 'last_run_at', 'next_run_at',
+        'run_at_time', 'due_in_days', 'run_months', 'is_active', 'last_run_at', 'next_run_at',
     ];
 
     protected $casts = [
+        'run_months' => 'array',
         'is_active' => 'boolean',
         'last_run_at' => 'datetime',
         'next_run_at' => 'datetime',
@@ -25,23 +26,40 @@ class AutomatedTask extends Model
     {
         $today = now();
 
+        // Check if restricted to specific months
+        if (!empty($this->run_months)) {
+            $months = is_array($this->run_months) ? $this->run_months : json_decode($this->run_months, true);
+            if (is_array($months) && count($months) > 0) {
+                if (!in_array((int) $today->month, $months)) {
+                    return false;
+                }
+            }
+        }
+
         switch ($this->trigger_type) {
             case 'monthly':
-                // trigger_value = day of month (1-31)
                 $targetDay = (int) $this->trigger_value;
                 $lastDay = (int) $today->daysInMonth;
-                // If target day exceeds month's days, run on last day
                 if ($targetDay > $lastDay) {
                     return (int) $today->day === $lastDay;
                 }
                 return (int) $today->day === $targetDay;
 
+            case 'quarterly':
+                // trigger_value = day of month, runs in months 1,4,7,10
+                $quarterMonths = [1, 4, 7, 10];
+                if (!in_array((int) $today->month, $quarterMonths)) {
+                    return false;
+                }
+                $targetDay = (int) $this->trigger_value;
+                $lastDay = (int) $today->daysInMonth;
+                if ($targetDay > $lastDay) return (int) $today->day === $lastDay;
+                return (int) $today->day === $targetDay;
+
             case 'yearly':
-                // trigger_value = "MM-DD" e.g. "09-30" for Sept 30
                 return $today->format('m-d') === $this->trigger_value;
 
             case 'weekly':
-                // trigger_value = day of week (0=Sun, 1=Mon...6=Sat)
                 return (int) $today->dayOfWeek === (int) $this->trigger_value;
 
             case 'daily':

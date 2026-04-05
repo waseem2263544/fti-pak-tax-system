@@ -17,6 +17,7 @@
                     <label class="form-label">Frequency</label>
                     <select name="trigger_type" id="triggerType" class="form-select" required onchange="updateTriggerValue()">
                         <option value="monthly" selected>Monthly</option>
+                        <option value="quarterly">Quarterly (Jan, Apr, Jul, Oct)</option>
                         <option value="yearly">Yearly</option>
                         <option value="weekly">Weekly</option>
                         <option value="daily">Daily</option>
@@ -38,6 +39,19 @@
             <div class="mb-3">
                 <label class="form-label">Description <small class="text-muted">(optional)</small></label>
                 <input type="text" name="description" class="form-control" value="{{ old('description') }}" placeholder="What this rule does...">
+            </div>
+
+            <!-- Specific months (optional) -->
+            <div class="mb-3" id="monthsGroup">
+                <label class="form-label">Run in specific months only <small class="text-muted">(optional - leave unchecked for every month)</small></label>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] as $i => $month)
+                    <div class="form-check" style="min-width: 80px;">
+                        <input type="checkbox" name="run_months[]" value="{{ $i + 1 }}" class="form-check-input" id="month{{ $i + 1 }}">
+                        <label class="form-check-label" for="month{{ $i + 1 }}" style="font-size: 0.85rem;">{{ $month }}</label>
+                    </div>
+                    @endforeach
+                </div>
             </div>
 
             <!-- Info box -->
@@ -135,7 +149,18 @@ function updateTriggerValue() {
     }
     group.style.display = 'block';
 
+    var mg = document.getElementById('monthsGroup');
     if (type === 'monthly') {
+        mg.style.display = 'block';
+    } else if (type === 'quarterly') {
+        mg.style.display = 'none';
+        // Auto-check quarterly months
+        document.querySelectorAll('[name="run_months[]"]').forEach(function(cb) { cb.checked = false; });
+    } else {
+        mg.style.display = 'none';
+    }
+
+    if (type === 'monthly' || type === 'quarterly') {
         label.textContent = 'Day of Month';
         var opts = '';
         for (var i = 1; i <= 31; i++) opts += '<option value="'+i+'">'+i+(i>28?' *':'')+'</option>';

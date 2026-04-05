@@ -27,7 +27,8 @@ class AutomatedTaskController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'trigger_type' => 'required|in:monthly,yearly,weekly,daily',
+            'trigger_type' => 'required|in:monthly,quarterly,yearly,weekly,daily',
+            'run_months' => 'nullable|array',
             'trigger_value' => 'nullable|string|max:255',
             'service_id' => 'required|exists:services,id',
             'task_template' => 'required|string|max:255',
@@ -55,7 +56,8 @@ class AutomatedTaskController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'trigger_type' => 'required|in:monthly,yearly,weekly,daily',
+            'trigger_type' => 'required|in:monthly,quarterly,yearly,weekly,daily',
+            'run_months' => 'nullable|array',
             'trigger_value' => 'nullable|string|max:255',
             'service_id' => 'required|exists:services,id',
             'task_template' => 'required|string|max:255',

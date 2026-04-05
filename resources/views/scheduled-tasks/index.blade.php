@@ -21,7 +21,15 @@
                     <div style="font-weight: 700; color: var(--primary); font-size: 0.95rem;">{{ $auto->name }}</div>
                     <div style="font-size: 0.8rem; color: #6b7280; margin-top: 2px;">
                         @if($auto->trigger_type == 'monthly')
-                            <i class="bi bi-calendar-event me-1"></i>Every month on day <strong>{{ $auto->trigger_value }}</strong>
+                            <i class="bi bi-calendar-event me-1"></i>
+                            @if($auto->run_months && count($auto->run_months) > 0)
+                                Day <strong>{{ $auto->trigger_value }}</strong> in
+                                <strong>{{ collect($auto->run_months)->map(fn($m) => date('M', mktime(0,0,0,$m,1)))->implode(', ') }}</strong>
+                            @else
+                                Every month on day <strong>{{ $auto->trigger_value }}</strong>
+                            @endif
+                        @elseif($auto->trigger_type == 'quarterly')
+                            <i class="bi bi-calendar3 me-1"></i>Quarterly (Jan, Apr, Jul, Oct) on day <strong>{{ $auto->trigger_value }}</strong>
                         @elseif($auto->trigger_type == 'yearly')
                             <i class="bi bi-calendar-heart me-1"></i>Every year on <strong>{{ $auto->trigger_value }}</strong>
                         @elseif($auto->trigger_type == 'weekly')
