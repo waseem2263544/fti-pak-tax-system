@@ -126,6 +126,20 @@ class Client extends Model
         return null;
     }
 
+    public function getSharePointUrlAttribute()
+    {
+        $link = $this->folder_link;
+        if (empty($link)) return null;
+
+        // Already a full URL
+        if (str_starts_with($link, 'http')) return $link;
+
+        // Relative path like /sites/FairTaxInternational723/Shared Documents/...
+        $encoded = rawurlencode($link);
+        $encoded = str_replace('%2F', '/', $encoded);
+        return 'https://fairtaxinternational.sharepoint.com/sites/FairTaxInternational723/Shared%20Documents/Forms/AllItems.aspx?id=' . $encoded;
+    }
+
     public function setSecpPasswordAttribute($value)
     {
         if ($value) {

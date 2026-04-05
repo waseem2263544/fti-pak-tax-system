@@ -93,6 +93,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('news/{newsArticle}/pin', [NewsController::class, 'togglePin'])->name('news.pin');
     Route::delete('news/{newsArticle}', [NewsController::class, 'destroy'])->name('news.destroy');
 
+    // Mention users API
+    Route::get('api/users/search', function (Request $request) {
+        $q = $request->get('q', '');
+        if (strlen($q) < 1) return response()->json([]);
+        return \App\Models\User::where('name', 'like', "%{$q}%")->limit(5)
+            ->get(['id', 'name'])->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'initials' => strtoupper(substr($u->name, 0, 2))]);
+    })->name('api.users.search');
+
     // Comments
     Route::post('comments', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');

@@ -96,7 +96,7 @@
                 @if($client->folder_link)
                 <div class="info-item mb-0">
                     <div class="info-label">Document Folder</div>
-                    <a href="{{ $client->folder_link }}" target="_blank" style="color: var(--primary); font-weight: 500; text-decoration: none; font-size: 0.85rem;">
+                    <a href="{{ $client->sharePointUrl }}" target="_blank" style="color: var(--primary); font-weight: 500; text-decoration: none; font-size: 0.85rem;">
                         <i class="bi bi-folder2-open me-1"></i>Open in SharePoint
                     </a>
                 </div>

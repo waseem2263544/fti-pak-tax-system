@@ -80,7 +80,7 @@ class SearchController extends Controller
 
         Client::whereNotNull('folder_link')->where('folder_link', '!=', '')
             ->where('name', 'like', "%{$q}%")->limit(3)->get()->each(function ($c) use (&$suggestions) {
-                $suggestions[] = ['type' => 'Document Folder', 'title' => $c->name, 'url' => $c->folder_link, 'icon' => 'bi-folder2-open'];
+                $suggestions[] = ['type' => 'Document Folder', 'title' => $c->name, 'url' => $c->sharePointUrl, 'icon' => 'bi-folder2-open'];
             });
 
         return response()->json($suggestions);

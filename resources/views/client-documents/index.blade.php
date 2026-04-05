@@ -56,12 +56,12 @@
                         </div>
                     </td>
                     <td>
-                        <a href="{{ $client->folder_link }}" target="_blank" style="font-size: 0.8rem; color: #2563eb; text-decoration: none; word-break: break-all;">
+                        <a href="{{ $client->sharePointUrl }}" target="_blank" style="font-size: 0.8rem; color: #2563eb; text-decoration: none; word-break: break-all;">
                             <i class="bi bi-folder2-open me-1"></i>{{ Str::limit($client->folder_link, 60) }}
                         </a>
                     </td>
                     <td class="text-end">
-                        <a href="{{ $client->folder_link }}" target="_blank" class="btn btn-sm btn-accent"><i class="bi bi-box-arrow-up-right me-1"></i>Open</a>
+                        <a href="{{ $client->sharePointUrl }}" target="_blank" class="btn btn-sm btn-accent"><i class="bi bi-box-arrow-up-right me-1"></i>Open</a>
                     </td>
                 </tr>
                 @empty

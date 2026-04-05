@@ -557,6 +557,135 @@
         }, 250);
     }
     </script>
+
+    <!-- @Mention System -->
+    <style>
+        .mention-container { position: relative; }
+        .mention-dropdown {
+            display: none; position: absolute; bottom: 100%; left: 0; right: 0;
+            background: #fff; border-radius: 10px; border: 1.5px solid #e5e7eb;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 1000;
+            max-height: 200px; overflow-y: auto; margin-bottom: 4px;
+        }
+        .mention-dropdown.show { display: block; }
+        .mention-item {
+            display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+            cursor: pointer; font-size: 0.85rem; transition: background 0.1s;
+        }
+        .mention-item:hover, .mention-item.active { background: rgba(215,223,39,0.08); }
+        .mention-item .avatar {
+            width: 28px; height: 28px; border-radius: 6px;
+            background: linear-gradient(135deg, var(--accent) 0%, #a8b01a 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.6rem; color: var(--primary);
+        }
+        .mention-tag {
+            background: rgba(215,223,39,0.15); color: var(--primary);
+            padding: 1px 6px; border-radius: 4px; font-weight: 600;
+            font-size: 0.85rem;
+        }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('textarea[name="body"]').forEach(function(textarea) {
+            setupMentions(textarea);
+        });
+    });
+
+    function setupMentions(textarea) {
+        var container = textarea.parentElement;
+        container.classList.add('mention-container');
+
+        var dropdown = document.createElement('div');
+        dropdown.className = 'mention-dropdown';
+        container.appendChild(dropdown);
+
+        var mentionStart = -1;
+        var mentionQuery = '';
+        var activeIndex = 0;
+        var items = [];
+
+        textarea.addEventListener('input', function() {
+            var val = textarea.value;
+            var pos = textarea.selectionStart;
+            var before = val.substring(0, pos);
+
+            var atIndex = before.lastIndexOf('@');
+            if (atIndex >= 0 && (atIndex === 0 || before[atIndex - 1] === ' ' || before[atIndex - 1] === '\n')) {
+                var query = before.substring(atIndex + 1);
+                if (query.length >= 1 && !query.includes(' ')) {
+                    mentionStart = atIndex;
+                    mentionQuery = query;
+                    fetchUsers(query, dropdown, textarea);
+                    return;
+                }
+            }
+            dropdown.classList.remove('show');
+        });
+
+        textarea.addEventListener('keydown', function(e) {
+            if (!dropdown.classList.contains('show')) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                updateActive(dropdown);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+                updateActive(dropdown);
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                if (items.length > 0) {
+                    e.preventDefault();
+                    selectMention(items[activeIndex], textarea, dropdown);
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('show');
+            }
+        });
+    }
+
+    function fetchUsers(query, dropdown, textarea) {
+        fetch('/api/users/search?q=' + encodeURIComponent(query))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                items = data;
+                activeIndex = 0;
+                if (data.length === 0) { dropdown.classList.remove('show'); return; }
+                dropdown.innerHTML = data.map(function(user, i) {
+                    return '<div class="mention-item' + (i === 0 ? ' active' : '') + '" data-id="' + user.id + '" data-name="' + user.name + '">'
+                        + '<div class="avatar">' + user.initials + '</div>'
+                        + '<span style="font-weight: 600; color: var(--primary);">' + user.name + '</span></div>';
+                }).join('');
+                dropdown.classList.add('show');
+
+                dropdown.querySelectorAll('.mention-item').forEach(function(item, idx) {
+                    item.addEventListener('click', function() {
+                        selectMention(data[idx], textarea, dropdown);
+                    });
+                });
+            });
+    }
+
+    function selectMention(user, textarea, dropdown) {
+        var val = textarea.value;
+        var pos = textarea.selectionStart;
+        var before = val.substring(0, pos);
+        var atIndex = before.lastIndexOf('@');
+        var after = val.substring(pos);
+
+        textarea.value = val.substring(0, atIndex) + '@[user:' + user.id + ']' + user.name + ' ' + after;
+        textarea.focus();
+        var newPos = atIndex + ('@[user:' + user.id + ']' + user.name + ' ').length;
+        textarea.setSelectionRange(newPos, newPos);
+        dropdown.classList.remove('show');
+    }
+
+    function updateActive(dropdown) {
+        dropdown.querySelectorAll('.mention-item').forEach(function(item, i) {
+            item.classList.toggle('active', i === activeIndex);
+        });
+    }
+    </script>
     @endauth
     @yield('scripts')
 </body>

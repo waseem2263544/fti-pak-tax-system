@@ -106,7 +106,7 @@
     <div class="card-header"><i class="bi bi-folder2-open me-2" style="color: var(--accent);"></i><span style="font-weight: 700;">Client Document Folders ({{ $results['documents']->count() }})</span></div>
     <div class="p-0">
         @foreach($results['documents'] as $client)
-        <a href="{{ $client->folder_link }}" target="_blank" class="d-flex justify-content-between align-items-center px-4 py-3 text-decoration-none" style="border-bottom: 1px solid #f5f6f8; color: var(--primary);">
+        <a href="{{ $client->sharePointUrl }}" target="_blank" class="d-flex justify-content-between align-items-center px-4 py-3 text-decoration-none" style="border-bottom: 1px solid #f5f6f8; color: var(--primary);">
             <div class="d-flex align-items-center gap-3">
                 <i class="bi bi-folder-fill" style="color: #2563eb; font-size: 1.1rem;"></i>
                 <div>
