@@ -418,6 +418,32 @@
                     <i class="bi bi-newspaper"></i> Tax News
                 </a>
 
+                <div class="sidebar-section-label">Accounting</div>
+                <a href="{{ route('accounting.dashboard') }}" class="@if(Route::currentRouteName() == 'accounting.dashboard') active @endif">
+                    <i class="bi bi-calculator"></i> Overview
+                </a>
+                <a href="{{ route('accounting.accounts.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.accounts')) active @endif">
+                    <i class="bi bi-journal-text"></i> Chart of Accounts
+                </a>
+                <a href="{{ route('accounting.sales-invoices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.sales-invoices')) active @endif">
+                    <i class="bi bi-receipt"></i> Sales Invoices
+                </a>
+                <a href="{{ route('accounting.purchase-invoices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.purchase-invoices')) active @endif">
+                    <i class="bi bi-cart-check"></i> Purchase Invoices
+                </a>
+                <a href="{{ route('accounting.receipt-vouchers.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.receipt-vouchers')) active @endif">
+                    <i class="bi bi-cash-coin"></i> Receipt Vouchers
+                </a>
+                <a href="{{ route('accounting.payment-vouchers.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.payment-vouchers')) active @endif">
+                    <i class="bi bi-cash-stack"></i> Payment Vouchers
+                </a>
+                <a href="{{ route('accounting.journal-entries.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.journal-entries')) active @endif">
+                    <i class="bi bi-journal-bookmark"></i> Journal Entries
+                </a>
+                <a href="{{ route('accounting.reports.trial-balance') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.reports')) active @endif">
+                    <i class="bi bi-graph-up"></i> Reports
+                </a>
+
                 <div class="sidebar-section-label">Operations</div>
                 <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
                     <i class="bi bi-arrow-repeat"></i> Processes
