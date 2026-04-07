@@ -47,20 +47,25 @@ class FetchFbrNotices extends Command
     private function refreshAccessToken($settings)
     {
         try {
-            $response = Http::post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
-                'client_id' => config('services.microsoft.client_id'),
-                'client_secret' => config('services.microsoft.client_secret'),
+            $response = Http::asForm()->post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
+                'client_id' => env('MICROSOFT_CLIENT_ID', ''),
+                'client_secret' => env('MICROSOFT_CLIENT_SECRET', ''),
                 'refresh_token' => $settings->refresh_token,
                 'grant_type' => 'refresh_token',
-                'scope' => 'Mail.Read',
+                'scope' => 'openid profile email Mail.Read Sites.Read.All offline_access',
             ]);
 
-            $data = $response->json();
-            $settings->update([
-                'access_token' => $data['access_token'],
-                'refresh_token' => $data['refresh_token'] ?? $settings->refresh_token,
-                'token_expires_at' => Carbon::now()->addSeconds($data['expires_in']),
-            ]);
+            if ($response->successful()) {
+                $data = $response->json();
+                $settings->update([
+                    'access_token' => $data['access_token'],
+                    'refresh_token' => $data['refresh_token'] ?? $settings->refresh_token,
+                    'token_expires_at' => Carbon::now()->addSeconds($data['expires_in']),
+                ]);
+                $this->info('Token refreshed successfully');
+            } else {
+                Log::error('Failed to refresh Microsoft token: ' . $response->body());
+            }
         } catch (\Exception $e) {
             Log::error('Failed to refresh Microsoft token: ' . $e->getMessage());
         }
