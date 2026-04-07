@@ -428,6 +428,9 @@
 
                 @if(Auth::user()->hasRole('admin'))
                 <div class="sidebar-section-label">Administration</div>
+                <a href="{{ route('extension.download') }}" class="@if(Route::currentRouteName() == 'extension.download') active @endif">
+                    <i class="bi bi-puzzle-fill"></i> Chrome Extension
+                </a>
                 <a href="{{ route('employees.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'employees.')) active @endif">
                     <i class="bi bi-person-badge-fill"></i> Employees
                 </a>

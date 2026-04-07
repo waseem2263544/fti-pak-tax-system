@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { width: 360px; background: #fff; }
+.header { background: #303a50; color: #fff; padding: 16px; display: flex; align-items: center; gap: 10px; }
+.header .logo { width: 32px; height: 32px; background: #D7DF27; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; color: #303a50; }
+.header h1 { font-size: 0.9rem; font-weight: 700; }
+.header small { font-size: 0.65rem; color: rgba(255,255,255,0.5); display: block; }
+
+.login-form { padding: 20px; }
+.login-form input { width: 100%; padding: 10px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 0.85rem; margin-bottom: 10px; outline: none; }
+.login-form input:focus { border-color: #D7DF27; }
+.btn { width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.btn-accent { background: #D7DF27; color: #303a50; }
+.btn-accent:hover { background: #c5cc20; }
+.btn-outline { background: none; border: 1.5px solid #e5e7eb; color: #6b7280; margin-top: 8px; }
+.btn-outline:hover { background: #f8f9fb; }
+
+.main { padding: 16px; }
+.portal-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; margin-bottom: 12px; }
+.portal-fbr { background: #dbeafe; color: #1e40af; }
+.portal-kpra { background: #d1fae5; color: #065f46; }
+.portal-secp { background: #fef3c7; color: #92400e; }
+.portal-unknown { background: #f3f4f6; color: #6b7280; }
+
+.search-box { position: relative; margin-bottom: 12px; }
+.search-box input { width: 100%; padding: 10px 12px 10px 34px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 0.85rem; outline: none; }
+.search-box input:focus { border-color: #D7DF27; }
+.search-box i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 0.85rem; }
+
+.client-list { max-height: 280px; overflow-y: auto; }
+.client-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+.client-item:hover { background: rgba(215,223,39,0.08); }
+.client-name { font-size: 0.85rem; font-weight: 600; color: #303a50; }
+.client-type { font-size: 0.68rem; color: #9ca3af; }
+.fill-btn { padding: 4px 12px; border-radius: 6px; border: none; background: #303a50; color: #fff; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+.fill-btn:hover { background: #3f4d68; }
+
+.status { padding: 16px; text-align: center; }
+.status.success { color: #065f46; }
+.status.error { color: #991b1b; font-size: 0.82rem; }
+
+.user-bar { padding: 10px 16px; background: #f8f9fb; border-top: 1px solid #f0f2f5; display: flex; justify-content: space-between; align-items: center; }
+.user-bar span { font-size: 0.75rem; color: #6b7280; }
+.user-bar a { font-size: 0.72rem; color: #dc2626; cursor: pointer; text-decoration: none; }
+
+.no-results { text-align: center; padding: 20px; color: #9ca3af; font-size: 0.82rem; }
+.hidden { display: none; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+<div class="header">
+    <div class="logo">FT</div>
+    <div>
+        <h1>FairTax Credentials</h1>
+        <small>Auto-fill FBR / KPRA / SECP</small>
+    </div>
+</div>
+
+<!-- Login Screen -->
+<div id="loginScreen" class="login-form">
+    <input type="email" id="loginEmail" placeholder="Email address">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button class="btn btn-accent" id="loginBtn">Sign In</button>
+    <div id="loginError" class="status error hidden"></div>
+</div>
+
+<!-- Main Screen -->
+<div id="mainScreen" class="hidden">
+    <div class="main">
+        <div id="portalBadge"></div>
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Search client by name or NTN...">
+        </div>
+        <div class="client-list" id="clientList">
+            <div class="no-results">Type to search clients</div>
+        </div>
+        <div id="fillStatus" class="status hidden"></div>
+    </div>
+    <div class="user-bar">
+        <span id="userName"></span>
+        <a id="logoutBtn">Logout</a>
+    </div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
