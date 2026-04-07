@@ -1,4 +1,4 @@
-const API_BASE = 'https://app.fairtaxint.com/ext';
+const API_BASE = 'https://app.fairtaxint.com/api/ext';
 
 // Portal detection
 const PORTALS = {
@@ -71,9 +71,6 @@ async function login() {
     errorDiv.classList.add('hidden');
 
     try {
-        // Get CSRF token first
-        await fetch('https://app.fairtaxint.com/sanctum/csrf-cookie', { credentials: 'include' });
-
         const res = await fetch(API_BASE + '/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },

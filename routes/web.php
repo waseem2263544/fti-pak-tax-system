@@ -22,10 +22,6 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
-// Chrome Extension API (token-based auth)
-Route::post('ext/login', [\App\Http\Controllers\CredentialApiController::class, 'login'])->name('ext.login');
-Route::get('ext/clients', [\App\Http\Controllers\CredentialApiController::class, 'searchClients'])->name('ext.clients');
-Route::get('ext/credentials/{client}', [\App\Http\Controllers\CredentialApiController::class, 'getCredentials'])->name('ext.credentials');
 
 Route::get('/test-deploy', function () {
     return 'Deploy working! ' . now();
