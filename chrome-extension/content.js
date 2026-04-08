@@ -88,11 +88,16 @@ function fillSECP(creds) {
     const password = creds.password || '';
     let filled = false;
 
-    // Try exact SECP LEAP selectors
+    // Try exact SECP LEAP selectors (Angular Material)
     const cnicEl = document.querySelector('input[formcontrolname="username"]')
-        || document.querySelector('input#mat-input-1');
+        || document.querySelector('input[formControlName="username"]')
+        || document.querySelector('input[ng-reflect-name="username"]')
+        || document.querySelector('input#mat-input-1')
+        || document.querySelector('input.mat-input-element[aria-required="true"]');
 
     const passEl = document.querySelector('input[formcontrolname="password"]')
+        || document.querySelector('input[formControlName="password"]')
+        || document.querySelector('input[ng-reflect-name="password"]')
         || document.querySelector('input#mat-input-2');
 
     if (cnicEl && cnic) {
@@ -106,8 +111,27 @@ function fillSECP(creds) {
 
     if (filled) return true;
 
-    // Fallback generic
-    return fillGeneric(cnic, password, null);
+    // Fallback: try all mat-input elements (SECP uses type="text" for both fields)
+    const matInputs = document.querySelectorAll('input.mat-input-element');
+    if (matInputs.length >= 2) {
+        if (cnic) setInputValue(matInputs[0], cnic);
+        if (password) setInputValue(matInputs[1], password);
+        return true;
+    }
+    if (matInputs.length === 1 && password) {
+        setInputValue(matInputs[0], password);
+        return true;
+    }
+
+    // Last fallback: all visible text inputs
+    const allInputs = document.querySelectorAll('input:not([type="hidden"]):not([readonly])');
+    if (allInputs.length >= 2) {
+        if (cnic) setInputValue(allInputs[0], cnic);
+        if (password) setInputValue(allInputs[1], password);
+        return true;
+    }
+
+    return false;
 }
 
 function fillGeneric(username, password, pin) {
