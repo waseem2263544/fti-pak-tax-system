@@ -64,4 +64,12 @@ for ($i = 0; $i < $zip->numFiles; $i++) {
 $zip->close();
 unlink($zipFile);
 
+// Clear view cache
+$viewCachePath = $basePath . '/storage/framework/views';
+if (is_dir($viewCachePath)) {
+    $cached = glob($viewCachePath . '/*.php');
+    foreach ($cached as $file) { unlink($file); }
+    echo "Cleared " . count($cached) . " cached views.\n";
+}
+
 echo "Synced $count files.\n\nDEPLOY COMPLETE!\n</pre>";
