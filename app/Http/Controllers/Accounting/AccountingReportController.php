@@ -393,6 +393,73 @@ class AccountingReportController extends Controller
         return view('accounting.reports.payable-aging', compact('aging', 'totals'));
     }
 
+    public function cashFlow(Request $request)
+    {
+        $fy = AccFiscalYear::active();
+        $fromDate = $request->get('from', $fy ? $fy->start_date->format('Y-m-d') : now()->startOfYear()->format('Y-m-d'));
+        $toDate = $request->get('to', now()->format('Y-m-d'));
+
+        // Cash/Bank accounts (sub_type = 'bank')
+        $cashAccounts = AccAccount::where('sub_type', 'bank')->where('is_active', true)->orderBy('code')->get();
+
+        $cashFlowData = [];
+        $totalOpening = 0;
+        $totalReceipts = 0;
+        $totalPayments = 0;
+
+        foreach ($cashAccounts as $account) {
+            // Opening balance (all transactions before fromDate)
+            $opening = $account->journalLines()
+                ->whereHas('journalEntry', fn($q) => $q->where('is_posted', true)->where('date', '<', $fromDate))
+                ->selectRaw('COALESCE(SUM(debit),0) as d, COALESCE(SUM(credit),0) as c')
+                ->first();
+            $openingBal = ($opening->d ?? 0) - ($opening->c ?? 0);
+            if ($account->opening_balance_type === 'debit') $openingBal += $account->opening_balance;
+
+            // Period receipts (debits to cash = money in)
+            $receipts = $account->journalLines()
+                ->whereHas('journalEntry', fn($q) => $q->where('is_posted', true)->whereBetween('date', [$fromDate, $toDate]))
+                ->sum('debit');
+
+            // Period payments (credits to cash = money out)
+            $payments = $account->journalLines()
+                ->whereHas('journalEntry', fn($q) => $q->where('is_posted', true)->whereBetween('date', [$fromDate, $toDate]))
+                ->sum('credit');
+
+            $closing = $openingBal + $receipts - $payments;
+
+            $cashFlowData[] = [
+                'account' => $account,
+                'opening' => $openingBal,
+                'receipts' => $receipts,
+                'payments' => $payments,
+                'closing' => $closing,
+            ];
+
+            $totalOpening += $openingBal;
+            $totalReceipts += $receipts;
+            $totalPayments += $payments;
+        }
+
+        $totalClosing = $totalOpening + $totalReceipts - $totalPayments;
+
+        // Breakdown by source - receipts from clients vs other
+        $receiptsBySource = AccVoucher::receipts()->where('status', 'posted')
+            ->whereBetween('date', [$fromDate, $toDate])
+            ->selectRaw('payment_method, SUM(amount) as total')
+            ->groupBy('payment_method')->pluck('total', 'payment_method')->toArray();
+
+        $paymentsBySource = AccVoucher::payments()->where('status', 'posted')
+            ->whereBetween('date', [$fromDate, $toDate])
+            ->selectRaw('payment_method, SUM(amount) as total')
+            ->groupBy('payment_method')->pluck('total', 'payment_method')->toArray();
+
+        return view('accounting.reports.cash-flow', compact(
+            'cashFlowData', 'totalOpening', 'totalReceipts', 'totalPayments', 'totalClosing',
+            'receiptsBySource', 'paymentsBySource', 'fromDate', 'toDate'
+        ));
+    }
+
     // ─── Helper Methods ──────────────────────────────────────────────
 
     /**

@@ -440,8 +440,31 @@
                 <a href="{{ route('accounting.journal-entries.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.journal-entries')) active @endif">
                     <i class="bi bi-journal-bookmark"></i> Journal Entries
                 </a>
-                <a href="{{ route('accounting.reports.trial-balance') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.reports')) active @endif">
-                    <i class="bi bi-graph-up"></i> Reports
+                <a href="{{ route('accounting.contacts.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.contacts')) active @endif">
+                    <i class="bi bi-building"></i> Vendors
+                </a>
+
+                <div class="sidebar-section-label">Reports</div>
+                <a href="{{ route('accounting.reports.trial-balance') }}" class="@if(Route::currentRouteName() == 'accounting.reports.trial-balance') active @endif">
+                    <i class="bi bi-list-columns"></i> Trial Balance
+                </a>
+                <a href="{{ route('accounting.reports.balance-sheet') }}" class="@if(Route::currentRouteName() == 'accounting.reports.balance-sheet') active @endif">
+                    <i class="bi bi-clipboard-data"></i> Balance Sheet
+                </a>
+                <a href="{{ route('accounting.reports.income-statement') }}" class="@if(Route::currentRouteName() == 'accounting.reports.income-statement') active @endif">
+                    <i class="bi bi-graph-up-arrow"></i> Income Statement
+                </a>
+                <a href="{{ route('accounting.reports.general-ledger') }}" class="@if(Route::currentRouteName() == 'accounting.reports.general-ledger') active @endif">
+                    <i class="bi bi-journal-text"></i> General Ledger
+                </a>
+                <a href="{{ route('accounting.reports.receivable-aging') }}" class="@if(Route::currentRouteName() == 'accounting.reports.receivable-aging') active @endif">
+                    <i class="bi bi-clock-history"></i> Receivable Aging
+                </a>
+                <a href="{{ route('accounting.reports.payable-aging') }}" class="@if(Route::currentRouteName() == 'accounting.reports.payable-aging') active @endif">
+                    <i class="bi bi-hourglass-split"></i> Payable Aging
+                </a>
+                <a href="{{ route('accounting.reports.cash-flow') }}" class="@if(Route::currentRouteName() == 'accounting.reports.cash-flow') active @endif">
+                    <i class="bi bi-cash"></i> Cash Flow
                 </a>
 
                 <div class="sidebar-section-label">Operations</div>
