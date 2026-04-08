@@ -492,25 +492,35 @@
                     </a>
                 </div>
 
-                <div class="sidebar-section-label">Operations</div>
-                <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
-                    <i class="bi bi-arrow-repeat"></i> Processes
-                </a>
-                <a href="{{ route('mini-apps.index') }}" class="@if(Route::currentRouteName() == 'mini-apps.index') active @endif">
-                    <i class="bi bi-puzzle-fill"></i> Mini Apps
-                </a>
+                <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" onclick="toggleSection('operations')">
+                    <span><i class="bi bi-gear me-1"></i> Operations</span>
+                    <i class="bi bi-chevron-right chevron"></i>
+                </div>
+                <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" id="section-operations">
+                    <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
+                        <i class="bi bi-arrow-repeat"></i> Processes
+                    </a>
+                    <a href="{{ route('mini-apps.index') }}" class="@if(Route::currentRouteName() == 'mini-apps.index') active @endif">
+                        <i class="bi bi-puzzle-fill"></i> Mini Apps
+                    </a>
+                </div>
 
                 @if(Auth::user()->hasRole('admin'))
-                <div class="sidebar-section-label">Administration</div>
-                <a href="{{ route('extension.download') }}" class="@if(Route::currentRouteName() == 'extension.download') active @endif">
-                    <i class="bi bi-puzzle-fill"></i> Chrome Extension
-                </a>
-                <a href="{{ route('employees.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'employees.')) active @endif">
-                    <i class="bi bi-person-badge-fill"></i> Employees
-                </a>
-                <a href="{{ route('settings.email') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'settings.')) active @endif">
-                    <i class="bi bi-envelope-at"></i> Email Integration
-                </a>
+                <div class="sidebar-collapse-toggle @if(in_array(Route::currentRouteName(), ['extension.download', 'settings.email']) || str_starts_with(Route::currentRouteName() ?? '', 'employees.')) open @endif" onclick="toggleSection('admin')">
+                    <span><i class="bi bi-shield-lock me-1"></i> Administration</span>
+                    <i class="bi bi-chevron-right chevron"></i>
+                </div>
+                <div class="sidebar-collapsible @if(in_array(Route::currentRouteName(), ['extension.download', 'settings.email']) || str_starts_with(Route::currentRouteName() ?? '', 'employees.')) open @endif" id="section-admin">
+                    <a href="{{ route('extension.download') }}" class="@if(Route::currentRouteName() == 'extension.download') active @endif">
+                        <i class="bi bi-puzzle-fill"></i> Chrome Extension
+                    </a>
+                    <a href="{{ route('employees.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'employees.')) active @endif">
+                        <i class="bi bi-person-badge-fill"></i> Employees
+                    </a>
+                    <a href="{{ route('settings.email') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'settings.')) active @endif">
+                        <i class="bi bi-envelope-at"></i> Email Integration
+                    </a>
+                </div>
                 @endif
             </div>
 
