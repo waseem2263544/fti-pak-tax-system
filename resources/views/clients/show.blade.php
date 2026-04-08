@@ -215,25 +215,19 @@
         </div>
     </div>
 
-    <!-- SECP -->
+    <!-- SECP Directors -->
     <div class="col-md-4">
         <div class="card section-card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center" style="background: rgba(48,58,80,0.02);">
-                <div><i class="bi bi-safe" style="color: #d97706;"></i> <span style="font-weight: 700;">SECP Directors</span></div>
-                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addDirectorModal" style="font-size: 0.72rem; padding: 2px 10px;"><i class="bi bi-plus"></i> Add</button>
+            <div class="card-header" style="background: rgba(48,58,80,0.02);">
+                <i class="bi bi-safe" style="color: #d97706;"></i>
+                <span style="font-weight: 700;">SECP Directors ({{ $client->secpDirectors->count() }})</span>
             </div>
             <div class="p-0">
-                @forelse($client->secpDirectors as $i => $director)
+                @forelse($client->secpDirectors as $director)
                 <div style="padding: 12px 16px; {{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.88rem; color: var(--primary);">{{ $director->director_name }}</div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; font-family: monospace;">{{ $director->cnic ?: 'No CNIC' }}</div>
-                        </div>
-                        <form method="POST" action="{{ route('clients.delete-director', $director) }}" onsubmit="return confirm('Remove this director?')">
-                            @csrf @method('DELETE')
-                            <button class="cred-btn" title="Remove"><i class="bi bi-x-lg" style="font-size: 0.65rem;"></i></button>
-                        </form>
+                    <div class="mb-2">
+                        <div style="font-weight: 700; font-size: 0.88rem; color: var(--primary);">{{ $director->director_name }}</div>
+                        <div style="font-size: 0.75rem; color: #9ca3af; font-family: monospace;">{{ $director->cnic ?: 'No CNIC' }}</div>
                     </div>
                     <div class="d-flex gap-2">
                         <div style="flex: 1;">
@@ -261,47 +255,6 @@
                 <div class="text-center py-4" style="color: #d1d5db; font-size: 0.82rem;">No directors added</div>
                 @endforelse
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Director Modal -->
-<div class="modal fade" id="addDirectorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content" style="border-radius: 16px; border: none;">
-            <div class="modal-header" style="border-bottom: 1px solid #f0f2f5; padding: 20px 24px;">
-                <h5 style="font-weight: 700; color: var(--primary); margin: 0; font-size: 1rem;"><i class="bi bi-safe me-2" style="color: #d97706;"></i>Add SECP Director</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('clients.add-director', $client) }}">
-                @csrf
-                <div class="modal-body" style="padding: 24px;">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Director Name <span class="text-danger">*</span></label>
-                            <input type="text" name="director_name" class="form-control" required placeholder="Full name">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">CNIC</label>
-                            <input type="text" name="cnic" class="form-control" placeholder="00000-0000000-0">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">SECP Password</label>
-                            <input type="text" name="secp_password" class="form-control" placeholder="Password">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">SECP PIN</label>
-                            <input type="text" name="secp_pin" class="form-control" placeholder="PIN">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top: 1px solid #f0f2f5; padding: 16px 24px;">
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Director</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

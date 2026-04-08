@@ -107,22 +107,14 @@
                         </div>
                     </div>
 
-                    <!-- SECP Credentials -->
+                    <!-- SECP Directors -->
                     <div class="card mt-3 mb-3">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0">SECP Credentials (Optional)</h6>
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">SECP Directors (Optional)</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addDirector()" style="font-size: 0.75rem;"><i class="bi bi-plus me-1"></i>Add Director</button>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">SECP Password</label>
-                                    <input type="password" class="form-control" name="secp_password">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">SECP Pin</label>
-                                    <input type="text" class="form-control" name="secp_pin">
-                                </div>
-                            </div>
+                        <div class="card-body" id="directors-container">
+                            <p class="text-muted small" id="no-directors-msg">No directors added yet. Click "Add Director" to add one.</p>
                         </div>
                     </div>
 
@@ -186,6 +178,22 @@ function addShareholder() {
             </div>
         </div>
     `;
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+var directorIndex = 0;
+function addDirector() {
+    var msg = document.getElementById('no-directors-msg');
+    if (msg) msg.remove();
+    var container = document.getElementById('directors-container');
+    directorIndex++;
+    var html = '<div class="director-row mb-3 pb-3" style="border-bottom: 1px solid #f0f2f5;"><div class="row">'
+        + '<div class="col-md-3 mb-2"><label class="form-label">Director Name</label><input type="text" class="form-control" name="directors[' + directorIndex + '][director_name]" required></div>'
+        + '<div class="col-md-3 mb-2"><label class="form-label">CNIC</label><input type="text" class="form-control" name="directors[' + directorIndex + '][cnic]"></div>'
+        + '<div class="col-md-2 mb-2"><label class="form-label">Password</label><input type="text" class="form-control" name="directors[' + directorIndex + '][secp_password]"></div>'
+        + '<div class="col-md-2 mb-2"><label class="form-label">PIN</label><input type="text" class="form-control" name="directors[' + directorIndex + '][secp_pin]"></div>'
+        + '<div class="col-md-2 mb-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'.director-row\').remove()"><i class="bi bi-trash"></i> Remove</button></div>'
+        + '</div></div>';
     container.insertAdjacentHTML('beforeend', html);
 }
 </script>

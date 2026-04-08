@@ -98,6 +98,15 @@ class ClientController extends Controller
             ]);
         }
 
+        // Save SECP directors
+        if ($request->directors) {
+            foreach ($request->directors as $dirData) {
+                if (!empty($dirData['director_name'])) {
+                    $client->secpDirectors()->create($dirData);
+                }
+            }
+        }
+
         return redirect()->route('clients.show', $client)->with('success', 'Client created successfully');
     }
 
@@ -117,7 +126,7 @@ class ClientController extends Controller
     {
         $services = Service::all();
         $potentialShareholders = Client::where('id', '!=', $client->id)->orderBy('name')->get();
-        $client->load(['shareholders', 'activeServices']);
+        $client->load(['shareholders', 'activeServices', 'secpDirectors']);
         return view('clients.edit', compact('client', 'services', 'potentialShareholders'));
     }
 
@@ -169,6 +178,28 @@ class ClientController extends Controller
                 'updated_at' => now(),
             ]);
         }
+
+        // Update SECP directors
+        $existingIds = [];
+        if ($request->directors) {
+            foreach ($request->directors as $dirData) {
+                if (empty($dirData['director_name'])) continue;
+                if (!empty($dirData['id'])) {
+                    // Update existing
+                    $director = \App\Models\SecpDirector::find($dirData['id']);
+                    if ($director && $director->client_id == $client->id) {
+                        $director->update($dirData);
+                        $existingIds[] = $director->id;
+                    }
+                } else {
+                    // Create new
+                    $new = $client->secpDirectors()->create($dirData);
+                    $existingIds[] = $new->id;
+                }
+            }
+        }
+        // Delete removed directors
+        $client->secpDirectors()->whereNotIn('id', $existingIds)->delete();
 
         return redirect()->route('clients.show', $client)->with('success', 'Client updated successfully');
     }

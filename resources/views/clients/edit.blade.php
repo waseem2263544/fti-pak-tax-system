@@ -99,20 +99,41 @@
                         </div>
                     </div>
 
-                    <!-- SECP Credentials -->
+                    <!-- SECP Directors -->
                     <div class="card mt-3 mb-3">
-                        <div class="card-header"><h6 class="mb-0" style="font-weight: 600;">SECP Credentials</h6></div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">SECP Password</label>
-                                    <input type="text" class="form-control" name="secp_password" value="{{ old('secp_password', $client->secp_password) }}">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">SECP Pin</label>
-                                    <input type="text" class="form-control" name="secp_pin" value="{{ old('secp_pin', $client->secp_pin) }}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0" style="font-weight: 600;">SECP Directors</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addDirector()" style="font-size: 0.75rem;"><i class="bi bi-plus me-1"></i>Add Director</button>
+                        </div>
+                        <div class="card-body" id="directors-container">
+                            @forelse($client->secpDirectors as $i => $director)
+                            <div class="director-row mb-3 pb-3" style="border-bottom: 1px solid #f0f2f5;">
+                                <input type="hidden" name="directors[{{ $i }}][id]" value="{{ $director->id }}">
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label">Director Name</label>
+                                        <input type="text" class="form-control" name="directors[{{ $i }}][director_name]" value="{{ $director->director_name }}" required>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label">CNIC</label>
+                                        <input type="text" class="form-control" name="directors[{{ $i }}][cnic]" value="{{ $director->cnic }}">
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label">Password</label>
+                                        <input type="text" class="form-control" name="directors[{{ $i }}][secp_password]" value="{{ $director->secp_password }}">
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label">PIN</label>
+                                        <input type="text" class="form-control" name="directors[{{ $i }}][secp_pin]" value="{{ $director->secp_pin }}">
+                                    </div>
+                                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.director-row').remove()"><i class="bi bi-trash"></i> Remove</button>
+                                    </div>
                                 </div>
                             </div>
+                            @empty
+                            <p class="text-muted small" id="no-directors-msg">No directors added yet. Click "Add Director" to add one.</p>
+                            @endforelse
                         </div>
                     </div>
 
@@ -179,6 +200,22 @@
 function addShareholder() {
     var container = document.getElementById('shareholders-container');
     var html = '<div class="row mb-2"><div class="col-md-8"><select class="form-select" name="shareholders[]"><option value="">Select Shareholder</option>@foreach($potentialShareholders as $s)<option value="{{ $s->id }}">{{ $s->name }}</option>@endforeach</select></div><div class="col-md-4"><input type="number" class="form-control" name="share_percentages[]" placeholder="%" step="0.01"></div></div>';
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+var directorIndex = {{ $client->secpDirectors->count() }};
+function addDirector() {
+    var msg = document.getElementById('no-directors-msg');
+    if (msg) msg.remove();
+    var container = document.getElementById('directors-container');
+    directorIndex++;
+    var html = '<div class="director-row mb-3 pb-3" style="border-bottom: 1px solid #f0f2f5;"><div class="row">'
+        + '<div class="col-md-3 mb-2"><label class="form-label">Director Name</label><input type="text" class="form-control" name="directors[' + directorIndex + '][director_name]" required></div>'
+        + '<div class="col-md-3 mb-2"><label class="form-label">CNIC</label><input type="text" class="form-control" name="directors[' + directorIndex + '][cnic]"></div>'
+        + '<div class="col-md-2 mb-2"><label class="form-label">Password</label><input type="text" class="form-control" name="directors[' + directorIndex + '][secp_password]"></div>'
+        + '<div class="col-md-2 mb-2"><label class="form-label">PIN</label><input type="text" class="form-control" name="directors[' + directorIndex + '][secp_pin]"></div>'
+        + '<div class="col-md-2 mb-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest(\'.director-row\').remove()"><i class="bi bi-trash"></i> Remove</button></div>'
+        + '</div></div>';
     container.insertAdjacentHTML('beforeend', html);
 }
 </script>
