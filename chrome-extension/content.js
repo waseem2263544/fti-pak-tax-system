@@ -81,34 +81,32 @@ function fillKPRA(creds) {
 
 function fillSECP(creds) {
     // SECP uses CNIC as the username field
+    // SECP LEAP uses Angular Material with formcontrolname attributes
+    // CNIC: formcontrolname="username", id="mat-input-1"
+    // Password: formcontrolname="password", id="mat-input-2", type="text" (not password!)
     const cnic = creds.cnic || '';
     const password = creds.password || '';
+    let filled = false;
 
-    const selectors = [
-        { user: 'input[name="cnic"]', pass: 'input[name="password"]' },
-        { user: 'input[name="username"]', pass: 'input[name="password"]' },
-        { user: 'input[name="email"]', pass: 'input[name="password"]' },
-        { user: 'input[id="cnic"]', pass: 'input[id="password"]' },
-        { user: 'input[id="username"]', pass: 'input[id="password"]' },
-        { user: 'input[placeholder*="CNIC"]', pass: 'input[type="password"]' },
-        { user: 'input[placeholder*="cnic"]', pass: 'input[type="password"]' },
-        { user: 'input[placeholder*="User"]', pass: 'input[type="password"]' },
-    ];
+    // Try exact SECP LEAP selectors
+    const cnicEl = document.querySelector('input[formcontrolname="username"]')
+        || document.querySelector('input#mat-input-1');
 
-    for (const sel of selectors) {
-        const userEl = document.querySelector(sel.user);
-        const passEl = document.querySelector(sel.pass);
+    const passEl = document.querySelector('input[formcontrolname="password"]')
+        || document.querySelector('input#mat-input-2');
 
-        if (passEl) {
-            setInputValue(passEl, password);
-            if (userEl && cnic) {
-                setInputValue(userEl, cnic);
-            }
-            return true;
-        }
+    if (cnicEl && cnic) {
+        setInputValue(cnicEl, cnic);
+        filled = true;
+    }
+    if (passEl && password) {
+        setInputValue(passEl, password);
+        filled = true;
     }
 
-    // Fallback: fill first text input with CNIC, first password with password
+    if (filled) return true;
+
+    // Fallback generic
     return fillGeneric(cnic, password, null);
 }
 
