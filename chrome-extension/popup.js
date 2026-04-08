@@ -232,24 +232,30 @@ async function fillCredentials(clientId, directorId) {
 
         const creds = await res.json();
 
-        // Send to content script
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {
-                action: 'fill',
-                portal: portalKey,
-                credentials: creds,
-            }, function (response) {
-                if (response && response.success) {
+        // Inject fill script directly into the page
+        chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
+            try {
+                const results = await chrome.scripting.executeScript({
+                    target: { tabId: tabs[0].id },
+                    func: injectFill,
+                    args: [portalKey, creds],
+                });
+                const result = results && results[0] && results[0].result;
+                if (result && result.success) {
                     statusDiv.className = 'status success';
                     statusDiv.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Filled for ' + creds.client_name;
                     statusDiv.classList.remove('hidden');
                     setTimeout(() => statusDiv.classList.add('hidden'), 3000);
                 } else {
                     statusDiv.className = 'status error';
-                    statusDiv.textContent = 'Could not fill. Make sure you are on the login page.';
+                    statusDiv.textContent = result ? (result.debug || 'Could not find form fields.') : 'Could not fill. Make sure you are on the login page.';
                     statusDiv.classList.remove('hidden');
                 }
-            });
+            } catch (err) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Cannot access this page. Check extension permissions.';
+                statusDiv.classList.remove('hidden');
+            }
         });
     } catch (e) {
         statusDiv.className = 'status error';
@@ -334,4 +340,90 @@ async function showDirectorSelection(clientId) {
     } catch (e) {
         list.innerHTML = '<div class="no-results">Failed to load directors</div>';
     }
+}
+
+// ── Injected Fill Function (runs in page context) ──
+
+function injectFill(portal, creds) {
+    function setValue(el, value) {
+        if (!el) return;
+        var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        nativeSetter.call(el, value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+    }
+
+    var filled = false;
+    var inputs = document.querySelectorAll('input:not([type="hidden"])');
+    var debugInfo = 'Found ' + inputs.length + ' inputs. ';
+
+    if (portal === 'fbr') {
+        var userEl = document.querySelector('input[name="userId"]')
+            || document.querySelector('input[name="username"]')
+            || document.querySelector('input[id="userId"]')
+            || document.querySelector('input[placeholder*="CNIC"]')
+            || document.querySelector('input[placeholder*="User"]')
+            || document.querySelector('input[placeholder*="NTN"]');
+        var passEl = document.querySelector('input[type="password"]')
+            || document.querySelector('input[name="password"]');
+        if (userEl) { setValue(userEl, creds.username || ''); filled = true; }
+        if (passEl) { setValue(passEl, creds.password || ''); filled = true; }
+        if (creds.pin) {
+            var pinEl = document.querySelector('input[name="pin"]') || document.querySelector('input[placeholder*="Pin"]');
+            if (pinEl) setValue(pinEl, creds.pin);
+        }
+    } else if (portal === 'kpra') {
+        var userEl = document.querySelector('input[name="username"]')
+            || document.querySelector('input[name="userId"]')
+            || document.querySelector('input[placeholder*="User"]');
+        var passEl = document.querySelector('input[type="password"]')
+            || document.querySelector('input[name="password"]');
+        if (userEl) { setValue(userEl, creds.username || ''); filled = true; }
+        if (passEl) { setValue(passEl, creds.password || ''); filled = true; }
+        if (creds.pin) {
+            var pinEl = document.querySelector('input[name="pin"]') || document.querySelector('input[placeholder*="Pin"]');
+            if (pinEl) setValue(pinEl, creds.pin);
+        }
+    } else if (portal === 'secp') {
+        var cnic = creds.cnic || '';
+        var password = creds.password || '';
+
+        // SECP LEAP Angular Material - try multiple strategies
+        var cnicEl = document.querySelector('input[formcontrolname="username"]')
+            || document.querySelector('input[formControlName="username"]')
+            || document.querySelector('input#mat-input-1')
+            || document.querySelector('input.mat-input-element');
+
+        var matInputs = document.querySelectorAll('input.mat-input-element');
+        var passEl = null;
+
+        if (matInputs.length >= 2) {
+            if (!cnicEl) cnicEl = matInputs[0];
+            passEl = matInputs[1];
+        } else {
+            passEl = document.querySelector('input[formcontrolname="password"]')
+                || document.querySelector('input[formControlName="password"]')
+                || document.querySelector('input#mat-input-2')
+                || document.querySelector('input[type="password"]');
+        }
+
+        // If still no luck, try all visible inputs
+        if (!cnicEl && !passEl) {
+            var allInputs = document.querySelectorAll('input:not([type="hidden"]):not([readonly])');
+            if (allInputs.length >= 2) {
+                cnicEl = allInputs[0];
+                passEl = allInputs[1];
+            }
+        }
+
+        debugInfo += 'CNIC el: ' + (cnicEl ? 'found' : 'NOT found') + ', Pass el: ' + (passEl ? 'found' : 'NOT found') + '. ';
+        debugInfo += 'mat-inputs: ' + matInputs.length + '. ';
+
+        if (cnicEl && cnic) { setValue(cnicEl, cnic); filled = true; }
+        if (passEl && password) { setValue(passEl, password); filled = true; }
+    }
+
+    return { success: filled, debug: debugInfo };
 }
