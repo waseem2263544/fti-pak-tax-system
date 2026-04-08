@@ -3,15 +3,10 @@
 @section('page-title', 'Create Client')
 
 @section('content')
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Add New Client</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('clients.store') }}" method="POST">
-                    @csrf
+<div class="card">
+    <div class="card-body" style="padding: 28px;">
+        <form action="{{ route('clients.store') }}" method="POST">
+            @csrf
 
                     <!-- Basic Info -->
                     <div class="mb-3">
@@ -151,12 +146,10 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">Create Client</button>
-                        <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-accent">Create Client</button>
+                        <a href="{{ route('clients.index') }}" class="btn btn-outline-primary">Cancel</a>
                     </div>
                 </form>
-            </div>
-        </div>
     </div>
 </div>
 

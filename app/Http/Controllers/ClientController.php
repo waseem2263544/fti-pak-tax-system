@@ -58,8 +58,9 @@ class ClientController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:clients',
-            'contact_no' => 'required|string|max:20',
+            'email' => 'nullable|string|max:255',
+            'contact_no' => 'nullable|string|max:50',
+            'directors' => 'nullable|array',
             'status' => 'required|in:Individual,AOP,Company',
             'notes' => 'nullable|string',
             'fbr_username' => 'nullable|string',
@@ -70,7 +71,7 @@ class ClientController extends Controller
             'kpra_pin' => 'nullable|string',
             'secp_password' => 'nullable|string',
             'secp_pin' => 'nullable|string',
-            'folder_link' => 'nullable|url',
+            'folder_link' => 'nullable|string|max:500',
             'shareholders' => 'nullable|array',
             'share_percentages' => 'nullable|array',
             'services' => 'nullable|array',
@@ -137,8 +138,9 @@ class ClientController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:clients,email,' . $client->id,
-            'contact_no' => 'required|string|max:20',
+            'email' => 'nullable|string|max:255',
+            'contact_no' => 'nullable|string|max:50',
+            'directors' => 'nullable|array',
             'status' => 'required|in:Individual,AOP,Company',
             'notes' => 'nullable|string',
             'fbr_username' => 'nullable|string',
@@ -149,7 +151,7 @@ class ClientController extends Controller
             'kpra_pin' => 'nullable|string',
             'secp_password' => 'nullable|string',
             'secp_pin' => 'nullable|string',
-            'folder_link' => 'nullable|url',
+            'folder_link' => 'nullable|string|max:500',
             'shareholders' => 'nullable|array',
             'share_percentages' => 'nullable|array',
             'services' => 'nullable|array',
