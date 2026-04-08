@@ -129,9 +129,6 @@ class Client extends Model
         return null;
     }
 
-    public function salesInvoices() { return $this->hasMany(AccSalesInvoice::class); }
-    public function receipts() { return $this->hasMany(AccVoucher::class)->where('type', 'receipt'); }
-
     public function getSharePointUrlAttribute()
     {
         $link = $this->folder_link;
