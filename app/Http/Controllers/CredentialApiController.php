@@ -48,7 +48,8 @@ class CredentialApiController extends Controller
             'status' => $c->status,
             'has_fbr' => !empty($c->fbr_username),
             'has_kpra' => !empty($c->kpra_username),
-            'has_secp' => !empty($c->getRawOriginal('secp_password')),
+            'has_secp' => $c->secpDirectors()->count() > 0,
+            'secp_directors_count' => $c->secpDirectors()->count(),
         ]));
     }
 
@@ -73,8 +74,24 @@ class CredentialApiController extends Controller
                 $data['pin'] = $client->kpra_pin;
                 break;
             case 'secp':
-                $data['password'] = $client->secp_password;
-                $data['pin'] = $client->secp_pin;
+                $directorId = $request->get('director_id');
+                if ($directorId) {
+                    $director = $client->secpDirectors()->find($directorId);
+                    if ($director) {
+                        $data['director_name'] = $director->director_name;
+                        $data['cnic'] = $director->cnic;
+                        $data['password'] = $director->secp_password;
+                        $data['pin'] = $director->secp_pin;
+                    }
+                }
+                // Also return list of all directors
+                $data['directors'] = $client->secpDirectors->map(fn($d) => [
+                    'id' => $d->id,
+                    'name' => $d->director_name,
+                    'cnic' => $d->cnic,
+                    'has_password' => !empty($d->getRawOriginal('secp_password')),
+                    'pin' => $d->secp_pin,
+                ]);
                 break;
         }
 

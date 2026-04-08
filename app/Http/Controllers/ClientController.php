@@ -106,7 +106,7 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
-        $client->load(['shareholders', 'activeServices', 'fbrNotices', 'tasks']);
+        $client->load(['shareholders', 'activeServices', 'fbrNotices', 'tasks', 'secpDirectors']);
         return view('clients.show', compact('client'));
     }
 
@@ -180,5 +180,25 @@ class ClientController extends Controller
     {
         $client->delete();
         return redirect()->route('clients.index')->with('success', 'Client deleted successfully');
+    }
+
+    public function addDirector(Request $request, Client $client)
+    {
+        $request->validate([
+            'director_name' => 'required|string|max:255',
+            'cnic' => 'nullable|string|max:50',
+            'secp_password' => 'nullable|string',
+            'secp_pin' => 'nullable|string|max:50',
+        ]);
+
+        $client->secpDirectors()->create($request->only('director_name', 'cnic', 'secp_password', 'secp_pin'));
+
+        return back()->with('success', 'Director added successfully');
+    }
+
+    public function deleteDirector(\App\Models\SecpDirector $secpDirector)
+    {
+        $secpDirector->delete();
+        return back()->with('success', 'Director removed');
     }
 }

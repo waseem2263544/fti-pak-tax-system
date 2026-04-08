@@ -31,6 +31,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('clients', ClientController::class);
+    Route::post('clients/{client}/directors', [ClientController::class, 'addDirector'])->name('clients.add-director');
+    Route::delete('clients/directors/{secpDirector}', [ClientController::class, 'deleteDirector'])->name('clients.delete-director');
 
     Route::resource('tasks', TaskController::class);
     Route::post('tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');

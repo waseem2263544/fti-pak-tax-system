@@ -139,26 +139,34 @@ function renderClients(clients) {
         return;
     }
 
+    const portalKey = currentPortal ? currentPortal.key : 'fbr';
+
     list.innerHTML = clients.map(c => {
-        const portalKey = currentPortal ? currentPortal.key : 'fbr';
         const hasCredentials = portalKey === 'fbr' ? c.has_fbr : (portalKey === 'kpra' ? c.has_kpra : c.has_secp);
+        let secpInfo = '';
+        if (portalKey === 'secp' && c.secp_directors_count > 0) {
+            secpInfo = ' · ' + c.secp_directors_count + ' director(s)';
+        }
         return '<div class="client-item" data-id="' + c.id + '">'
             + '<div><div class="client-name">' + c.name + '</div>'
-            + '<div class="client-type">' + c.status + (hasCredentials ? ' · Credentials available' : ' · No credentials') + '</div></div>'
-            + (hasCredentials ? '<button class="fill-btn" data-id="' + c.id + '"><i class="bi bi-key-fill me-1"></i>Fill</button>' : '')
+            + '<div class="client-type">' + c.status + (hasCredentials ? ' · Credentials available' + secpInfo : ' · No credentials') + '</div></div>'
+            + (hasCredentials ? '<button class="fill-btn" data-id="' + c.id + '"><i class="bi bi-key-fill me-1"></i>' + (portalKey === 'secp' ? 'Select' : 'Fill') + '</button>' : '')
             + '</div>';
     }).join('');
 
-    // Attach fill handlers
     list.querySelectorAll('.fill-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            fillCredentials(this.dataset.id);
+            if (portalKey === 'secp') {
+                showDirectorSelection(this.dataset.id);
+            } else {
+                fillCredentials(this.dataset.id);
+            }
         });
     });
 }
 
-async function fillCredentials(clientId) {
+async function fillCredentials(clientId, directorId) {
     const stored = await chrome.storage.local.get(['token']);
     if (!stored.token) return;
 
@@ -166,7 +174,9 @@ async function fillCredentials(clientId) {
     const statusDiv = document.getElementById('fillStatus');
 
     try {
-        const res = await fetch(API_BASE + '/credentials/' + clientId + '?portal=' + portalKey, {
+        let url = API_BASE + '/credentials/' + clientId + '?portal=' + portalKey;
+        if (directorId) url += '&director_id=' + directorId;
+        const res = await fetch(url, {
             headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
         });
 
@@ -195,5 +205,83 @@ async function fillCredentials(clientId) {
         statusDiv.className = 'status error';
         statusDiv.textContent = 'Failed to fetch credentials';
         statusDiv.classList.remove('hidden');
+    }
+}
+
+// ── SECP Director Selection ──
+
+async function showDirectorSelection(clientId) {
+    const stored = await chrome.storage.local.get(['token']);
+    if (!stored.token) return;
+
+    const list = document.getElementById('clientList');
+    list.innerHTML = '<div class="no-results">Loading directors...</div>';
+
+    try {
+        const res = await fetch(API_BASE + '/credentials/' + clientId + '?portal=secp', {
+            headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+        });
+        const data = await res.json();
+        const directors = data.directors || [];
+
+        if (directors.length === 0) {
+            list.innerHTML = '<div class="no-results">No directors found for this client</div>';
+            return;
+        }
+
+        list.innerHTML = '<div style="padding: 8px 12px; font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Select Director for ' + data.client_name + '</div>'
+            + '<div style="padding: 4px 12px 8px;"><button class="fill-btn" style="background: none; border: 1px solid #e5e7eb; color: #6b7280; width: 100%; text-align: left; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem;" id="back-to-search"><i class="bi bi-arrow-left me-1"></i>Back to search</button></div>'
+            + directors.map(d => {
+                return '<div class="client-item" style="flex-direction: column; align-items: stretch; gap: 6px;">'
+                    + '<div style="display: flex; justify-content: space-between; align-items: center;">'
+                    + '<div>'
+                    + '<div class="client-name" style="font-size: 0.88rem;">' + d.name + '</div>'
+                    + '<div class="client-type">' + (d.cnic || 'No CNIC') + '</div>'
+                    + '</div>'
+                    + '<div style="display: flex; gap: 4px;">'
+                    + '<button class="fill-btn director-fill" data-client="' + clientId + '" data-director="' + d.id + '"><i class="bi bi-key-fill me-1"></i>Fill</button>'
+                    + (d.pin ? '<button class="fill-btn pin-reveal" data-pin="' + d.pin + '" style="background: #f59e0b; border-color: #f59e0b;"><i class="bi bi-eye me-1"></i>PIN</button>' : '')
+                    + '</div>'
+                    + '</div>'
+                    + '</div>';
+            }).join('');
+
+        // Back button
+        document.getElementById('back-to-search').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            list.innerHTML = '<div class="no-results">Type to search clients</div>';
+        });
+
+        // Fill handlers
+        list.querySelectorAll('.director-fill').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                fillCredentials(this.dataset.client, this.dataset.director);
+            });
+        });
+
+        // PIN reveal handlers
+        list.querySelectorAll('.pin-reveal').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const pin = this.dataset.pin;
+                const statusDiv = document.getElementById('fillStatus');
+                if (this.textContent.includes('PIN')) {
+                    this.innerHTML = '<i class="bi bi-hash me-1"></i>' + pin;
+                    this.style.background = '#10b981';
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="bi bi-eye me-1"></i>PIN';
+                        this.style.background = '#f59e0b';
+                    }, 5000);
+                } else {
+                    this.innerHTML = '<i class="bi bi-eye me-1"></i>PIN';
+                    this.style.background = '#f59e0b';
+                }
+            });
+        });
+
+    } catch (e) {
+        list.innerHTML = '<div class="no-results">Failed to load directors</div>';
     }
 }
