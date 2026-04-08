@@ -143,24 +143,74 @@ function renderClients(clients) {
 
     list.innerHTML = clients.map(c => {
         const hasCredentials = portalKey === 'fbr' ? c.has_fbr : (portalKey === 'kpra' ? c.has_kpra : c.has_secp);
-        let secpInfo = '';
+        let extra = '';
         if (portalKey === 'secp' && c.secp_directors_count > 0) {
-            secpInfo = ' · ' + c.secp_directors_count + ' director(s)';
+            extra = ' · ' + c.secp_directors_count + ' director(s)';
+        }
+        let buttons = '';
+        if (hasCredentials) {
+            if (portalKey === 'secp') {
+                buttons = '<button class="fill-btn" data-id="' + c.id + '"><i class="bi bi-key-fill me-1"></i>Select</button>';
+            } else {
+                buttons = '<div style="display:flex;gap:4px;">'
+                    + '<button class="fill-btn" data-id="' + c.id + '"><i class="bi bi-key-fill me-1"></i>Fill</button>'
+                    + '<button class="fill-btn pin-btn" data-id="' + c.id + '" style="background:#f59e0b;"><i class="bi bi-eye me-1"></i>PIN</button>'
+                    + '</div>';
+            }
         }
         return '<div class="client-item" data-id="' + c.id + '">'
             + '<div><div class="client-name">' + c.name + '</div>'
-            + '<div class="client-type">' + c.status + (hasCredentials ? ' · Credentials available' + secpInfo : ' · No credentials') + '</div></div>'
-            + (hasCredentials ? '<button class="fill-btn" data-id="' + c.id + '"><i class="bi bi-key-fill me-1"></i>' + (portalKey === 'secp' ? 'Select' : 'Fill') + '</button>' : '')
+            + '<div class="client-type">' + c.status + (hasCredentials ? ' · Credentials available' + extra : ' · No credentials') + '</div></div>'
+            + buttons
             + '</div>';
     }).join('');
 
-    list.querySelectorAll('.fill-btn').forEach(btn => {
+    // Fill handlers
+    list.querySelectorAll('.fill-btn:not(.pin-btn)').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             if (portalKey === 'secp') {
                 showDirectorSelection(this.dataset.id);
             } else {
                 fillCredentials(this.dataset.id);
+            }
+        });
+    });
+
+    // PIN reveal handlers for FBR/KPRA
+    list.querySelectorAll('.pin-btn').forEach(btn => {
+        btn.addEventListener('click', async function (e) {
+            e.stopPropagation();
+            const clientId = this.dataset.id;
+            const pinBtn = this;
+
+            if (pinBtn.dataset.revealed) {
+                pinBtn.innerHTML = '<i class="bi bi-eye me-1"></i>PIN';
+                pinBtn.style.background = '#f59e0b';
+                delete pinBtn.dataset.revealed;
+                return;
+            }
+
+            const stored = await chrome.storage.local.get(['token']);
+            if (!stored.token) return;
+
+            try {
+                const res = await fetch(API_BASE + '/credentials/' + clientId + '?portal=' + portalKey, {
+                    headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+                });
+                const creds = await res.json();
+                const pin = creds.pin || 'N/A';
+                pinBtn.innerHTML = '<i class="bi bi-hash me-1"></i>' + pin;
+                pinBtn.style.background = '#10b981';
+                pinBtn.dataset.revealed = '1';
+                setTimeout(() => {
+                    pinBtn.innerHTML = '<i class="bi bi-eye me-1"></i>PIN';
+                    pinBtn.style.background = '#f59e0b';
+                    delete pinBtn.dataset.revealed;
+                }, 5000);
+            } catch (err) {
+                pinBtn.innerHTML = '<i class="bi bi-x me-1"></i>Error';
+                setTimeout(() => { pinBtn.innerHTML = '<i class="bi bi-eye me-1"></i>PIN'; }, 2000);
             }
         });
     });

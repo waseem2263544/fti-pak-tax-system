@@ -23,9 +23,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
 });
 
 function fillFBR(creds) {
-    // IRIS FBR login selectors
     const selectors = [
-        // Try common input patterns
         { user: 'input[name="userId"]', pass: 'input[name="password"]', pin: 'input[name="pin"]' },
         { user: 'input[name="username"]', pass: 'input[name="password"]', pin: 'input[name="pin"]' },
         { user: 'input[id="userId"]', pass: 'input[id="password"]', pin: 'input[id="pin"]' },
@@ -50,7 +48,6 @@ function fillFBR(creds) {
         }
     }
 
-    // Fallback: fill first text input and first password input
     return fillGeneric(creds.username, creds.password, creds.pin);
 }
 
@@ -83,32 +80,36 @@ function fillKPRA(creds) {
 }
 
 function fillSECP(creds) {
+    // SECP uses CNIC as the username field
+    const cnic = creds.cnic || '';
+    const password = creds.password || '';
+
     const selectors = [
-        { user: 'input[name="username"]', pass: 'input[name="password"]', pin: 'input[name="pin"]' },
-        { user: 'input[name="email"]', pass: 'input[name="password"]', pin: null },
-        { user: 'input[id="username"]', pass: 'input[id="password"]', pin: 'input[id="pin"]' },
-        { user: 'input[type="text"]', pass: 'input[type="password"]', pin: null },
+        { user: 'input[name="cnic"]', pass: 'input[name="password"]' },
+        { user: 'input[name="username"]', pass: 'input[name="password"]' },
+        { user: 'input[name="email"]', pass: 'input[name="password"]' },
+        { user: 'input[id="cnic"]', pass: 'input[id="password"]' },
+        { user: 'input[id="username"]', pass: 'input[id="password"]' },
+        { user: 'input[placeholder*="CNIC"]', pass: 'input[type="password"]' },
+        { user: 'input[placeholder*="cnic"]', pass: 'input[type="password"]' },
+        { user: 'input[placeholder*="User"]', pass: 'input[type="password"]' },
     ];
 
     for (const sel of selectors) {
+        const userEl = document.querySelector(sel.user);
         const passEl = document.querySelector(sel.pass);
+
         if (passEl) {
-            setInputValue(passEl, creds.password || '');
-
-            if (sel.user && creds.username) {
-                const userEl = document.querySelector(sel.user);
-                if (userEl) setInputValue(userEl, creds.username);
-            }
-
-            if (sel.pin && creds.pin) {
-                const pinEl = document.querySelector(sel.pin);
-                if (pinEl) setInputValue(pinEl, creds.pin);
+            setInputValue(passEl, password);
+            if (userEl && cnic) {
+                setInputValue(userEl, cnic);
             }
             return true;
         }
     }
 
-    return fillGeneric(null, creds.password, creds.pin);
+    // Fallback: fill first text input with CNIC, first password with password
+    return fillGeneric(cnic, password, null);
 }
 
 function fillGeneric(username, password, pin) {
@@ -131,11 +132,9 @@ function fillGeneric(username, password, pin) {
 
 // Set value and trigger events (for React/Angular forms)
 function setInputValue(el, value) {
-    // Native value setter
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
     nativeInputValueSetter.call(el, value);
 
-    // Trigger events
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
     el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
