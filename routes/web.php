@@ -108,6 +108,41 @@ Route::middleware(['auth'])->group(function () {
 
     // Chrome Extension
     Route::get('extension', function () { return view('extension.download'); })->name('extension.download');
+
+    // ── ACCOUNTING MODULE ──
+    Route::prefix('accounting')->name('accounting.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'dashboard'])->name('dashboard');
+
+        Route::resource('accounts', \App\Http\Controllers\Accounting\AccountController::class);
+
+        Route::resource('journal-entries', \App\Http\Controllers\Accounting\JournalEntryController::class)->except(['edit', 'update'])->parameters(['journal-entries' => 'journalEntry']);
+        Route::post('journal-entries/{journalEntry}/post', [\App\Http\Controllers\Accounting\JournalEntryController::class, 'post'])->name('journal-entries.post');
+        Route::post('journal-entries/{journalEntry}/reverse', [\App\Http\Controllers\Accounting\JournalEntryController::class, 'reverse'])->name('journal-entries.reverse');
+
+        Route::resource('sales-invoices', \App\Http\Controllers\Accounting\SalesInvoiceController::class)->parameters(['sales-invoices' => 'salesInvoice']);
+        Route::post('sales-invoices/{salesInvoice}/send', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'markSent'])->name('sales-invoices.send');
+
+        Route::resource('purchase-invoices', \App\Http\Controllers\Accounting\PurchaseInvoiceController::class)->parameters(['purchase-invoices' => 'purchaseInvoice']);
+
+        Route::resource('payment-vouchers', \App\Http\Controllers\Accounting\PaymentVoucherController::class)->except(['edit', 'update'])->parameters(['payment-vouchers' => 'paymentVoucher']);
+
+        Route::resource('receipt-vouchers', \App\Http\Controllers\Accounting\ReceiptVoucherController::class)->except(['edit', 'update'])->parameters(['receipt-vouchers' => 'receiptVoucher']);
+
+        Route::resource('contacts', \App\Http\Controllers\Accounting\AccContactController::class)->parameters(['contacts' => 'contact']);
+
+        Route::resource('fiscal-years', \App\Http\Controllers\Accounting\AccFiscalYearController::class)->except(['show'])->parameters(['fiscal-years' => 'fiscalYear']);
+        Route::post('fiscal-years/{fiscalYear}/close', [\App\Http\Controllers\Accounting\AccFiscalYearController::class, 'close'])->name('fiscal-years.close');
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('trial-balance', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'trialBalance'])->name('trial-balance');
+            Route::get('balance-sheet', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'balanceSheet'])->name('balance-sheet');
+            Route::get('income-statement', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'incomeStatement'])->name('income-statement');
+            Route::get('general-ledger', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'generalLedger'])->name('general-ledger');
+            Route::get('account-ledger/{account}', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'accountLedger'])->name('account-ledger');
+            Route::get('receivable-aging', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'receivableAging'])->name('receivable-aging');
+            Route::get('payable-aging', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'payableAging'])->name('payable-aging');
+        });
+    });
 });
 
 require __DIR__.'/auth.php';
