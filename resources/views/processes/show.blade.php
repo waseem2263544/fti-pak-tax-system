@@ -54,18 +54,21 @@
     <div class="card-body" style="padding: 24px;">
         <div class="row">
             @foreach([
-                'appellant_name' => 'Appellant Name',
-                'ntn_cnic' => 'NTN / CNIC',
-                'appellant_address' => 'Address',
+                'bench' => 'Bench',
                 'tax_year' => 'Tax Year',
-                'section' => 'Section',
-                'assessment_order_no' => 'Assessment Order No.',
-                'order_date' => 'Order Date',
+                'appellant_name' => 'Client Name',
+                'ntn_cnic' => 'Registration No. (NTN/CNIC)',
+                'appellant_address' => 'Client Address',
                 'cira_order_no' => 'CIR(A) Order No.',
                 'cira_order_date' => 'CIR(A) Order Date',
-                'cira_appeal_no' => 'Appeal No. at CIR(A)',
-                'respondent_name' => 'Respondent',
-                'respondent_address' => 'Respondent Address',
+                'assessment_order_no' => 'Assessment Order No.',
+                'assessment_order_date' => 'Assessment Order Date',
+                'respondent_1' => 'Respondent 1 (Assessing Officer)',
+                'respondent_2' => 'Respondent 2 (Commissioner)',
+                'recovery_notice_no' => 'Recovery Notice No.',
+                'recovery_notice_date' => 'Recovery Notice Date',
+                'intimation_no' => 'Intimation No.',
+                'reference_no' => 'Reference No.',
                 'demand_amount' => 'Demand Amount',
                 'amount_paid' => 'Amount Paid',
                 'balance_demand' => 'Balance Demand',
@@ -88,21 +91,21 @@
         @if(!empty($meta['grounds']))
         <div class="mb-3">
             <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Grounds of Appeal</div>
-            <p style="margin: 4px 0 0; color: #4b5563; white-space: pre-line;">{{ $meta['grounds'] }}</p>
+            <div style="margin: 8px 0 0; color: #4b5563; line-height: 1.7; background: #fafbfc; padding: 16px; border-radius: 8px; border: 1px solid #f0f2f5;">{!! $meta['grounds'] !!}</div>
         </div>
         @endif
 
         @if(!empty($meta['prayer']))
         <div class="mb-3">
             <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Prayer / Relief Sought</div>
-            <p style="margin: 4px 0 0; color: #4b5563; white-space: pre-line;">{{ $meta['prayer'] }}</p>
+            <div style="margin: 8px 0 0; color: #4b5563; line-height: 1.7; background: #fafbfc; padding: 16px; border-radius: 8px; border: 1px solid #f0f2f5;">{!! $meta['prayer'] !!}</div>
         </div>
         @endif
 
         @if(!empty($meta['stay_reasons']))
         <div class="mb-3">
             <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Reasons for Stay</div>
-            <p style="margin: 4px 0 0; color: #4b5563; white-space: pre-line;">{{ $meta['stay_reasons'] }}</p>
+            <div style="margin: 8px 0 0; color: #4b5563; line-height: 1.7; background: #fafbfc; padding: 16px; border-radius: 8px; border: 1px solid #f0f2f5;">{!! $meta['stay_reasons'] !!}</div>
         </div>
         @endif
     </div>

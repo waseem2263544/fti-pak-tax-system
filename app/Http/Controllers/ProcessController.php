@@ -58,10 +58,14 @@ class ProcessController extends Controller
         $validated['template'] = $request->input('template');
 
         $metadataFields = [
-            'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year', 'section',
-            'assessment_order_no', 'order_date', 'cira_order_no', 'cira_order_date',
-            'cira_appeal_no', 'respondent_name', 'respondent_address', 'demand_amount',
-            'amount_paid', 'balance_demand', 'grounds', 'prayer', 'stay_reasons',
+            'bench', 'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year',
+            'section', 'assessment_order_no', 'assessment_order_date', 'order_date',
+            'cira_order_no', 'cira_order_date', 'cira_appeal_no',
+            'respondent_1', 'respondent_2', 'respondent_name', 'respondent_address',
+            'recovery_notice_no', 'recovery_notice_date',
+            'intimation_no', 'reference_no',
+            'demand_amount', 'amount_paid', 'balance_demand',
+            'grounds', 'prayer', 'stay_reasons',
         ];
         $metadata = [];
         foreach ($metadataFields as $field) {
@@ -109,10 +113,14 @@ class ProcessController extends Controller
 
         // Update metadata
         $metadataFields = [
-            'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year', 'section',
-            'assessment_order_no', 'order_date', 'cira_order_no', 'cira_order_date',
-            'cira_appeal_no', 'respondent_name', 'respondent_address', 'demand_amount',
-            'amount_paid', 'balance_demand', 'grounds', 'prayer', 'stay_reasons',
+            'bench', 'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year',
+            'section', 'assessment_order_no', 'assessment_order_date', 'order_date',
+            'cira_order_no', 'cira_order_date', 'cira_appeal_no',
+            'respondent_1', 'respondent_2', 'respondent_name', 'respondent_address',
+            'recovery_notice_no', 'recovery_notice_date',
+            'intimation_no', 'reference_no',
+            'demand_amount', 'amount_paid', 'balance_demand',
+            'grounds', 'prayer', 'stay_reasons',
         ];
         $metadata = $process->metadata ?? [];
         foreach ($metadataFields as $field) {

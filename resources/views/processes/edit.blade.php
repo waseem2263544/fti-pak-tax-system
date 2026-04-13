@@ -74,63 +74,77 @@ $templateNames = [
         </div>
         <div class="card-body" style="padding: 24px;">
             <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Bench</label>
+                    <input type="text" name="bench" class="form-control" value="{{ old('bench', $meta['bench'] ?? '') }}" placeholder="Peshawar Bench, Peshawar">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tax Year</label>
+                    <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year', $meta['tax_year'] ?? '') }}">
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Appellant Name</label>
+                    <label class="form-label">Client Name</label>
                     <input type="text" name="appellant_name" class="form-control" value="{{ old('appellant_name', $meta['appellant_name'] ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">NTN / CNIC</label>
+                    <label class="form-label">Client Registration No. (NTN/CNIC)</label>
                     <input type="text" name="ntn_cnic" class="form-control" value="{{ old('ntn_cnic', $meta['ntn_cnic'] ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Address</label>
+                    <label class="form-label">Client Address</label>
                     <input type="text" name="appellant_address" class="form-control" value="{{ old('appellant_address', $meta['appellant_address'] ?? '') }}">
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Tax Year</label>
-                    <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year', $meta['tax_year'] ?? '') }}">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Section</label>
-                    <input type="text" name="section" class="form-control" value="{{ old('section', $meta['section'] ?? '') }}">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Assessment Order No.</label>
-                    <input type="text" name="assessment_order_no" class="form-control" value="{{ old('assessment_order_no', $meta['assessment_order_no'] ?? '') }}">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Order Date</label>
-                    <input type="date" name="order_date" class="form-control" value="{{ old('order_date', $meta['order_date'] ?? '') }}">
-                </div>
-            </div>
-
-            @if($isTribunal)
-            <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">CIR(A) Order No.</label>
                     <input type="text" name="cira_order_no" class="form-control" value="{{ old('cira_order_no', $meta['cira_order_no'] ?? '') }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">CIR(A) Order Date</label>
                     <input type="date" name="cira_order_date" class="form-control" value="{{ old('cira_order_date', $meta['cira_order_date'] ?? '') }}">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Appeal No. at CIR(A)</label>
-                    <input type="text" name="cira_appeal_no" class="form-control" value="{{ old('cira_appeal_no', $meta['cira_appeal_no'] ?? '') }}">
-                </div>
             </div>
-            @endif
-
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Respondent Name</label>
-                    <input type="text" name="respondent_name" class="form-control" value="{{ old('respondent_name', $meta['respondent_name'] ?? '') }}">
+                    <label class="form-label">Assessment Order No.</label>
+                    <input type="text" name="assessment_order_no" class="form-control" value="{{ old('assessment_order_no', $meta['assessment_order_no'] ?? '') }}">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Respondent Designation & Address</label>
-                    <input type="text" name="respondent_address" class="form-control" value="{{ old('respondent_address', $meta['respondent_address'] ?? '') }}">
+                    <label class="form-label">Assessment Order Date</label>
+                    <input type="date" name="assessment_order_date" class="form-control" value="{{ old('assessment_order_date', $meta['assessment_order_date'] ?? '') }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Respondent 1 (Assessing Officer)</label>
+                    <input type="text" name="respondent_1" class="form-control" value="{{ old('respondent_1', $meta['respondent_1'] ?? '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Respondent 2 (Commissioner)</label>
+                    <input type="text" name="respondent_2" class="form-control" value="{{ old('respondent_2', $meta['respondent_2'] ?? '') }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Recovery Notice No.</label>
+                    <input type="text" name="recovery_notice_no" class="form-control" value="{{ old('recovery_notice_no', $meta['recovery_notice_no'] ?? '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Recovery Notice Date</label>
+                    <input type="date" name="recovery_notice_date" class="form-control" value="{{ old('recovery_notice_date', $meta['recovery_notice_date'] ?? '') }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Intimation No.</label>
+                    <input type="text" name="intimation_no" class="form-control" value="{{ old('intimation_no', $meta['intimation_no'] ?? '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Reference No.</label>
+                    <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no', $meta['reference_no'] ?? '') }}">
                 </div>
             </div>
 
@@ -153,17 +167,21 @@ $templateNames = [
 
             <div class="mb-3">
                 <label class="form-label">Grounds of Appeal</label>
-                <textarea name="grounds" class="form-control" rows="4">{{ old('grounds', $meta['grounds'] ?? '') }}</textarea>
+                <div id="grounds-editor" contenteditable="true" class="form-control" style="min-height: 150px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('grounds', $meta['grounds'] ?? '') !!}</div>
+                <input type="hidden" name="grounds" id="grounds-hidden">
+                <small class="text-muted">You can paste formatted text here. Formatting will be preserved.</small>
             </div>
             <div class="mb-3">
                 <label class="form-label">Prayer / Relief Sought</label>
-                <textarea name="prayer" class="form-control" rows="3">{{ old('prayer', $meta['prayer'] ?? '') }}</textarea>
+                <div id="prayer-editor" contenteditable="true" class="form-control" style="min-height: 80px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('prayer', $meta['prayer'] ?? '') !!}</div>
+                <input type="hidden" name="prayer" id="prayer-hidden">
             </div>
 
             @if($isStay)
             <div class="mb-3">
                 <label class="form-label">Reasons for Stay</label>
-                <textarea name="stay_reasons" class="form-control" rows="3">{{ old('stay_reasons', $meta['stay_reasons'] ?? '') }}</textarea>
+                <div id="stay-editor" contenteditable="true" class="form-control" style="min-height: 80px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_reasons', $meta['stay_reasons'] ?? '') !!}</div>
+                <input type="hidden" name="stay_reasons" id="stay-hidden">
             </div>
             @endif
         </div>
@@ -223,14 +241,24 @@ $templateNames = [
 </form>
 @endsection
 
-@if($isStay)
 @section('scripts')
 <script>
+@if($isStay)
 function calcBalance() {
     var d = parseFloat(document.querySelector('input[name="demand_amount"]').value) || 0;
     var p = parseFloat(document.querySelector('input[name="amount_paid"]').value) || 0;
     document.querySelector('input[name="balance_demand"]').value = (d - p).toFixed(2);
 }
+@endif
+
+// Sync contenteditable editors to hidden inputs on submit
+document.querySelector('form').addEventListener('submit', function() {
+    var g = document.getElementById('grounds-editor');
+    var p = document.getElementById('prayer-editor');
+    var s = document.getElementById('stay-editor');
+    if (g) document.getElementById('grounds-hidden').value = g.innerHTML;
+    if (p) document.getElementById('prayer-hidden').value = p.innerHTML;
+    if (s) document.getElementById('stay-hidden').value = s.innerHTML;
+});
 </script>
 @endsection
-@endif

@@ -87,68 +87,96 @@ $isStay = str_contains($template, 'stay');
             Case Details
         </div>
         <div class="card-body" style="padding: 24px;">
+            <!-- Bench & Tax Year -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Bench <span class="text-danger">*</span></label>
+                    <input type="text" name="bench" class="form-control" value="{{ old('bench') }}" required placeholder="Peshawar Bench, Peshawar">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Tax Year <span class="text-danger">*</span></label>
+                    <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year') }}" required placeholder="e.g. 2025-2026">
+                </div>
+            </div>
+
+            <!-- Client Details -->
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Appellant Name <span class="text-danger">*</span></label>
-                    <input type="text" name="appellant_name" class="form-control" value="{{ old('appellant_name') }}" required placeholder="Full name of the appellant">
+                    <label class="form-label">Client Name <span class="text-danger">*</span></label>
+                    <input type="text" name="appellant_name" class="form-control" value="{{ old('appellant_name') }}" required placeholder="Full name as per NTN">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">NTN / CNIC</label>
+                    <label class="form-label">Client Registration No. (NTN/CNIC)</label>
                     <input type="text" name="ntn_cnic" class="form-control" value="{{ old('ntn_cnic') }}" placeholder="NTN or CNIC number">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Address</label>
-                    <input type="text" name="appellant_address" class="form-control" value="{{ old('appellant_address') }}" placeholder="Appellant's address">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Tax Year</label>
-                    <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year') }}" placeholder="e.g. 2025-2026">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Section</label>
-                    <input type="text" name="section" class="form-control" value="{{ old('section') }}" placeholder="e.g. 122(5A)">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Assessment Order No.</label>
-                    <input type="text" name="assessment_order_no" class="form-control" value="{{ old('assessment_order_no') }}" placeholder="Order number">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Order Date</label>
-                    <input type="date" name="order_date" class="form-control" value="{{ old('order_date') }}">
+                    <label class="form-label">Client Address</label>
+                    <input type="text" name="appellant_address" class="form-control" value="{{ old('appellant_address') }}" placeholder="Registered address">
                 </div>
             </div>
 
-            @if($isTribunal)
+            <!-- CIR(A) Order -->
             <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">CIR(A) Order No.</label>
-                    <input type="text" name="cira_order_no" class="form-control" value="{{ old('cira_order_no') }}" placeholder="CIR Appeals order number">
+                    <input type="text" name="cira_order_no" class="form-control" value="{{ old('cira_order_no') }}" placeholder="Commissioner Appeals order number">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">CIR(A) Order Date</label>
                     <input type="date" name="cira_order_date" class="form-control" value="{{ old('cira_order_date') }}">
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Appeal No. at CIR(A)</label>
-                    <input type="text" name="cira_appeal_no" class="form-control" value="{{ old('cira_appeal_no') }}" placeholder="Previous appeal number">
-                </div>
             </div>
-            @endif
 
+            <!-- Assessment Order -->
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Respondent Name</label>
-                    <input type="text" name="respondent_name" class="form-control" value="{{ old('respondent_name') }}" placeholder="e.g. Commissioner Inland Revenue">
+                    <label class="form-label">Assessment Order No.</label>
+                    <input type="text" name="assessment_order_no" class="form-control" value="{{ old('assessment_order_no') }}" placeholder="Assessment order number">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Respondent Designation & Address</label>
-                    <input type="text" name="respondent_address" class="form-control" value="{{ old('respondent_address') }}" placeholder="Office address">
+                    <label class="form-label">Assessment Order Date</label>
+                    <input type="date" name="assessment_order_date" class="form-control" value="{{ old('assessment_order_date') }}">
+                </div>
+            </div>
+
+            <!-- Respondents -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Respondent 1 (Assessing Officer)</label>
+                    <input type="text" name="respondent_1" class="form-control" value="{{ old('respondent_1') }}" placeholder="Name & Designation of Assessing Officer">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Respondent 2 (Commissioner)</label>
+                    <input type="text" name="respondent_2" class="form-control" value="{{ old('respondent_2') }}" placeholder="Name & Designation of Commissioner">
+                </div>
+            </div>
+
+            <!-- Recovery Notice -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Recovery Notice No.</label>
+                    <input type="text" name="recovery_notice_no" class="form-control" value="{{ old('recovery_notice_no') }}" placeholder="Recovery notice number">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Recovery Notice Date</label>
+                    <input type="date" name="recovery_notice_date" class="form-control" value="{{ old('recovery_notice_date') }}">
+                </div>
+            </div>
+
+            <!-- Intimation Reference -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Intimation No.</label>
+                    <input type="text" name="intimation_no" class="form-control" value="{{ old('intimation_no') }}" placeholder="Intimation number">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Reference No.</label>
+                    <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no') }}" placeholder="Reference number">
                 </div>
             </div>
 
             @if($isStay)
+            <!-- Demand Details -->
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Demand Amount (PKR)</label>
@@ -160,25 +188,30 @@ $isStay = str_contains($template, 'stay');
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Balance Demand (PKR)</label>
-                    <input type="number" name="balance_demand" class="form-control" value="{{ old('balance_demand') }}" step="0.01" placeholder="Auto-calculated" readonly style="background: #f8f9fb;">
+                    <input type="number" name="balance_demand" class="form-control" value="{{ old('balance_demand') }}" step="0.01" readonly style="background: #f8f9fb;">
                 </div>
             </div>
             @endif
 
+            <!-- Grounds of Appeal (rich text paste) -->
             <div class="mb-3">
                 <label class="form-label">Grounds of Appeal</label>
-                <textarea name="grounds" class="form-control" rows="4" placeholder="List the grounds of appeal...">{{ old('grounds') }}</textarea>
+                <div id="grounds-editor" contenteditable="true" class="form-control" style="min-height: 150px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('grounds') !!}</div>
+                <input type="hidden" name="grounds" id="grounds-hidden">
+                <small class="text-muted">You can paste formatted text here (from Word, etc.). Formatting will be preserved.</small>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Prayer / Relief Sought</label>
-                <textarea name="prayer" class="form-control" rows="3" placeholder="State the relief sought from the appellate authority...">{{ old('prayer') }}</textarea>
+                <div id="prayer-editor" contenteditable="true" class="form-control" style="min-height: 80px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('prayer') !!}</div>
+                <input type="hidden" name="prayer" id="prayer-hidden">
             </div>
 
             @if($isStay)
             <div class="mb-3">
                 <label class="form-label">Reasons for Stay</label>
-                <textarea name="stay_reasons" class="form-control" rows="3" placeholder="Why should the demand be stayed pending appeal...">{{ old('stay_reasons') }}</textarea>
+                <div id="stay-editor" contenteditable="true" class="form-control" style="min-height: 80px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_reasons') !!}</div>
+                <input type="hidden" name="stay_reasons" id="stay-hidden">
             </div>
             @endif
         </div>
@@ -248,6 +281,20 @@ if (demandInput && paidInput && balanceInput) {
     }
     demandInput.addEventListener('input', calcBalance);
     paidInput.addEventListener('input', calcBalance);
+}
+
+// Sync contenteditable editors to hidden inputs on submit
+document.getElementById('invoice-form')?.addEventListener('submit', syncEditors);
+document.querySelector('form')?.addEventListener('submit', syncEditors);
+
+function syncEditors() {
+    var groundsEditor = document.getElementById('grounds-editor');
+    var prayerEditor = document.getElementById('prayer-editor');
+    var stayEditor = document.getElementById('stay-editor');
+
+    if (groundsEditor) document.getElementById('grounds-hidden').value = groundsEditor.innerHTML;
+    if (prayerEditor) document.getElementById('prayer-hidden').value = prayerEditor.innerHTML;
+    if (stayEditor) document.getElementById('stay-hidden').value = stayEditor.innerHTML;
 }
 </script>
 @endsection
