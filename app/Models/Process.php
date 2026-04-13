@@ -9,13 +9,14 @@ class Process extends Model
     protected $fillable = [
         'client_id', 'service_id', 'assigned_to', 'title',
         'description', 'stage', 'start_date', 'due_date',
-        'completed_date', 'notes',
+        'completed_date', 'notes', 'template', 'metadata',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'due_date' => 'date',
         'completed_date' => 'date',
+        'metadata' => 'array',
     ];
 
     public function client() { return $this->belongsTo(Client::class); }

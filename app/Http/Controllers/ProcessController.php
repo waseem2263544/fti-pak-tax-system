@@ -54,9 +54,28 @@ class ProcessController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Save template and metadata
+        $validated['template'] = $request->input('template');
+
+        $metadataFields = [
+            'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year', 'section',
+            'assessment_order_no', 'order_date', 'cira_order_no', 'cira_order_date',
+            'cira_appeal_no', 'respondent_name', 'respondent_address', 'demand_amount',
+            'amount_paid', 'balance_demand', 'grounds', 'prayer', 'stay_reasons',
+        ];
+        $metadata = [];
+        foreach ($metadataFields as $field) {
+            if ($request->filled($field)) {
+                $metadata[$field] = $request->input($field);
+            }
+        }
+        if (!empty($metadata)) {
+            $validated['metadata'] = $metadata;
+        }
+
         $process = Process::create($validated);
         $this->createTaskForAssignment($process);
-        return redirect()->route('processes.index')->with('success', 'Process created successfully');
+        return redirect()->route('processes.show', $process)->with('success', 'Process created successfully');
     }
 
     public function show(Process $process)
@@ -87,6 +106,21 @@ class ProcessController extends Controller
             'completed_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        // Update metadata
+        $metadataFields = [
+            'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year', 'section',
+            'assessment_order_no', 'order_date', 'cira_order_no', 'cira_order_date',
+            'cira_appeal_no', 'respondent_name', 'respondent_address', 'demand_amount',
+            'amount_paid', 'balance_demand', 'grounds', 'prayer', 'stay_reasons',
+        ];
+        $metadata = $process->metadata ?? [];
+        foreach ($metadataFields as $field) {
+            if ($request->has($field)) {
+                $metadata[$field] = $request->input($field);
+            }
+        }
+        $validated['metadata'] = $metadata;
 
         $oldAssignedTo = $process->assigned_to;
         $process->update($validated);
