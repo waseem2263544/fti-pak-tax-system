@@ -112,5 +112,85 @@
 </div>
 @endif
 
+@if($process->template && (str_contains($process->template, 'appeal') || str_contains($process->template, 'stay')))
+<!-- Generate Documents -->
+<div class="card mt-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-file-earmark-word" style="color: var(--accent);"></i>
+        <span style="font-weight: 700;">Generate Documents</span>
+    </div>
+    <div class="card-body" style="padding: 20px;">
+        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Click to preview and download auto-generated documents with all case details filled in.</p>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'stay-application']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(139,92,246,0.08); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-file-earmark-text" style="color: #7c3aed; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Stay Application</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Application for interim relief</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'grounds-of-appeal']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245,158,11,0.08); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-list-ol" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Grounds of Appeal</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Legal grounds and prayer</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'intimation']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,0.08); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-envelope" style="color: #3b82f6; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Intimation Letter</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">To Commissioner regarding filing</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'affidavit']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16,185,129,0.08); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-patch-check" style="color: #10b981; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Affidavit</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Sworn statement of truth</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'index']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(48,58,80,0.06); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-list-columns-reverse" style="color: var(--primary); font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Index (4 Copies)</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Member, Accountant, Tribunal, Office</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <a href="{{ route('processes.index') }}" class="btn btn-outline-primary mt-3"><i class="bi bi-arrow-left me-1"></i>Back</a>
 @endsection
