@@ -115,6 +115,18 @@ $isStay = str_contains($template, 'stay');
                     <input type="text" name="appellant_address" class="form-control" value="{{ old('appellant_address') }}" placeholder="Registered address">
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Client Phone</label>
+                    <input type="text" name="appellant_phone" class="form-control" value="{{ old('appellant_phone') }}" placeholder="e.g. 0314-9444785">
+                    <small class="text-muted">Leave blank to use the client's saved phone</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Client Email</label>
+                    <input type="text" name="appellant_email" class="form-control" value="{{ old('appellant_email') }}" placeholder="e.g. info@example.com">
+                    <small class="text-muted">Leave blank to use the client's saved email</small>
+                </div>
+            </div>
 
             <!-- CIR(A) Order -->
             <div class="row">

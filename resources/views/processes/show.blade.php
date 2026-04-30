@@ -56,6 +56,8 @@
                 'appellant_name' => 'Client Name',
                 'ntn_cnic' => 'Registration No. (NTN/CNIC)',
                 'appellant_address' => 'Client Address',
+                'appellant_phone' => 'Client Phone',
+                'appellant_email' => 'Client Email',
                 'cira_order_no' => 'CIR(A) Order No.',
                 'cira_order_date' => 'CIR(A) Order Date',
                 'assessment_order_no' => 'Assessment Order No.',

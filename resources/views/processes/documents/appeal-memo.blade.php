@@ -9,8 +9,8 @@ $respondent1 = $meta['respondent_2'] ?? 'Commissioner Inland Revenue (Appeals)';
 $respondent2 = $meta['respondent_1'] ?? 'Deputy Commissioner Inland Revenue';
 $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
 
-$clientPhone = $process->client->contact_no ?? '';
-$clientEmail = $process->client->email ?? '';
+$clientPhone = $meta['appellant_phone'] ?? $process->client->contact_no ?? '';
+$clientEmail = $meta['appellant_email'] ?? $process->client->email ?? '';
 $contactLine = trim(($clientPhone ? $clientPhone : '') . ($clientPhone && $clientEmail ? ', ' : '') . ($clientEmail ?: ''));
 if ($contactLine === '') $contactLine = '';
 

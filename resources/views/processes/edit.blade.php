@@ -100,6 +100,16 @@ $templateNames = [
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
+                    <label class="form-label">Client Phone</label>
+                    <input type="text" name="appellant_phone" class="form-control" value="{{ old('appellant_phone', $meta['appellant_phone'] ?? $process->client->contact_no ?? '') }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Client Email</label>
+                    <input type="text" name="appellant_email" class="form-control" value="{{ old('appellant_email', $meta['appellant_email'] ?? $process->client->email ?? '') }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">CIR(A) Order No.</label>
                     <input type="text" name="cira_order_no" class="form-control" value="{{ old('cira_order_no', $meta['cira_order_no'] ?? '') }}">
                 </div>

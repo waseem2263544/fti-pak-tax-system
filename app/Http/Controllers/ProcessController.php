@@ -63,7 +63,7 @@ class ProcessController extends Controller
         $validated['template'] = $request->input('template');
 
         $metadataFields = [
-            'bench', 'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year',
+            'bench', 'appellant_name', 'ntn_cnic', 'appellant_address', 'appellant_phone', 'appellant_email', 'tax_year',
             'section', 'assessment_order_no', 'assessment_order_date', 'order_date',
             'cira_order_no', 'cira_order_date', 'cira_appeal_no',
             'respondent_1', 'respondent_2', 'respondent_name', 'respondent_address',
@@ -129,7 +129,7 @@ class ProcessController extends Controller
 
         // Update metadata
         $metadataFields = [
-            'bench', 'appellant_name', 'ntn_cnic', 'appellant_address', 'tax_year',
+            'bench', 'appellant_name', 'ntn_cnic', 'appellant_address', 'appellant_phone', 'appellant_email', 'tax_year',
             'section', 'assessment_order_no', 'assessment_order_date', 'order_date',
             'cira_order_no', 'cira_order_date', 'cira_appeal_no',
             'respondent_1', 'respondent_2', 'respondent_name', 'respondent_address',
