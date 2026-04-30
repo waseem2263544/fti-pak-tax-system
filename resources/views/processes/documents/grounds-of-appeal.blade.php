@@ -10,10 +10,10 @@ $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
 
 @if($isStTribunalStay)
 {{-- ── Title block ─────────────────────────────────────────────── --}}
-<div style="text-align: center; margin: 0 0 30pt;">
-    <p style="font-size: 14pt; font-weight: bold; margin: 0;">{{ strtoupper($clientName) }}</p>
-    <p style="font-size: 14pt; font-weight: bold; margin: 12pt 0 0;">GROUNDS OF APPEAL</p>
-    <p style="font-size: 14pt; font-weight: bold; margin: 4pt 0 0;">Against Assessment Order No. {{ $assessmentOrderNo }}</p>
+<div style="margin: 0 0 30pt;">
+    <p style="font-size: 14pt; font-weight: bold; text-align: center; margin: 0;">{{ strtoupper($clientName) }}</p>
+    <p style="font-size: 14pt; font-weight: bold; text-align: center; margin: 12pt 0 0;">GROUNDS OF APPEAL</p>
+    <p style="font-size: 14pt; font-weight: bold; text-align: center; margin: 4pt 0 0;">AGAINST ASSESSMENT ORDER NO. {{ strtoupper($assessmentOrderNo) }}</p>
 </div>
 
 @php
