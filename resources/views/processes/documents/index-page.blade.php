@@ -18,10 +18,10 @@ $year = date('Y');
         <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">OFFICE COPY</td>
     </tr>
     <tr>
-        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
-        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
-        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
-        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-size: 8pt;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-size: 8pt;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-size: 8pt;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-size: 8pt;">&nbsp;</td>
     </tr>
 </table>
 
