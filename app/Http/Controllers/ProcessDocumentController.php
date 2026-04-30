@@ -196,11 +196,18 @@ class ProcessDocumentController extends Controller
                         $tplId = $mpdf->importPage($i);
                         $size = $mpdf->getTemplateSize($tplId);
                         $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                        $mpdf->AddPageByArray([
-                            'orientation' => $orientation,
-                            'sheet-size' => [$size['width'], $size['height']],
-                        ]);
-                        $mpdf->useTemplate($tplId);
+
+                        // Add a standard A4 page so the running header still has margin space
+                        $mpdf->AddPage($orientation);
+
+                        // Fit the imported template inside the content area so it doesn't cover the page-number header in the top margin
+                        $contentH = $mpdf->h - $mpdf->tMargin - $mpdf->bMargin;
+                        $scale = min($mpdf->w / $size['width'], $contentH / $size['height']);
+                        $placedW = $size['width'] * $scale;
+                        $placedH = $size['height'] * $scale;
+                        $x = ($mpdf->w - $placedW) / 2;
+                        $y = $mpdf->tMargin;
+                        $mpdf->useTemplate($tplId, $x, $y, $placedW, $placedH);
                     }
                 } catch (\Exception $e) {
                     $mpdf->AddPage();
