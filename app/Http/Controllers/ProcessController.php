@@ -153,7 +153,8 @@ class ProcessController extends Controller
         $oldAssignedTo = $process->assigned_to;
         $process->update($validated);
 
-        if ($validated['assigned_to'] && $validated['assigned_to'] != $oldAssignedTo) {
+        $newAssignedTo = $validated['assigned_to'] ?? $process->assigned_to;
+        if ($newAssignedTo && $newAssignedTo != $oldAssignedTo) {
             $this->createTaskForAssignment($process);
         }
 
