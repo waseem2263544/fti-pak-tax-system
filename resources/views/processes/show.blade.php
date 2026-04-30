@@ -111,6 +111,17 @@
 @endif
 
 @if($process->template === 'st-tribunal-stay')
+<!-- Combined Package -->
+<div class="card mt-4">
+    <div class="card-body" style="padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <div>
+            <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;"><i class="bi bi-collection me-1"></i>Combined Package</div>
+            <div style="font-size: 0.82rem; color: #6b7280;">All 10 documents in sequence with page numbers, ready to print as one PDF.</div>
+        </div>
+        <a href="{{ route('processes.document.combined', $process) }}" target="_blank" class="btn btn-accent"><i class="bi bi-eye me-1"></i>Open Combined Package</a>
+    </div>
+</div>
+
 <!-- Attached Documents -->
 <div class="card mt-4">
     <div class="card-header d-flex align-items-center gap-2">

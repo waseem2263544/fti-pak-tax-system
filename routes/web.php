@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('processes/{process}/stage', [ProcessController::class, 'updateStage'])->name('processes.updateStage');
     Route::get('processes/{process}/document/{document}/generate', [\App\Http\Controllers\ProcessDocumentController::class, 'generate'])->name('processes.document.generate');
     Route::get('processes/{process}/document/{document}/preview', [\App\Http\Controllers\ProcessDocumentController::class, 'preview'])->name('processes.document.preview');
+    Route::get('processes/{process}/combined', [\App\Http\Controllers\ProcessDocumentController::class, 'combined'])->name('processes.document.combined');
 
     // Pending Proceedings
     Route::resource('proceedings', ProceedingController::class)->parameters(['proceedings' => 'proceeding']);

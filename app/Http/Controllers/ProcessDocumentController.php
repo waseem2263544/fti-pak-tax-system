@@ -110,6 +110,21 @@ class ProcessDocumentController extends Controller
             ->header('Cache-Control', 'max-age=0');
     }
 
+    public function combined(Process $process)
+    {
+        $meta = $process->metadata ?? [];
+        $process->load('client');
+
+        $content = view('processes.documents.combined-package', compact('process', 'meta'))->render();
+
+        return view('processes.documents.preview', [
+            'process' => $process,
+            'meta' => $meta,
+            'content' => $content,
+            'documentName' => 'Combined Package',
+        ]);
+    }
+
     public function preview(Process $process, $document)
     {
         $meta = $process->metadata ?? [];
