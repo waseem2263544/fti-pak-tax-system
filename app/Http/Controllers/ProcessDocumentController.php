@@ -81,6 +81,17 @@ class ProcessDocumentController extends Controller
                 td, th { border: 1px solid #000; padding: 6pt 8pt; font-size: 11pt; }
                 th { background-color: #f0f0f0; font-weight: bold; }
                 .no-border td, .no-border th { border: none; }
+                /* Strip pasted highlights from rich-text content (Quill / Word paste) */
+                .rich-content, .rich-content * { background-color: transparent !important; }
+                .rich-content ul { list-style: disc; padding-left: 2em; margin: 0.4em 0; }
+                .rich-content ol { list-style: decimal; padding-left: 2em; margin: 0.4em 0; }
+                .rich-content li { margin: 0.2em 0; }
+                .rich-content p { margin: 0.4em 0; }
+                .rich-content .ql-indent-1 { padding-left: 2em; }
+                .rich-content .ql-indent-2 { padding-left: 4em; }
+                .rich-content .ql-indent-3 { padding-left: 6em; }
+                .rich-content .ql-indent-4 { padding-left: 8em; }
+                .rich-content .ql-indent-5 { padding-left: 10em; }
             </style>
         </head>
         <body>' . $html . '</body></html>';

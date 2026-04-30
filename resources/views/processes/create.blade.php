@@ -275,6 +275,15 @@ $isStay = str_contains($template, 'stay');
 @endsection
 
 @section('scripts')
+@if($template === 'st-tribunal-stay')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<style>
+.ql-editor { min-height: 160px; max-height: 420px; font-family: inherit; line-height: 1.7; font-size: 14px; }
+.ql-toolbar.ql-snow { border-top-left-radius: 6px; border-top-right-radius: 6px; }
+.ql-container.ql-snow { border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+</style>
+@else
 <style>
 .editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid #ced4da; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 8px; background: #f8f9fb; }
 .ed-btn { background: #fff; border: 1px solid #e2e6ea; border-radius: 4px; font-size: 0.85rem; padding: 3px 9px; cursor: pointer; color: #303a50; line-height: 1.2; min-width: 30px; }
@@ -284,8 +293,37 @@ $isStay = str_contains($template, 'stay');
 [contenteditable="true"] ul { list-style: disc; padding-left: 2em; margin: 0.5em 0; }
 [contenteditable="true"] ol { list-style: decimal; padding-left: 2em; margin: 0.5em 0; }
 </style>
+@endif
 <script>
-// Inject formatting toolbar above each rich-text editor
+@if($template === 'st-tribunal-stay')
+// Replace contenteditable editors with Quill (paste-sanitized, MS-Word-style behavior)
+(function() {
+    var qToolbar = [
+        ['bold', 'italic', 'underline'],
+        [{'list': 'ordered'}, {'list': 'bullet'}],
+        [{'indent': '-1'}, {'indent': '+1'}],
+        ['clean']
+    ];
+    ['stay', 'grounds', 'prayer'].forEach(function(name) {
+        var ed = document.getElementById(name + '-editor');
+        var hi = document.getElementById(name + '-hidden');
+        if (!ed || !hi) return;
+        var initial = ed.innerHTML;
+        var box = document.createElement('div');
+        box.id = name + '-quill';
+        ed.parentNode.replaceChild(box, ed);
+        var q = new Quill('#' + name + '-quill', {
+            theme: 'snow',
+            modules: { toolbar: qToolbar }
+        });
+        if (initial && initial.trim()) q.clipboard.dangerouslyPasteHTML(initial);
+        var sync = function() { hi.value = q.root.innerHTML; };
+        q.on('text-change', sync);
+        sync();
+    });
+})();
+@else
+// Inject formatting toolbar above each rich-text editor (legacy contenteditable path)
 (function() {
     var editors = document.querySelectorAll('[contenteditable="true"].form-control');
     if (!editors.length) return;
@@ -316,27 +354,13 @@ $isStay = str_contains($template, 'stay');
     });
 })();
 
-// Auto-calculate balance demand
-var demandInput = document.querySelector('input[name="demand_amount"]');
-var paidInput = document.querySelector('input[name="amount_paid"]');
-var balanceInput = document.querySelector('input[name="balance_demand"]');
-if (demandInput && paidInput && balanceInput) {
-    function calcBalance() {
-        var demand = parseFloat(demandInput.value) || 0;
-        var paid = parseFloat(paidInput.value) || 0;
-        balanceInput.value = (demand - paid).toFixed(2);
-    }
-    demandInput.addEventListener('input', calcBalance);
-    paidInput.addEventListener('input', calcBalance);
-}
-
-// Keep hidden inputs in lockstep with their contenteditable editors
+// Keep hidden inputs in lockstep with their contenteditable editors (legacy path)
 function bindEditor(editorId, hiddenId) {
     var ed = document.getElementById(editorId);
     var hi = document.getElementById(hiddenId);
     if (!ed || !hi) return;
     var sync = function() { hi.value = ed.innerHTML; };
-    sync(); // populate on load
+    sync();
     ed.addEventListener('input', sync);
     ed.addEventListener('blur', sync);
     ed.addEventListener('keyup', sync);
@@ -353,5 +377,20 @@ document.querySelector('form')?.addEventListener('submit', function() {
         if (ed && hi) hi.value = ed.innerHTML;
     });
 });
+@endif
+
+// Auto-calculate balance demand
+var demandInput = document.querySelector('input[name="demand_amount"]');
+var paidInput = document.querySelector('input[name="amount_paid"]');
+var balanceInput = document.querySelector('input[name="balance_demand"]');
+if (demandInput && paidInput && balanceInput) {
+    function calcBalance() {
+        var demand = parseFloat(demandInput.value) || 0;
+        var paid = parseFloat(paidInput.value) || 0;
+        balanceInput.value = (demand - paid).toFixed(2);
+    }
+    demandInput.addEventListener('input', calcBalance);
+    paidInput.addEventListener('input', calcBalance);
+}
 </script>
 @endsection
