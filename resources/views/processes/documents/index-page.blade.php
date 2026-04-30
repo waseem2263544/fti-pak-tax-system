@@ -53,16 +53,16 @@ $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
     </thead>
     <tbody>
         @if($isStTribunalStay)
-        <tr><td class="center">1</td><td>INDEX</td><td class="center">1</td></tr>
-        <tr><td class="center">2</td><td>APPEAL MEMO</td><td class="center">2</td></tr>
-        <tr><td class="center">3</td><td>STAY APPLICATION</td><td class="center">3</td></tr>
-        <tr><td class="center">4</td><td>GROUNDS OF APPEAL</td><td class="center">4</td></tr>
-        <tr><td class="center">5</td><td>ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center">5</td></tr>
-        <tr><td class="center">6</td><td>ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center">6</td></tr>
-        <tr><td class="center">7</td><td>RECOVERY NOTICE</td><td class="center">7</td></tr>
-        <tr><td class="center">8</td><td>INTIMATION LETTER</td><td class="center">8</td></tr>
-        <tr><td class="center">9</td><td>POWER OF ATTORNEY</td><td class="center">9</td></tr>
-        <tr><td class="center">10</td><td>AFFIDAVIT</td><td class="center">10</td></tr>
+        <tr><td class="center">1</td><td>INDEX</td><td></td></tr>
+        <tr><td class="center">2</td><td>APPEAL MEMO</td><td class="center">1</td></tr>
+        <tr><td class="center">3</td><td>STAY APPLICATION</td><td class="center">2</td></tr>
+        <tr><td class="center">4</td><td>GROUNDS OF APPEAL</td><td class="center">3</td></tr>
+        <tr><td class="center">5</td><td>ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center">4</td></tr>
+        <tr><td class="center">6</td><td>ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center">5</td></tr>
+        <tr><td class="center">7</td><td>RECOVERY NOTICE</td><td class="center">6</td></tr>
+        <tr><td class="center">8</td><td>INTIMATION LETTER</td><td class="center">7</td></tr>
+        <tr><td class="center">9</td><td>POWER OF ATTORNEY</td><td class="center">8</td></tr>
+        <tr><td class="center">10</td><td>AFFIDAVIT</td><td class="center">9</td></tr>
         @else
         <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
