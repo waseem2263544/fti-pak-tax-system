@@ -2,18 +2,26 @@
 $bench = $meta['bench'] ?? 'Peshawar Bench Peshawar';
 $clientName = $meta['appellant_name'] ?? $process->client->name ?? '_______________';
 $ntn = $meta['ntn_cnic'] ?? '_______________';
+$ntnDigits = preg_replace('/\D/', '', $ntn);
+$idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 $taxYear = trim($meta['tax_year'] ?? '');
 $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
 @endphp
 
-<table style="border: none; margin-bottom: 18pt;">
+<table style="border: none; margin-left: auto; margin-right: 0; margin-bottom: 14pt; width: auto;">
     <tr>
-        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">MEMBER COPY</td>
-        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">ACCOUNTANT COPY</td>
-        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">TRIBUNAL COPY</td>
-        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">OFFICE COPY</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">MEMBER COPY</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">ACCOUNTANT COPY</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">TRIBUNAL COPY</td>
+        <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">OFFICE COPY</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
+        <td style="border: 1px solid #000; padding: 10pt 6pt; text-align: center;">&nbsp;</td>
     </tr>
 </table>
 
@@ -21,7 +29,7 @@ $year = date('Y');
 
 <p><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
-<p><b>Appellant:</b> STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</p>
+<p><b>Appellant:</b> STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</p>
 
 <p><b>Respondents:</b></p>
 <p class="indent">1. {{ strtoupper($respondent2) }}</p>
