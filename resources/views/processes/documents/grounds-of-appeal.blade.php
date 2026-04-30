@@ -27,5 +27,5 @@ $grounds = $meta['grounds'] ?? '';
     <p><b>{{ strtoupper($clientName) }}</b></p>
     <p style="margin-top: 12pt;">Through</p>
     <p><b>Waseem Ur Rehman</b><br>
-    (Partner - FairTax International)</p>
+    (Partner - Fair Tax (Pvt) Ltd)</p>
 </div>

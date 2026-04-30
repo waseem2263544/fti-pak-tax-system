@@ -221,12 +221,8 @@ $isStay = str_contains($template, 'stay');
             <!-- Intimation Reference -->
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Intimation No.</label>
-                    <input type="text" name="intimation_no" class="form-control" value="{{ old('intimation_no') }}" placeholder="Intimation number">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Reference No.</label>
-                    <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no') }}" placeholder="Reference number">
+                    <label class="form-label">Intimation Ref No.</label>
+                    <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no') }}" placeholder="Reference shown on the intimation letter">
                 </div>
             </div>
 

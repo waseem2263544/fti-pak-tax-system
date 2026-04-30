@@ -9,7 +9,6 @@ $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
 $assessmentOrderDate = $meta['assessment_order_date'] ?? '_______________';
 $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
-$intimationNo = $meta['intimation_no'] ?? '_______________';
 $referenceNo = $meta['reference_no'] ?? '_______________';
 @endphp
 
@@ -39,5 +38,5 @@ Peshawar</p>
 <div class="signature">
     <p>Yours' sincerely,</p>
     <p style="margin-top: 36pt;"><b>Waseem Ur Rehman</b><br>
-    (Partner - FairTax International)</p>
+    (Partner - Fair Tax (Pvt) Ltd)</p>
 </div>

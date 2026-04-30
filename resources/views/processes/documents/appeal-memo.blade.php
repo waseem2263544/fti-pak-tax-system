@@ -114,7 +114,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 <table style="width: 100%; border-collapse: collapse; margin-top: 14pt;">
     <tr>
         <td style="{{ $rowLabel }} width: 38%;">Name and Address of Advocate/Representative</td>
-        <td style="{{ $rowValue }}">WASEEM UR REHMAN, FAIRTAX INTERNATIONAL, TF-121, DEANS TRADE CENTRE, PESHAWAR CANTT, PESHAWAR.</td>
+        <td style="{{ $rowValue }}">WASEEM UR REHMAN, FAIR TAX (PVT) LTD, TF-121, DEANS TRADE CENTRE, PESHAWAR CANTT, PESHAWAR.</td>
     </tr>
     <tr>
         <td style="{{ $rowLabel }}">Cell, Phone/Fax No. and Email Address</td>

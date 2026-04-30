@@ -194,11 +194,7 @@ $templateNames = [
             @endif
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Intimation No.</label>
-                    <input type="text" name="intimation_no" class="form-control" value="{{ old('intimation_no', $meta['intimation_no'] ?? '') }}">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Reference No.</label>
+                    <label class="form-label">Intimation Ref No.</label>
                     <input type="text" name="reference_no" class="form-control" value="{{ old('reference_no', $meta['reference_no'] ?? '') }}">
                 </div>
             </div>

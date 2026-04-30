@@ -61,6 +61,6 @@ $year = date('Y');
 <div class="signature right" style="margin-top: 36pt;">
     <p><b>WASEEM UR REHMAN</b><br>
     PARTNER<br>
-    M/S FAIRTAX INTERNATIONAL<br>
+    FAIR TAX (PVT) LTD<br>
     AUTHORIZED REPRESENTATIVE</p>
 </div>

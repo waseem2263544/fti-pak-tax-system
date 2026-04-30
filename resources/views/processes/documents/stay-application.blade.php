@@ -49,7 +49,7 @@ CNIC/NTN No. {{ $ntn }}</p>
     <p><b>{{ strtoupper($clientName) }}</b></p>
     <p>Through</p>
     <p><b>Waseem Ur Rehman</b><br>
-    M/S FairTax International<br>
+    Fair Tax (Pvt) Ltd<br>
     Partner<br>
     TF – 121, Deans Trade Centre<br>
     Peshawar Cantt, Peshawar.</p>
