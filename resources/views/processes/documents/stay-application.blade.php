@@ -14,16 +14,24 @@ $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeal
 $recoveryNoticeNo = $meta['recovery_notice_no'] ?? '_______________';
 $recoveryNoticeDate = $meta['recovery_notice_date'] ?? '_______________';
 $year = date('Y');
+$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
 @endphp
 
 <h1>BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
+@if($isStTribunalStay)
+<p><b>Appellant:</b> <b><u>{{ strtoupper($clientName) }}</u></b>,<br>
+CNIC/NTN No. {{ $ntn }}</p>
+
+<p><b>Subject:</b> Application of Interim Relief Against Recovery Notice No. {{ $recoveryNoticeNo }}, dated {{ $recoveryNoticeDate }} for Order No. {{ $assessmentOrderNo }}, dated {{ $assessmentOrderDate }}.</p>
+@else
 <p class="center"><b>In Income Tax Appeal No. ___________________/{{ $year }}</b></p>
 
 <p><b>Appellant:</b> {{ strtoupper($clientName) }},<br>
 CNIC/NTN No. {{ $ntn }}</p>
 
 <p><b>Application of interim relief</b> for the Order U/s {{ $section }} passed by the {{ $respondent1 }} vide order No. {{ $assessmentOrderNo }} dated {{ $assessmentOrderDate }} as well as Order U/s 129(1) Passed by the {{ $respondent2 }} vide Order No. {{ $ciraOrderNo }} dated {{ $ciraOrderDate }}.</p>
+@endif
 
 <p><b>Respected Sir,</b></p>
 
