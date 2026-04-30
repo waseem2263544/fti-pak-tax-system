@@ -52,7 +52,7 @@
         <div class="row">
             @foreach([
                 'bench' => 'Bench',
-                'tax_year' => 'Tax Year',
+                'tax_year' => 'Tax Year / Tax Period',
                 'appellant_name' => 'Client Name',
                 'ntn_cnic' => 'Registration No. (NTN/CNIC)',
                 'appellant_address' => 'Client Address',

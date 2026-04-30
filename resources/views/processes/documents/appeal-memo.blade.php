@@ -164,12 +164,12 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 <p style="text-align: center; margin: 26pt 0 12pt; font-size: 12pt;"><b><u>VERIFICATION</u></b></p>
 
 @if($isIndividual)
-<p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 180pt; display: inline-block;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 12pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
+<p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
 @else
-<p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
+<p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
 @endif
 
-<p style="line-height: 2.0; margin: 10pt 0 0;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 12pt; font-weight: bold; min-width: 50pt; display: inline-block;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 12pt; font-weight: bold; min-width: 120pt; display: inline-block;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
+<p style="line-height: 2.0; margin: 10pt 0 0;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 60pt;">
     <tr>

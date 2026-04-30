@@ -44,23 +44,13 @@ $templateNames = [
                 <label class="form-label">Title</label>
                 <input type="text" name="title" class="form-control" value="{{ old('title', $process->title) }}" required>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Client</label>
-                    <select name="client_id" class="form-select" required>
-                        @foreach($clients as $client)
-                            <option value="{{ $client->id }}" {{ $process->client_id == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Service</label>
-                    <select name="service_id" class="form-select" required>
-                        @foreach($services as $service)
-                            <option value="{{ $service->id }}" {{ $process->service_id == $service->id ? 'selected' : '' }}>{{ $service->display_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Client</label>
+                <select name="client_id" class="form-select" required>
+                    @foreach($clients as $client)
+                        <option value="{{ $client->id }}" {{ $process->client_id == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>
@@ -94,20 +84,16 @@ $templateNames = [
                 @else
                 <div class="col-md-6 mb-3">
                 @endif
-                    <label class="form-label">Tax Year</label>
+                    <label class="form-label">Tax Year / Tax Period</label>
                     <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year', $meta['tax_year'] ?? '') }}">
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Client Name</label>
-                    <input type="text" name="appellant_name" class="form-control" value="{{ old('appellant_name', $meta['appellant_name'] ?? '') }}">
-                </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">Client Registration No. (NTN/CNIC)</label>
                     <input type="text" name="ntn_cnic" class="form-control" value="{{ old('ntn_cnic', $meta['ntn_cnic'] ?? '') }}">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">Client Address</label>
                     <input type="text" name="appellant_address" class="form-control" value="{{ old('appellant_address', $meta['appellant_address'] ?? '') }}">
                 </div>

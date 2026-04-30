@@ -45,7 +45,7 @@ class ProcessController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'client_id' => 'required|exists:clients,id',
-            'service_id' => 'required|exists:services,id',
+            'service_id' => 'nullable|exists:services,id',
             'assigned_to' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
             'stage' => 'nullable|in:intake,in_progress,review,completed',
@@ -57,6 +57,7 @@ class ProcessController extends Controller
         // Sensible defaults for fields no longer collected on the form
         $validated['stage'] = $validated['stage'] ?? 'intake';
         $validated['start_date'] = $validated['start_date'] ?? now()->toDateString();
+        $validated['service_id'] = $validated['service_id'] ?? optional(Service::first())->id;
 
         // Save template and metadata
         $validated['template'] = $request->input('template');
@@ -109,7 +110,7 @@ class ProcessController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'client_id' => 'required|exists:clients,id',
-            'service_id' => 'required|exists:services,id',
+            'service_id' => 'nullable|exists:services,id',
             'assigned_to' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
             'stage' => 'nullable|in:intake,in_progress,review,completed',
@@ -120,7 +121,7 @@ class ProcessController extends Controller
         ]);
 
         // Drop fields the form no longer submits so update() doesn't blank them out
-        foreach (['stage', 'assigned_to', 'start_date', 'due_date', 'completed_date', 'description'] as $f) {
+        foreach (['service_id', 'stage', 'assigned_to', 'start_date', 'due_date', 'completed_date', 'description'] as $f) {
             if (!$request->has($f)) {
                 unset($validated[$f]);
             }

@@ -57,24 +57,14 @@ $isStay = str_contains($template, 'stay');
                 <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title', $templateTitle) }}" required>
                 @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Client <span class="text-danger">*</span></label>
-                    <select name="client_id" class="form-select" required>
-                        <option value="">Select Client</option>
-                        @foreach($clients as $client)
-                            <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Service</label>
-                    <select name="service_id" class="form-select" required>
-                        @foreach($services as $service)
-                            <option value="{{ $service->id }}" {{ old('service_id') == $service->id ? 'selected' : '' }}>{{ $service->display_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="mb-3">
+                <label class="form-label">Client <span class="text-danger">*</span></label>
+                <select name="client_id" class="form-select" required>
+                    <option value="">Select Client</option>
+                    @foreach($clients as $client)
+                        <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>
@@ -109,22 +99,18 @@ $isStay = str_contains($template, 'stay');
                 @else
                 <div class="col-md-6 mb-3">
                 @endif
-                    <label class="form-label">Tax Year <span class="text-danger">*</span></label>
+                    <label class="form-label">Tax Year / Tax Period <span class="text-danger">*</span></label>
                     <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year') }}" required placeholder="e.g. 2025-2026">
                 </div>
             </div>
 
             <!-- Client Details -->
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Client Name <span class="text-danger">*</span></label>
-                    <input type="text" name="appellant_name" class="form-control" value="{{ old('appellant_name') }}" required placeholder="Full name as per NTN">
-                </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">Client Registration No. (NTN/CNIC)</label>
                     <input type="text" name="ntn_cnic" class="form-control" value="{{ old('ntn_cnic') }}" placeholder="NTN or CNIC number">
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <label class="form-label">Client Address</label>
                     <input type="text" name="appellant_address" class="form-control" value="{{ old('appellant_address') }}" placeholder="Registered address">
                 </div>
