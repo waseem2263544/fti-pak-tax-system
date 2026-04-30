@@ -50,7 +50,7 @@ CNIC/NTN No. {{ $ntn }}</p>
     <p>Through</p>
     <p><b>Waseem Ur Rehman</b><br>
     Fair Tax (Pvt) Ltd<br>
-    Partner<br>
+    Director<br>
     TF – 121, Deans Trade Centre<br>
     Peshawar Cantt, Peshawar.</p>
 </div>

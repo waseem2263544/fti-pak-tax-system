@@ -23,10 +23,11 @@
 
         /* Strip pasted highlights from rich-text content (Quill / Word paste) */
         .rich-content, .rich-content * { background-color: transparent !important; }
-        .rich-content ul { list-style: disc; padding-left: 2em; margin: 0.4em 0; }
-        .rich-content ol { list-style: decimal; padding-left: 2em; margin: 0.4em 0; }
-        .rich-content li { margin: 0.2em 0; }
-        .rich-content p { margin: 0.4em 0; }
+        .rich-content { line-height: 1.5; }
+        .rich-content ul { list-style: disc; padding-left: 2em; margin: 0.6em 0; }
+        .rich-content ol { list-style: decimal; padding-left: 2em; margin: 0.6em 0; }
+        .rich-content li { margin: 0.3em 0; line-height: 1.5; }
+        .rich-content p { margin: 0.6em 0; line-height: 1.5; }
         .rich-content .ql-indent-1 { padding-left: 2em; }
         .rich-content .ql-indent-2 { padding-left: 4em; }
         .rich-content .ql-indent-3 { padding-left: 6em; }

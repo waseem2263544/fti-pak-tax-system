@@ -61,7 +61,7 @@ $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 
 <div class="signature right" style="margin-top: 36pt;">
     <p><b>WASEEM UR REHMAN</b><br>
-    PARTNER<br>
+    DIRECTOR<br>
     FAIR TAX (PVT) LTD<br>
     AUTHORIZED REPRESENTATIVE</p>
 </div>

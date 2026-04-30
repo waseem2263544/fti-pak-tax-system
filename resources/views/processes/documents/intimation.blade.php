@@ -39,5 +39,5 @@ Peshawar</p>
 <div class="signature">
     <p>Yours' sincerely,</p>
     <p style="margin-top: 36pt;"><b>Waseem Ur Rehman</b><br>
-    (Partner - Fair Tax (Pvt) Ltd)</p>
+    (Director - Fair Tax (Pvt) Ltd)</p>
 </div>
