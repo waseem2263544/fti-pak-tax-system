@@ -35,9 +35,7 @@ $year = date('Y');
 <p class="indent">1. {{ strtoupper($respondent2) }}</p>
 <p class="indent">2. {{ strtoupper($respondent1) }}</p>
 
-<h2 style="margin-top: 24pt;">INDEX</h2>
-
-<table>
+<table style="margin-top: 24pt;">
     <thead>
         <tr>
             <th style="width: 10%;">S. NO</th>
