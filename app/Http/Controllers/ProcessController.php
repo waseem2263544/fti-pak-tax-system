@@ -75,6 +75,7 @@ class ProcessController extends Controller
             'ir_office_assessment', 'ir_office_location',
             'communication_date', 'filing_date',
             'verifier_name', 'verifier_designation',
+            'bank_accounts_attached',
         ];
         $metadata = [];
         foreach ($metadataFields as $field) {
@@ -141,6 +142,7 @@ class ProcessController extends Controller
             'ir_office_assessment', 'ir_office_location',
             'communication_date', 'filing_date',
             'verifier_name', 'verifier_designation',
+            'bank_accounts_attached',
         ];
         $metadata = $process->metadata ?? [];
         foreach ($metadataFields as $field) {

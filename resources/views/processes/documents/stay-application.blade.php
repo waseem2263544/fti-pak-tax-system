@@ -15,15 +15,26 @@ $recoveryNoticeNo = $meta['recovery_notice_no'] ?? '_______________';
 $recoveryNoticeDate = $meta['recovery_notice_date'] ?? '_______________';
 $year = date('Y');
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$bankAccountsAttached = !empty($meta['bank_accounts_attached']) && $meta['bank_accounts_attached'] !== '0';
+$bankPhrase = $bankAccountsAttached ? ', bank accounts may be de-attached' : '';
+
+if ($isStTribunalStay) {
+    $fmtDate = function($d) {
+        if (!$d || $d === '_______________') return $d;
+        try { return \Carbon\Carbon::parse($d)->format('j F Y'); } catch (\Exception $e) { return $d; }
+    };
+    $recoveryNoticeDate  = $fmtDate($recoveryNoticeDate);
+    $assessmentOrderDate = $fmtDate($assessmentOrderDate);
+    $ciraOrderDate       = $fmtDate($ciraOrderDate);
+}
 @endphp
 
 <h1>BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
 @if($isStTribunalStay)
-<p><b>Appellant:</b> <b><u>{{ strtoupper($clientName) }}</u></b>,<br>
-CNIC/NTN No. {{ $ntn }}</p>
+<p><b>Appellant:</b> <b><u>{{ strtoupper($clientName) }}</u></b></p>
 
-<p><b>Subject:</b> Application of Interim Relief Against Recovery Notice No. {{ $recoveryNoticeNo }}, dated {{ $recoveryNoticeDate }} for Order No. {{ $assessmentOrderNo }}, dated {{ $assessmentOrderDate }}.</p>
+<p><b>Subject:</b> <b><u>Application of Interim Relief Against Recovery Notice No. {{ $recoveryNoticeNo }}, dated {{ $recoveryNoticeDate }} for Order No. {{ $assessmentOrderNo }}, dated {{ $assessmentOrderDate }}.</u></b></p>
 @else
 <p class="center"><b>In Income Tax Appeal No. ___________________/{{ $year }}</b></p>
 
@@ -49,7 +60,11 @@ CNIC/NTN No. {{ $ntn }}</p>
 
 <p class="indent">6. That the impugned order passed by the {{ $respondent1 }} is totally illegal and against the facts of the case.</p>
 
+@if($isStTribunalStay)
+<p style="margin-top: 18pt;">It is therefore humbly prayed that on acceptance of this application, impugned order may be further suspended till final decision of main appeal{{ $bankPhrase }} and proceedings initiated against our client may be stopped till final decision of main appeal.</p>
+@else
 <p style="margin-top: 18pt;">It is therefore humbly prayed that on acceptance of this application, impugned order may be further suspended till final decision of main appeal, bank accounts may be de-attached and proceedings initiated against our client may be stopped till final decision of main appeal.</p>
+@endif
 
 <p>Any other relief deemed appropriate in the circumstances may be granted.</p>
 

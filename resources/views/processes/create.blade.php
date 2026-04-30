@@ -242,6 +242,17 @@ $isStay = str_contains($template, 'stay');
             </div>
             @endif
 
+            @if($template === 'st-tribunal-stay')
+            <div class="mb-3 form-check">
+                <input type="hidden" name="bank_accounts_attached" value="0">
+                <input class="form-check-input" type="checkbox" name="bank_accounts_attached" value="1" id="bank-accounts-attached" {{ old('bank_accounts_attached') == '1' ? 'checked' : '' }}>
+                <label class="form-check-label" for="bank-accounts-attached">
+                    Bank accounts of the client are attached
+                </label>
+                <div class="form-text">If checked, the Stay Application prayer will include "bank accounts may be de-attached".</div>
+            </div>
+            @endif
+
             @if($isStay)
             <div class="mb-3">
                 <label class="form-label">Brief Facts of the Case</label>
