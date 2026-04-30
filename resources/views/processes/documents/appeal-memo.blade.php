@@ -1,106 +1,131 @@
 @php
-$bench = $meta['bench'] ?? 'Peshawar Bench Peshawar';
+$bench = $meta['bench'] ?? 'Peshawar Bench, Peshawar';
 $clientName = $meta['appellant_name'] ?? $process->client->name ?? '_______________';
 $ntn = $meta['ntn_cnic'] ?? '_______________';
-$ntnDigits = preg_replace('/\D/', '', $ntn);
-$idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 $address = $meta['appellant_address'] ?? '_______________';
 $taxYear = trim($meta['tax_year'] ?? '');
-$section = $meta['section'] ?? '122(1)/129';
-$assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
-$assessmentOrderDate = $meta['assessment_order_date'] ?? '_______________';
-$ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
+$section = $meta['section'] ?? '_______________';
+$respondent1 = $meta['respondent_2'] ?? 'Commissioner Inland Revenue (Appeals)';
+$respondent2 = $meta['respondent_1'] ?? 'Deputy Commissioner Inland Revenue';
 $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
-$respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
-$respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
-$demandAmount = $meta['demand_amount'] ?? null;
-$amountPaid = $meta['amount_paid'] ?? null;
-$balanceDemand = $meta['balance_demand'] ?? null;
-$year = date('Y');
+
+$clientPhone = $process->client->contact_no ?? '';
+$clientEmail = $process->client->email ?? '';
+$contactLine = trim(($clientPhone ? $clientPhone : '') . ($clientPhone && $clientEmail ? '   ' : '') . ($clientEmail ?: ''));
+if ($contactLine === '') $contactLine = '_______________';
+
+$irOfficeAssessment = $meta['ir_office_assessment'] ?? '_______________';
+$irOfficeLocation = $meta['ir_office_location'] ?? '_______________';
+$communicationDate = $meta['communication_date'] ?? $ciraOrderDate;
+$verifierName = $meta['verifier_name'] ?? '_______________';
+$verifierDesignation = $meta['verifier_designation'] ?? '_______________';
+$verificationDay = $meta['verification_day'] ?? '_______';
+$verificationMonth = $meta['verification_month'] ?? '_______________';
+$verificationYear = $meta['verification_year'] ?? date('Y');
+$typeOfAppeal = $meta['type_of_appeal'] ?? 'sales_tax';
+$isSalesTax = $typeOfAppeal === 'sales_tax';
 @endphp
 
-<h1 style="font-size: 18pt; line-height: 1.3;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
+<div style="text-align: center; margin-bottom: 6pt;">
+    <p style="margin: 0;"><b>FORM &ldquo;B&rdquo;</b></p>
+    <p style="margin: 0;"><b>[see rule 7]</b></p>
+    <p style="margin: 0;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 46 OF THE SALES TAX ACT, 1990 OR SECTION 34 OF THE FEDERAL EXCISE ACT, 2005</u></b></p>
+</div>
 
-<p class="center"><b>In ITA No. ____________________/{{ $year }}</b></p>
+<p style="margin-top: 14pt;">BEFORE THE APPELLATE TRIBUNAL INLAND REVENU&nbsp;<b>{{ strtoupper($bench) }}</b></p>
 
-<p><b>SUBJECT:</b> <b><u>APPEAL UNDER SECTION 131 OF THE INCOME TAX ORDINANCE, 2001 IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</u></b></p>
+<p>Appeal/Application No.<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 360px;">&nbsp;</span></p>
 
-<p><b>APPELLANT:</b> {{ strtoupper($clientName) }},<br>
-{{ $idType }} No. {{ $ntn }},<br>
-{{ $address }}</p>
+@php
+$boxOpen  = '<span style="display:inline-block; width: 10pt; height: 10pt; border: 1px solid #000; vertical-align: middle; margin-right: 4pt;"></span>';
+$boxCheck = '<span style="display:inline-block; width: 10pt; height: 10pt; border: 1px solid #000; vertical-align: middle; margin-right: 4pt; text-align: center; line-height: 10pt; font-size: 10pt;">&#10003;</span>';
+@endphp
 
-<p><b>RESPONDENTS:</b></p>
-<p class="indent">1. {{ strtoupper($respondent2) }}</p>
-<p class="indent">2. {{ strtoupper($respondent1) }}</p>
-
-<h2 style="margin-top: 24pt;">MEMORANDUM OF APPEAL</h2>
-
-<p><b>Respected Sir,</b></p>
-
-<p>The Appellant most humbly and respectfully begs to submit as under:</p>
-
-<table style="margin-top: 12pt;">
+<table style="margin-top: 4pt;">
     <tr>
-        <td style="width: 8%;" class="center">1.</td>
-        <td style="width: 50%;">Section under which the order appealed against has been passed</td>
-        <td>{{ $section }}</td>
-    </tr>
-    <tr>
-        <td class="center">2.</td>
-        <td>Date of order appealed against</td>
-        <td>{{ $ciraOrderDate }}</td>
-    </tr>
-    <tr>
-        <td class="center">3.</td>
-        <td>Authority who passed the order</td>
-        <td>{{ $respondent2 }}</td>
-    </tr>
-    <tr>
-        <td class="center">4.</td>
-        <td>Order No. of CIR(A)</td>
-        <td>{{ $ciraOrderNo }}</td>
-    </tr>
-    <tr>
-        <td class="center">5.</td>
-        <td>Order No. of Assessing Officer (u/s 122)</td>
-        <td>{{ $assessmentOrderNo }} dated {{ $assessmentOrderDate }}</td>
-    </tr>
-    <tr>
-        <td class="center">6.</td>
-        <td>Tax Year</td>
-        <td>{{ $taxYear ?: '________' }}</td>
-    </tr>
-    <tr>
-        <td class="center">7.</td>
-        <td>Demand created by the Assessing Officer (PKR)</td>
-        <td>{{ $demandAmount !== null && $demandAmount !== '' ? number_format((float)$demandAmount, 2) : '_______________' }}</td>
-    </tr>
-    <tr>
-        <td class="center">8.</td>
-        <td>Amount paid against demand (PKR)</td>
-        <td>{{ $amountPaid !== null && $amountPaid !== '' ? number_format((float)$amountPaid, 2) : '_______________' }}</td>
-    </tr>
-    <tr>
-        <td class="center">9.</td>
-        <td>Balance demand outstanding (PKR)</td>
-        <td>{{ $balanceDemand !== null && $balanceDemand !== '' ? number_format((float)$balanceDemand, 2) : '_______________' }}</td>
-    </tr>
-    <tr>
-        <td class="center">10.</td>
-        <td>Address for service of notices on the Appellant</td>
-        <td>M/s FairTax International, TF-121, Deans Trade Centre, Peshawar Cantt, Peshawar.</td>
+        <th style="width: 22%; text-align: center;">Type of Appeal</th>
+        <td style="width: 39%;">{!! $isSalesTax ? $boxCheck : $boxOpen !!}@if($isSalesTax)<b>1. Sales Tax</b>@else 1. Sales Tax @endif</td>
+        <td>{!! $isSalesTax ? $boxOpen : $boxCheck !!}@if(!$isSalesTax)<b>2. Federal Excise</b>@else 2. Federal Excise @endif</td>
     </tr>
 </table>
 
-<p style="margin-top: 18pt;">The Appellant being aggrieved by the order passed by the {{ $respondent2 }} prefers this appeal before this Honorable Tribunal on the grounds set out in the accompanying Grounds of Appeal, which may kindly be read as an integral part of this memorandum.</p>
+<table style="margin-top: 2pt;">
+    <tr>
+        <th rowspan="2" style="width: 12%; text-align: center; vertical-align: middle;">Relates to:</th>
+        <td style="width: 22%;">{!! $boxOpen !!}1. Main Appeal</td>
+        <td style="width: 22%;">{!! $boxCheck !!}<b>2. Stay Application</b></td>
+        <td style="width: 22%;">{!! $boxOpen !!}3. Early Hearing</td>
+        <td>{!! $boxOpen !!}4. Condonation of delay</td>
+    </tr>
+    <tr>
+        <td>{!! $boxOpen !!}5. Rectification</td>
+        <td>{!! $boxOpen !!}6. Recalling</td>
+        <td colspan="2">{!! $boxOpen !!}7. Others</td>
+    </tr>
+</table>
 
-<p>It is therefore, most humbly and respectfully prayed that this Honorable Tribunal may graciously be pleased to accept this appeal, set aside the impugned order, and grant such other relief as it may deem just and proper in the circumstances of the case.</p>
+<p style="margin-top: 14pt;">Name and Address of Appellant/Applicant&nbsp;&nbsp;<b><u>{{ strtoupper($clientName) }}</u></b><br>
+<b><u>{{ strtoupper($address) }}</u></b></p>
 
-<div class="signature right" style="margin-top: 36pt;">
-    <p><b>Appellant</b></p>
-    <p><b>{{ strtoupper($clientName) }}</b></p>
-    <p style="margin-top: 12pt;">Through</p>
-    <p><b>Waseem Ur Rehman</b><br>
-    (Partner - FairTax International)<br>
-    Authorized Representative</p>
-</div>
+<p>Cell, Phone/Fax No. and e-mail Address&nbsp;&nbsp;<b><u>{{ $contactLine }}</u></b></p>
+
+<p>Name and Address of Advocate/Representative&nbsp;&nbsp;<b><u>WASEEM UR REHMAN, FAIRTAX INTERNATIONAL</u></b><br>
+<b><u>TF-121, DEANS TRADE CENTRE, PESHAWAR CANTT, PESHAWAR.</u></b></p>
+
+<p>Cell, Phone/Fax No. and e-mail Address&nbsp;&nbsp;<b><u>0314-9444795&nbsp;&nbsp;&nbsp;fairtaxint@gmail.com</u></b></p>
+
+<p>Name &amp; Address of Respondent(s)&nbsp;&nbsp;1.&nbsp;<b><u>{{ strtoupper($respondent1) }}</u></b><br>
+<span style="margin-left: 230pt;">2.&nbsp;<b><u>{{ strtoupper($respondent2) }}</u></b></span></p>
+
+<p>Inland Revenue Office in which assessment was made&nbsp;&nbsp;<b><u>{{ strtoupper($irOfficeAssessment) }}</u></b></p>
+
+<p>and one which it is located&nbsp;&nbsp;<b><u>{{ strtoupper($irOfficeLocation) }}</u></b></p>
+
+<p>Tax year/ Tax period to which the appeal relates.&nbsp;&nbsp;<b><u>{{ $taxYear ?: '_______________' }}</u></b></p>
+
+<p>Section of the Ordinance/Act under which Commissioner passed the order&nbsp;&nbsp;<b><u>{{ $section }}</u></b></p>
+
+<p>Commissioner (Appeals) passing the appellate order&nbsp;&nbsp;<b><u>{{ strtoupper($respondent1) }}</u></b></p>
+
+<p>Date of communication of the order appeal against&nbsp;&nbsp;<b><u>{{ $communicationDate }}</u></b></p>
+
+<p style="text-align: center; margin-top: 14pt;"><b><u>VERIFICATION</u></b></p>
+
+<p>I&nbsp;<b><u>{{ strtoupper($verifierName) }}</u></b>&nbsp;the&nbsp;<b><u>{{ strtoupper($verifierDesignation) }}</u></b>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
+
+<p>Verified today, the&nbsp;<b><u>{{ strtoupper($verificationDay) }}</u></b>&nbsp;day of&nbsp;<b><u>{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</u></b></p>
+
+<p style="text-align: right; margin-top: 24pt;">Signature of Appellant/Applicant&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span></p>
+
+<p style="text-align: right; margin-top: 24pt;">Signature of Authorized Representative&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span></p>
+
+<p style="margin-top: 14pt;"><b><u>Enclosures</u></b></p>
+
+<table class="no-border">
+    <tr>
+        <td style="width: 50%; vertical-align: top;">
+            1. Memorandum of Appeal<br>
+            2. Index documents<br>
+            3. Power of attorney<br>
+            4. Affidavit<br>
+            5. Summary of the case
+        </td>
+        <td style="vertical-align: top;">
+            6. Recovery Memo/Seizure Report/Copy of FIR (if any)<br>
+            7. Show cause notice<br>
+            8. Order-in-original<br>
+            9. Order-in-appeal<br>
+            10. Any other document(s) relating to this appeal
+        </td>
+    </tr>
+</table>
+
+<p style="text-align: center; font-weight: bold; margin-top: 14pt; border-top: 1px solid #000; padding-top: 8pt;">For Official Use only:</p>
+
+<p>Received in registry against Diary No.&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span>&nbsp;on&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 140px;">&nbsp;</span></p>
+
+<p>Objection(s)&nbsp;&nbsp;1.&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;2.&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span></p>
+
+<p style="margin-left: 70pt;">3.&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;4.&nbsp;<span style="display:inline-block; border-bottom: 1px solid #000; min-width: 180px;">&nbsp;</span></p>
+
+<p style="text-align: right; margin-top: 24pt;"><b>Assistant Registrar</b></p>

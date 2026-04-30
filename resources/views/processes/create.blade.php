@@ -89,11 +89,26 @@ $isStay = str_contains($template, 'stay');
         <div class="card-body" style="padding: 24px;">
             <!-- Bench & Tax Year -->
             <div class="row">
+                @if(str_starts_with($template, 'st-'))
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Type of Appeal <span class="text-danger">*</span></label>
+                    <select name="type_of_appeal" class="form-select" required>
+                        <option value="sales_tax" {{ old('type_of_appeal') === 'sales_tax' ? 'selected' : '' }}>Sales Tax</option>
+                        <option value="federal_excise" {{ old('type_of_appeal') === 'federal_excise' ? 'selected' : '' }}>Federal Excise Duty</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                @else
                 <div class="col-md-6 mb-3">
+                @endif
                     <label class="form-label">Bench <span class="text-danger">*</span></label>
                     <input type="text" name="bench" class="form-control" value="{{ old('bench') }}" required placeholder="Peshawar Bench, Peshawar">
                 </div>
+                @if(str_starts_with($template, 'st-'))
+                <div class="col-md-4 mb-3">
+                @else
                 <div class="col-md-6 mb-3">
+                @endif
                     <label class="form-label">Tax Year <span class="text-danger">*</span></label>
                     <input type="text" name="tax_year" class="form-control" value="{{ old('tax_year') }}" required placeholder="e.g. 2025-2026">
                 </div>
