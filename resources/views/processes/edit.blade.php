@@ -161,7 +161,7 @@ $templateNames = [
                     <label class="form-label">{{ $label }} <small class="text-muted">(PDF / image)</small></label>
                     <input type="file" name="{{ $field }}" class="form-control" accept=".pdf,image/*">
                     @if(!empty($meta[$field]))
-                        <small class="d-block mt-1"><a href="{{ asset($meta[$field]) }}" target="_blank"><i class="bi bi-paperclip me-1"></i>View current file</a></small>
+                        <small class="d-block mt-1"><a href="{{ asset($meta[$field]) }}" target="_blank"><i class="bi bi-paperclip me-1"></i>View current file</a> &middot; {{ $meta[$field . '_pages'] ?? 1 }} page{{ ($meta[$field . '_pages'] ?? 1) == 1 ? '' : 's' }}</small>
                     @endif
                 </div>
                 @endforeach

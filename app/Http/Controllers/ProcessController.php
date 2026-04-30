@@ -123,11 +123,43 @@ class ProcessController extends Controller
             $filename = $field . '-' . time() . '.' . $ext;
             $file->move($dir, $filename);
             $metadata[$field] = 'uploads/processes/' . $process->id . '/' . $filename;
+            $metadata[$field . '_pages'] = $this->countAttachmentPages($dir . '/' . $filename);
             $changed = true;
         }
         if ($changed) {
             $process->update(['metadata' => $metadata]);
         }
+    }
+
+    /**
+     * Count physical pages in an uploaded attachment.
+     *  - Images = 1
+     *  - PDF: regex against the raw bytes (looks for /Type /Pages /Count, falls back to counting /Type /Page objects)
+     *  - Anything else / unparseable = 1
+     */
+    private function countAttachmentPages(string $filePath): int
+    {
+        if (!is_file($filePath)) return 1;
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff'])) {
+            return 1;
+        }
+
+        if ($ext === 'pdf') {
+            $content = @file_get_contents($filePath);
+            if (!$content) return 1;
+            if (preg_match('/\/Type\s*\/Pages\b[^>]*?\/Count\s+(\d+)/s', $content, $m)) {
+                return max(1, (int) $m[1]);
+            }
+            if (preg_match('/\/Count\s+(\d+)[^>]*?\/Type\s*\/Pages\b/s', $content, $m)) {
+                return max(1, (int) $m[1]);
+            }
+            $count = preg_match_all('/\/Type\s*\/Page(?!\w)/i', $content, $matches);
+            if ($count > 0) return $count;
+        }
+
+        return 1;
     }
 
     public function show(Process $process)

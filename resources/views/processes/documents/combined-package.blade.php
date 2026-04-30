@@ -1,16 +1,31 @@
 @php
+// Cumulative page numbering with multi-page attachment support
+$orderInAppealPages   = max(1, (int) ($meta['order_in_appeal_file_pages']   ?? 1));
+$orderInOriginalPages = max(1, (int) ($meta['order_in_original_file_pages'] ?? 1));
+$recoveryNoticePages  = max(1, (int) ($meta['recovery_notice_file_pages']   ?? 1));
+
+$pAppealMemo      = 1;
+$pStayApp         = $pAppealMemo + 1;
+$pGrounds         = $pStayApp + 1;
+$pOrderInAppeal   = $pGrounds + 1;
+$pOrderInOriginal = $pOrderInAppeal + $orderInAppealPages;
+$pRecoveryNotice  = $pOrderInOriginal + $orderInOriginalPages;
+$pIntimation      = $pRecoveryNotice + $recoveryNoticePages;
+$pPOA             = $pIntimation + 1;
+$pAffidavit       = $pPOA + 1;
+
 // pageNo is null for sections that should not be page-numbered (e.g. INDEX)
 $sections = [
-    ['title' => 'INDEX',              'view' => 'processes.documents.index-page',         'fileMeta' => null,                     'pageNo' => null],
-    ['title' => 'APPEAL MEMO',        'view' => 'processes.documents.appeal-memo',        'fileMeta' => null,                     'pageNo' => 1],
-    ['title' => 'STAY APPLICATION',   'view' => 'processes.documents.stay-application',   'fileMeta' => null,                     'pageNo' => 2],
-    ['title' => 'GROUNDS OF APPEAL',  'view' => 'processes.documents.grounds-of-appeal',  'fileMeta' => null,                     'pageNo' => 3],
-    ['title' => 'ORDER IN APPEAL',    'view' => null,                                      'fileMeta' => 'order_in_appeal_file',    'pageNo' => 4],
-    ['title' => 'ORDER IN ORIGINAL',  'view' => null,                                      'fileMeta' => 'order_in_original_file',  'pageNo' => 5],
-    ['title' => 'RECOVERY NOTICE',    'view' => null,                                      'fileMeta' => 'recovery_notice_file',    'pageNo' => 6],
-    ['title' => 'INTIMATION LETTER',  'view' => 'processes.documents.intimation',         'fileMeta' => null,                     'pageNo' => 7],
-    ['title' => 'POWER OF ATTORNEY',  'view' => 'processes.documents.power-of-attorney',  'fileMeta' => null,                     'pageNo' => 8],
-    ['title' => 'AFFIDAVIT',          'view' => 'processes.documents.affidavit',          'fileMeta' => null,                     'pageNo' => 9],
+    ['title' => 'INDEX',              'view' => 'processes.documents.index-page',         'fileMeta' => null,                       'pageNo' => null,             'pages' => 1],
+    ['title' => 'APPEAL MEMO',        'view' => 'processes.documents.appeal-memo',        'fileMeta' => null,                       'pageNo' => $pAppealMemo,     'pages' => 1],
+    ['title' => 'STAY APPLICATION',   'view' => 'processes.documents.stay-application',   'fileMeta' => null,                       'pageNo' => $pStayApp,        'pages' => 1],
+    ['title' => 'GROUNDS OF APPEAL',  'view' => 'processes.documents.grounds-of-appeal',  'fileMeta' => null,                       'pageNo' => $pGrounds,        'pages' => 1],
+    ['title' => 'ORDER IN APPEAL',    'view' => null,                                      'fileMeta' => 'order_in_appeal_file',     'pageNo' => $pOrderInAppeal,   'pages' => $orderInAppealPages],
+    ['title' => 'ORDER IN ORIGINAL',  'view' => null,                                      'fileMeta' => 'order_in_original_file',   'pageNo' => $pOrderInOriginal, 'pages' => $orderInOriginalPages],
+    ['title' => 'RECOVERY NOTICE',    'view' => null,                                      'fileMeta' => 'recovery_notice_file',     'pageNo' => $pRecoveryNotice,  'pages' => $recoveryNoticePages],
+    ['title' => 'INTIMATION LETTER',  'view' => 'processes.documents.intimation',         'fileMeta' => null,                       'pageNo' => $pIntimation,     'pages' => 1],
+    ['title' => 'POWER OF ATTORNEY',  'view' => 'processes.documents.power-of-attorney',  'fileMeta' => null,                       'pageNo' => $pPOA,            'pages' => 1],
+    ['title' => 'AFFIDAVIT',          'view' => 'processes.documents.affidavit',          'fileMeta' => null,                       'pageNo' => $pAffidavit,      'pages' => 1],
 ];
 @endphp
 
@@ -45,7 +60,7 @@ $sections = [
 @foreach($sections as $section)
 <div class="cp-section">
     @if($section['pageNo'])
-    <div class="cp-page-no">{{ $section['pageNo'] }}</div>
+    <div class="cp-page-no">{{ $section['pages'] > 1 ? $section['pageNo'] . '-' . ($section['pageNo'] + $section['pages'] - 1) : $section['pageNo'] }}</div>
     @endif
 
     @if($section['view'])
