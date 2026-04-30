@@ -2,25 +2,26 @@
 $bench = $meta['bench'] ?? 'Peshawar Bench Peshawar';
 $clientName = $meta['appellant_name'] ?? $process->client->name ?? '_______________';
 $ntn = $meta['ntn_cnic'] ?? '_______________';
-$taxYear = $meta['tax_year'] ?? '________';
+$taxYear = trim($meta['tax_year'] ?? '');
 $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
-
-$copies = ['MEMBER COPY', 'ACCOUNTANT COPY', 'TRIBUNAL COPY', 'OFFICE COPY'];
 @endphp
 
-@foreach($copies as $copyIdx => $copyLabel)
-@if($copyIdx > 0)<div class="page-break"></div>@endif
-
-<p class="center bold" style="font-size: 14pt; margin-bottom: 24pt;">{{ $copyLabel }}</p>
+<table style="border: none; margin-bottom: 18pt;">
+    <tr>
+        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">MEMBER COPY</td>
+        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">ACCOUNTANT COPY</td>
+        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">TRIBUNAL COPY</td>
+        <td style="border: 1px solid #000; padding: 8pt 14pt; text-align: center; font-weight: bold;">OFFICE COPY</td>
+    </tr>
+</table>
 
 <h1>BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
-<p class="center"><b>In RE: CM No.____________________/{{ $year }}</b></p>
-<p class="center"><b>In ITA No. ____________________/{{ $year }}</b></p>
+<p><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
-<p><b>Appellant:</b> STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }} FOR THE TAX YEAR {{ $taxYear }}</p>
+<p><b>Appellant:</b> STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</p>
 
 <p><b>Respondents:</b></p>
 <p class="indent">1. {{ strtoupper($respondent2) }}</p>
@@ -57,4 +58,3 @@ $copies = ['MEMBER COPY', 'ACCOUNTANT COPY', 'TRIBUNAL COPY', 'OFFICE COPY'];
     M/S FAIRTAX INTERNATIONAL<br>
     AUTHORIZED REPRESENTATIVE</p>
 </div>
-@endforeach

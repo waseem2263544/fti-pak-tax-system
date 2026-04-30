@@ -5,11 +5,8 @@
 @section('content')
 <div class="card">
     <div class="card-body" style="padding: 28px;">
-        <div class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-                <h4 style="font-weight: 700; color: var(--primary); margin: 0;">{{ $process->title }}</h4>
-                <p class="mt-1 mb-0" style="color: #9ca3af; font-size: 0.85rem;">{{ $process->client->name }} &middot; {{ $process->service->display_name }}</p>
-            </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 style="font-weight: 700; color: var(--primary); margin: 0; flex: 1;">{{ $process->title }}</h4>
             <div class="d-flex gap-2">
                 <a href="{{ route('processes.edit', $process) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
                 <form action="{{ route('processes.destroy', $process) }}" method="POST" onsubmit="return confirm('Delete this process?')">
@@ -181,8 +178,8 @@
                             <i class="bi bi-list-columns-reverse" style="color: var(--primary); font-size: 1.1rem;"></i>
                         </div>
                         <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Index (4 Copies)</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Member, Accountant, Tribunal, Office</div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Index</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Print 4× and tick the copy type</div>
                         </div>
                     </div>
                 </a>

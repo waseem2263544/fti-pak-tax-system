@@ -2,7 +2,7 @@
 $bench = $meta['bench'] ?? 'Peshawar Bench Peshawar';
 $clientName = $meta['appellant_name'] ?? $process->client->name ?? '_______________';
 $ntn = $meta['ntn_cnic'] ?? '_______________';
-$taxYear = $meta['tax_year'] ?? '________';
+$taxYear = trim($meta['tax_year'] ?? '');
 $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
@@ -19,7 +19,7 @@ Peshawar</p>
 
 <p class="right">Dated: {{ date('d-M-Y') }}<br>Ref: {{ $referenceNo }}</p>
 
-<p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }} FOR THE TAX YEAR {{ $taxYear }}</b></p>
+<p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</b></p>
 
 <p>Respected Sir,</p>
 

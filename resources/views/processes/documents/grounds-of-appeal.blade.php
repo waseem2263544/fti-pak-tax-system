@@ -1,13 +1,13 @@
 @php
 $clientName = $meta['appellant_name'] ?? $process->client->name ?? '_______________';
-$taxYear = $meta['tax_year'] ?? '________';
+$taxYear = trim($meta['tax_year'] ?? '');
 $section = $meta['section'] ?? '122(1)/129';
 $grounds = $meta['grounds'] ?? '';
 @endphp
 
 <h1>{{ strtoupper($clientName) }}</h1>
 
-<h2>GROUNDS OF APPEAL<br>FOR THE TAX YEAR {{ $taxYear }}<br>AGAINST THE ORDER U/S {{ $section }}</h2>
+<h2>GROUNDS OF APPEAL@if($taxYear)<br>FOR THE TAX YEAR {{ $taxYear }}@endif<br>AGAINST THE ORDER U/S {{ $section }}</h2>
 
 <div style="margin-top: 24pt; text-align: justify; line-height: 1.8;">
 {!! $grounds !!}
