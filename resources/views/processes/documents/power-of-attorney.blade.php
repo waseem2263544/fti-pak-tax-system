@@ -23,7 +23,7 @@ $pronounObject = $isIndividual ? 'me' : 'us';
 {{-- Stamp-paper reminder watermark (screen only, hidden when printing) --}}
 <style>
 .stamp-paper-watermark {
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-30deg);
