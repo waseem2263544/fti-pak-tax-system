@@ -113,12 +113,15 @@
 @if($process->template === 'st-tribunal-stay')
 <!-- Combined Package -->
 <div class="card mt-4">
-    <div class="card-body" style="padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+    <div class="card-body" style="padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
         <div>
             <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;"><i class="bi bi-collection me-1"></i>Combined Package</div>
-            <div style="font-size: 0.82rem; color: #6b7280;">All 10 documents in sequence with page numbers, ready to print as one PDF.</div>
+            <div style="font-size: 0.82rem; color: #6b7280;">All documents merged with running page numbers (Index page stays unnumbered).</div>
         </div>
-        <a href="{{ route('processes.document.combined', $process) }}" target="_blank" class="btn btn-accent"><i class="bi bi-eye me-1"></i>Open Combined Package</a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('processes.document.combined', $process) }}" target="_blank" class="btn btn-outline-primary"><i class="bi bi-eye me-1"></i>Preview</a>
+            <a href="{{ route('processes.document.combined-pdf', $process) }}" class="btn btn-accent"><i class="bi bi-file-earmark-pdf me-1"></i>Download Combined PDF</a>
+        </div>
     </div>
 </div>
 

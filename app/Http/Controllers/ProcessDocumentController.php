@@ -125,6 +125,102 @@ class ProcessDocumentController extends Controller
         ]);
     }
 
+    /**
+     * Build a single merged PDF: generated docs + uploaded PDFs/images, with a
+     * running page number stamped on every page (Index excluded).
+     */
+    public function combinedPdf(Process $process)
+    {
+        $meta = $process->metadata ?? [];
+        $process->load('client');
+
+        $tempDir = storage_path('app/mpdf-temp');
+        if (!is_dir($tempDir)) @mkdir($tempDir, 0775, true);
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 18,
+            'margin_right' => 18,
+            'margin_top' => 22,
+            'margin_bottom' => 18,
+            'margin_header' => 8,
+            'margin_footer' => 8,
+            'tempDir' => $tempDir,
+        ]);
+
+        $renderDoc = function ($view) use ($process, $meta) {
+            $content = view($view, [
+                'process' => $process,
+                'meta' => $meta,
+                'inCombinedPdf' => true,
+            ])->render();
+            return view('processes.documents._pdf-wrapper', ['content' => $content])->render();
+        };
+
+        // ── Page 1: INDEX (no page number) ─────────────────────────────────
+        $mpdf->SetHTMLHeader('');
+        $mpdf->WriteHTML($renderDoc('processes.documents.index-page'));
+
+        // From here on: enable bold top-right page number, restart counter at 1
+        $headerHtml = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';
+
+        $first = true;
+        $emit = function ($view) use ($mpdf, $renderDoc, $headerHtml, &$first) {
+            if ($first) {
+                // Reset page counter so the first numbered page becomes 1
+                $mpdf->AddPage('', '', '1');
+                $mpdf->SetHTMLHeader($headerHtml);
+                $first = false;
+            } else {
+                $mpdf->AddPage();
+            }
+            $mpdf->WriteHTML($renderDoc($view));
+        };
+
+        $emit('processes.documents.appeal-memo');
+        $emit('processes.documents.stay-application');
+        $emit('processes.documents.grounds-of-appeal');
+
+        // ── Imported attachments: each page becomes its own page in the package
+        foreach (['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file'] as $field) {
+            if (empty($meta[$field])) continue;
+            $abs = public_path($meta[$field]);
+            if (!file_exists($abs)) continue;
+
+            $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+            if ($ext === 'pdf') {
+                try {
+                    $pageCount = $mpdf->setSourceFile($abs);
+                    for ($i = 1; $i <= $pageCount; $i++) {
+                        $tplId = $mpdf->importPage($i);
+                        $size = $mpdf->getTemplateSize($tplId);
+                        $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+                        $mpdf->AddPageByArray([
+                            'orientation' => $orientation,
+                            'sheet-size' => [$size['width'], $size['height']],
+                        ]);
+                        $mpdf->useTemplate($tplId);
+                    }
+                } catch (\Exception $e) {
+                    $mpdf->AddPage();
+                    $mpdf->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment: ' . e($field) . '</p>');
+                }
+            } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                $mpdf->AddPage();
+                $mpdf->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
+            }
+        }
+
+        $emit('processes.documents.intimation');
+        $emit('processes.documents.power-of-attorney');
+        $emit('processes.documents.affidavit');
+
+        $clientName = $meta['appellant_name'] ?? $process->client->name ?? 'Process';
+        $filename = 'Combined Package - ' . $clientName . '.pdf';
+        $mpdf->Output($filename, \Mpdf\Output\Destination::DOWNLOAD);
+    }
+
     public function preview(Process $process, $document)
     {
         $meta = $process->metadata ?? [];

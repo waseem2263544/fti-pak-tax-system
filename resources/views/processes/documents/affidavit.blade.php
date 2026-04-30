@@ -18,7 +18,8 @@ $verifierDesignation = $meta['verifier_designation'] ?? '';
 {{-- Reserve top space for stamp-paper printed header --}}
 <div style="height: 3in;"></div>
 
-{{-- Stamp-paper reminder watermark (screen only, hidden when printing) --}}
+@if(!($inCombinedPdf ?? false))
+{{-- Stamp-paper reminder watermark (screen-only preview, hidden in print + omitted from combined PDF) --}}
 <style>
 .stamp-paper-watermark {
     position: absolute;
@@ -40,6 +41,7 @@ $verifierDesignation = $meta['verifier_designation'] ?? '';
 }
 </style>
 <div class="stamp-paper-watermark">Print on Rs. 200 Stamp Paper</div>
+@endif
 @endif
 
 <h1>BEFORE THE APPELLATE TRIBUNAL,<br>INLAND REVENUE, {{ strtoupper($bench) }}</h1>

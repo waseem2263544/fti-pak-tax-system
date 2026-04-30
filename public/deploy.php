@@ -30,7 +30,7 @@ $zip = new ZipArchive;
 if ($zip->open($zipFile) !== true) { die("Cannot open zip\n"); }
 
 $prefix = $zip->getNameIndex(0);
-$skip = ['.env', 'vendor/', 'storage/logs/', 'storage/framework/sessions/', 'storage/framework/views/', 'node_modules/'];
+$skip = ['.env', 'storage/logs/', 'storage/framework/sessions/', 'storage/framework/views/', 'node_modules/'];
 
 $count = 0;
 for ($i = 0; $i < $zip->numFiles; $i++) {
