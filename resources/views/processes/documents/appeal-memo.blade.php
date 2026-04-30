@@ -161,7 +161,8 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<p style="text-align: center; margin: 26pt 0 12pt; font-size: 12pt;"><b><u>VERIFICATION</u></b></p>
+<pagebreak />
+<p style="text-align: center; margin: 0 0 12pt; font-size: 12pt;"><b><u>VERIFICATION</u></b></p>
 
 @if($isIndividual)
 <p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
