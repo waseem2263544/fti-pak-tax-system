@@ -178,6 +178,46 @@ $isStay = str_contains($template, 'stay');
                 </div>
             </div>
 
+            @if(str_starts_with($template, 'st-'))
+            <!-- Appeal Memo (Form B) Details -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Section of Ordinance/Act</label>
+                    <input type="text" name="section" class="form-control" value="{{ old('section') }}" placeholder="e.g. 11E, 122(1)">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Date of Communication of Order</label>
+                    <input type="date" name="communication_date" class="form-control" value="{{ old('communication_date') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Date of Filing of Appeal</label>
+                    <input type="date" name="filing_date" class="form-control" value="{{ old('filing_date') }}">
+                    <small class="text-muted">Used as verification date on the memo</small>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">IR Office (where assessment was made)</label>
+                    <input type="text" name="ir_office_assessment" class="form-control" value="{{ old('ir_office_assessment') }}" placeholder="e.g. Corporate Zone, RTO Peshawar">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">IR Office Location</label>
+                    <input type="text" name="ir_office_location" class="form-control" value="{{ old('ir_office_location') }}" placeholder="e.g. Regional Tax Office, Jamrud Road, Peshawar">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Verifier Name <small class="text-muted">(for companies/AOPs)</small></label>
+                    <input type="text" name="verifier_name" class="form-control" value="{{ old('verifier_name') }}" placeholder="e.g. Zakir Khan">
+                    <small class="text-muted">For individuals (13-digit CNIC), appellant name + CNIC are used automatically.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Verifier Designation <small class="text-muted">(for companies/AOPs)</small></label>
+                    <input type="text" name="verifier_designation" class="form-control" value="{{ old('verifier_designation') }}" placeholder="e.g. Director, Partner">
+                </div>
+            </div>
+            @endif
+
             <!-- Intimation Reference -->
             <div class="row">
                 <div class="col-md-6 mb-3">

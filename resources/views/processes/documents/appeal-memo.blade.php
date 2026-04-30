@@ -19,11 +19,38 @@ $irOfficeLocation = $meta['ir_office_location'] ?? '';
 $communicationDate = $meta['communication_date'] ?? $ciraOrderDate;
 $verifierName = $meta['verifier_name'] ?? '';
 $verifierDesignation = $meta['verifier_designation'] ?? '';
-$verificationDay = $meta['verification_day'] ?? '';
-$verificationMonth = $meta['verification_month'] ?? '';
-$verificationYear = $meta['verification_year'] ?? date('Y');
 $typeOfAppeal = $meta['type_of_appeal'] ?? 'sales_tax';
 $isSalesTax = $typeOfAppeal === 'sales_tax';
+
+// Determine individual vs company from registration number digits
+$ntnDigits = preg_replace('/\D/', '', $ntn);
+$isIndividual = strlen($ntnDigits) === 13;
+
+// Derive verification day / month / year from filing date
+$filingDate = $meta['filing_date'] ?? null;
+$verificationDay = '';
+$verificationMonth = '';
+$verificationYear = date('Y');
+if ($filingDate) {
+    try {
+        $dt = \Carbon\Carbon::parse($filingDate);
+        $verificationDay = $dt->format('jS');
+        $verificationMonth = $dt->format('F');
+        $verificationYear = $dt->format('Y');
+    } catch (\Exception $e) {
+        // ignore parse errors
+    }
+}
+
+// Format communication date as readable
+$communicationDateDisplay = '';
+if ($communicationDate && $communicationDate !== '_______________') {
+    try {
+        $communicationDateDisplay = \Carbon\Carbon::parse($communicationDate)->format('d-M-Y');
+    } catch (\Exception $e) {
+        $communicationDateDisplay = $communicationDate;
+    }
+}
 
 // Reusable inline styles
 $rowLabel = 'border: none; padding: 6pt 8pt 6pt 0; vertical-align: top;';
@@ -130,13 +157,17 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
     <tr>
         <td style="{{ $rowLabel }}">Date of communication of the order appeal against</td>
-        <td style="{{ $rowValue }}">{{ $communicationDate !== '_______________' ? $communicationDate : '' }}</td>
+        <td style="{{ $rowValue }}">{{ $communicationDateDisplay }}</td>
     </tr>
 </table>
 
 <p style="text-align: center; margin: 26pt 0 12pt; font-size: 12pt;"><b><u>VERIFICATION</u></b></p>
 
-<p style="line-height: 2.0; margin: 0; text-align: justify;">I&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ strtoupper($verifierName) }}</span>&nbsp;the&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
+@if($isIndividual)
+<p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 180pt; display: inline-block;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 12pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
+@else
+<p style="line-height: 2.0; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 16pt; font-weight: bold; min-width: 140pt; display: inline-block;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
+@endif
 
 <p style="line-height: 2.0; margin: 10pt 0 0;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 12pt; font-weight: bold; min-width: 50pt; display: inline-block;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; padding: 0 12pt; font-weight: bold; min-width: 120pt; display: inline-block;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
 

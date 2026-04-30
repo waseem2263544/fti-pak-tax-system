@@ -67,6 +67,9 @@ class ProcessController extends Controller
             'demand_amount', 'amount_paid', 'balance_demand',
             'grounds', 'prayer', 'stay_reasons',
             'type_of_appeal',
+            'ir_office_assessment', 'ir_office_location',
+            'communication_date', 'filing_date',
+            'verifier_name', 'verifier_designation',
         ];
         $metadata = [];
         foreach ($metadataFields as $field) {
@@ -123,6 +126,9 @@ class ProcessController extends Controller
             'demand_amount', 'amount_paid', 'balance_demand',
             'grounds', 'prayer', 'stay_reasons',
             'type_of_appeal',
+            'ir_office_assessment', 'ir_office_location',
+            'communication_date', 'filing_date',
+            'verifier_name', 'verifier_designation',
         ];
         $metadata = $process->metadata ?? [];
         foreach ($metadataFields as $field) {
