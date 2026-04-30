@@ -12,6 +12,8 @@ $idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 $isIndividual = $idType === 'CNIC';
 $verifierName = $meta['verifier_name'] ?? '';
 $verifierDesignation = $meta['verifier_designation'] ?? '';
+$pronounPossessive = $isIndividual ? 'my' : 'our';
+$pronounObject = $isIndividual ? 'me' : 'us';
 @endphp
 
 @if($isStTribunalStay)
@@ -77,7 +79,7 @@ NTN/CNIC No. {{ $ntn }}</p>
     <li>Engage further counsel or substitute representation as may be required.</li>
 </ol>
 
-<p style="margin-top: 12pt;">All acts and deeds lawfully performed by the said Authorized Representative in pursuance of this Power of Attorney shall be deemed to have been done with @if($isIndividual)my@else our@endif full knowledge and consent and shall be binding upon @if($isIndividual)me@else us@endif.</p>
+<p style="margin-top: 12pt;">All acts and deeds lawfully performed by the said Authorized Representative in pursuance of this Power of Attorney shall be deemed to have been done with {{ $pronounPossessive }} full knowledge and consent and shall be binding upon {{ $pronounObject }}.</p>
 
 @if($isStTribunalStay && !$isIndividual)
 {{-- Company signature block --}}
