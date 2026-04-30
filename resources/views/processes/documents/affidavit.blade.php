@@ -2,18 +2,34 @@
 $bench = $meta['bench'] ?? 'Peshawar Bench Peshawar';
 $clientName = $meta['appellant_name'] ?? $process->client->name ?? '_______________';
 $ntn = $meta['ntn_cnic'] ?? '_______________';
+$address = $meta['appellant_address'] ?? '_______________';
 $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
+$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$ntnDigits = preg_replace('/\D/', '', $ntn);
+$idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
+$isIndividual = $idType === 'CNIC';
+$verifierName = $meta['verifier_name'] ?? '';
+$verifierDesignation = $meta['verifier_designation'] ?? '';
 @endphp
+
+@if($isStTribunalStay)
+{{-- Reserve top space for stamp-paper printed header --}}
+<div style="height: 3in;"></div>
+@endif
 
 <h1>BEFORE THE APPELLATE TRIBUNAL,<br>INLAND REVENUE, {{ strtoupper($bench) }}</h1>
 
+@if($isStTribunalStay)
+<p><b>Appellant:</b> {{ $clientName }}, {{ $idType }} {{ $ntn }}, {{ $address }}</p>
+@else
 <p class="center"><b>In RE: CM No; ____________________/{{ $year }}</b></p>
 <p class="center"><b>In ITA No: ____________________/{{ $year }}</b></p>
 
 <p><b>Appellant:</b> {{ $clientName }},<br>
 NTN/CNIC No. {{ $ntn }}</p>
+@endif
 
 <p><b>Respondents:</b></p>
 <p class="indent">1. {{ strtoupper($respondent2) }}</p>
@@ -21,10 +37,27 @@ NTN/CNIC No. {{ $ntn }}</p>
 
 <h2 style="margin-top: 36pt;">AFFIDAVIT</h2>
 
-<p>I, <b>{{ $clientName }}</b> CNIC/NTN# <b>{{ $ntn }}</b>, do hereby solemnly affirm that contents of this Application are true and correct to the best of my knowledge and belief, and nothing has been concealed intentionally from this Honorable Tribunal.</p>
+@if($isStTribunalStay && !$isIndividual)
+{{-- Company / AOP affidavit: verifier swears on behalf of the company --}}
+<p>I, <b>{{ $verifierName ?: '_______________' }}</b>, being the <b>{{ $verifierDesignation ?: '_______________' }}</b> of <b>{{ $clientName }}</b>, having NTN <b>{{ $ntn }}</b>, do hereby solemnly affirm that contents of this Application are true and correct to the best of my knowledge and belief, and nothing has been concealed intentionally from this Honorable Tribunal.</p>
+@else
+{{-- Individual affidavit (default) --}}
+<p>I, <b>{{ $clientName }}</b> {{ $idType }}# <b>{{ $ntn }}</b>, do hereby solemnly affirm that contents of this Application are true and correct to the best of my knowledge and belief, and nothing has been concealed intentionally from this Honorable Tribunal.</p>
+@endif
 
+@if($isStTribunalStay && !$isIndividual)
+{{-- Company / AOP signature: verifier signs on behalf of the company --}}
+<div class="signature right" style="margin-top: 72pt;">
+    <p>________________________<br>
+    <b>Signature</b></p>
+    <p style="margin-top: 12pt;"><b>{{ strtoupper($verifierName ?: '_______________') }}</b></p>
+    <p style="margin: 0;">{{ $verifierDesignation ?: '_______________' }}</p>
+    <p style="margin: 0;"><b>{{ strtoupper($clientName) }}</b></p>
+</div>
+@else
 <div class="signature right" style="margin-top: 72pt;">
     <p>________________________<br>
     <b>Signature</b></p>
     <p style="margin-top: 12pt;"><b>{{ strtoupper($clientName) }}</b></p>
 </div>
+@endif
