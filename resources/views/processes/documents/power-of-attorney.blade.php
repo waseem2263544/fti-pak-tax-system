@@ -81,26 +81,25 @@ NTN/CNIC No. {{ $ntn }}</p>
 
 <p style="margin-top: 12pt;">All acts and deeds lawfully performed by the said Authorized Representative in pursuance of this Power of Attorney shall be deemed to have been done with {{ $pronounPossessive }} full knowledge and consent and shall be binding upon {{ $pronounObject }}.</p>
 
-@if($isStTribunalStay && !$isIndividual)
-{{-- Company signature block --}}
-<div class="signature right" style="margin-top: 72pt;">
-    <p>________________________<br>
-    <b>Signature of Executant</b></p>
-    <p style="margin-top: 12pt;"><b>{{ strtoupper($verifierName ?: '_______________') }}</b></p>
-    <p style="margin: 0;">{{ $verifierDesignation ?: '_______________' }}</p>
-    <p style="margin: 0;"><b>{{ strtoupper($clientName) }}</b></p>
-</div>
-@else
-<div class="signature right" style="margin-top: 72pt;">
-    <p>________________________<br>
-    <b>Signature of Executant</b></p>
-    <p style="margin-top: 12pt;"><b>{{ strtoupper($clientName) }}</b></p>
-</div>
-@endif
-
-<div style="margin-top: 36pt;">
-    <p style="margin: 0;"><b>Accepted by:</b></p>
-    <p style="margin-top: 24pt;">________________________<br>
-    <b>Mr. Waseem Ur Rehman</b><br>
-    Director - Fair Tax (Pvt) Ltd</p>
-</div>
+{{-- Side-by-side signature block: Authorized Representative (left) | Executant (right) --}}
+<table class="no-border" style="width: 100%; border: none; margin-top: 48pt; border-collapse: collapse;">
+    <tr>
+        <td style="border: none; padding: 0 12pt 0 0; vertical-align: top; width: 50%; text-align: center;">
+            <p style="margin: 0;">________________________</p>
+            <p style="margin: 6pt 0 0;"><b>Mr. Waseem Ur Rehman</b></p>
+            <p style="margin: 0;">Director - Fair Tax (Pvt) Ltd</p>
+            <p style="margin: 6pt 0 0;"><b>(Authorized Representative)</b></p>
+        </td>
+        <td style="border: none; padding: 0 0 0 12pt; vertical-align: top; width: 50%; text-align: center;">
+            <p style="margin: 0;">________________________</p>
+            @if($isStTribunalStay && !$isIndividual)
+            <p style="margin: 6pt 0 0;"><b>{{ strtoupper($verifierName ?: '_______________') }}</b></p>
+            <p style="margin: 0;">{{ $verifierDesignation ?: '_______________' }}</p>
+            <p style="margin: 0;"><b>{{ strtoupper($clientName) }}</b></p>
+            @else
+            <p style="margin: 6pt 0 0;"><b>{{ strtoupper($clientName) }}</b></p>
+            @endif
+            <p style="margin: 6pt 0 0;"><b>(Executant)</b></p>
+        </td>
+    </tr>
+</table>
