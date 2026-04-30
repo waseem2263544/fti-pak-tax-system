@@ -83,11 +83,12 @@ class ProcessDocumentController extends Controller
                 .no-border td, .no-border th { border: none; }
                 /* Strip pasted highlights from rich-text content (Quill / Word paste) */
                 .rich-content, .rich-content * { background-color: transparent !important; }
-                .rich-content { line-height: 1.5; }
-                .rich-content ul { list-style: disc; padding-left: 2em; margin: 0.6em 0; }
-                .rich-content ol { list-style: decimal; padding-left: 2em; margin: 0.6em 0; }
-                .rich-content li { margin: 0.3em 0; line-height: 1.5; }
-                .rich-content p { margin: 0.6em 0; line-height: 1.5; }
+                .rich-content { line-height: 1.5; font-size: 12pt; }
+                .rich-content p { margin: 0 0 10pt; line-height: 1.5; text-align: justify; }
+                .rich-content p:last-child { margin-bottom: 0; }
+                .rich-content ul { list-style: disc; padding-left: 2.2em; margin: 8pt 0 10pt; }
+                .rich-content ol { list-style: decimal; padding-left: 2.2em; margin: 8pt 0 10pt; }
+                .rich-content li { margin: 0 0 4pt; line-height: 1.5; }
                 .rich-content .ql-indent-1 { padding-left: 2em; }
                 .rich-content .ql-indent-2 { padding-left: 4em; }
                 .rich-content .ql-indent-3 { padding-left: 6em; }
