@@ -11,15 +11,30 @@ $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
 $referenceNo = $meta['reference_no'] ?? '_______________';
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
+$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$ntnDigits = preg_replace('/\D/', '', $ntn);
+$idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 @endphp
 
+@if($isStTribunalStay)
+<div style="max-width: 280pt;">
+    <p style="margin: 0;">{{ $respondent2 }},<br>
+    Regional Tax Office,<br>
+    Peshawar</p>
+</div>
+@else
 <p>{{ $respondent2 }},<br>
 Regional Tax Office,<br>
 Peshawar</p>
+@endif
 
 <p class="right">Dated: {{ date('d-M-Y') }}<br>Ref: {{ $referenceNo }}</p>
 
+@if($isStTribunalStay)
+<p><b>SUBJECT:</b> <b><u>INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }}, {{ $idType }} {{ $ntn }}, FOR THE ASSESSMENT ORDER NO. {{ strtoupper($assessmentOrderNo) }}.</u></b></p>
+@else
 <p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}{!! $taxYearText !!}</b></p>
+@endif
 
 <p>Respected Sir,</p>
 
