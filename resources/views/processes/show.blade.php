@@ -185,6 +185,21 @@
                     </div>
                 </a>
             </div>
+            @if($process->template === 'st-tribunal-stay')
+            <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'power-of-attorney']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99,102,241,0.08); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-key" style="color: #6366f1; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Power of Attorney</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Print on Rs. 200 stamp paper</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            @endif
             <div class="col-md-4">
                 <a href="{{ route('processes.document.preview', [$process, 'index']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
                     <div class="d-flex align-items-center gap-3">

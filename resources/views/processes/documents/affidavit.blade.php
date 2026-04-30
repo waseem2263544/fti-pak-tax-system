@@ -17,6 +17,29 @@ $verifierDesignation = $meta['verifier_designation'] ?? '';
 @if($isStTribunalStay)
 {{-- Reserve top space for stamp-paper printed header --}}
 <div style="height: 3in;"></div>
+
+{{-- Stamp-paper reminder watermark (screen only, hidden when printing) --}}
+<style>
+.stamp-paper-watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 64pt;
+    color: rgba(220, 38, 38, 0.18);
+    font-weight: bold;
+    letter-spacing: 4pt;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+    user-select: none;
+    text-transform: uppercase;
+}
+@media print {
+    .stamp-paper-watermark { display: none !important; }
+}
+</style>
+<div class="stamp-paper-watermark">Print on Rs. 200 Stamp Paper</div>
 @endif
 
 <h1>BEFORE THE APPELLATE TRIBUNAL,<br>INLAND REVENUE, {{ strtoupper($bench) }}</h1>

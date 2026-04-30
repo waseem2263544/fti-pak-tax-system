@@ -37,6 +37,10 @@ class ProcessDocumentController extends Controller
                 'view' => 'processes.documents.grounds-of-appeal',
                 'filename' => 'Grounds of Appeal - ' . ($meta['appellant_name'] ?? $process->client->name ?? 'Client'),
             ],
+            'power-of-attorney' => [
+                'view' => 'processes.documents.power-of-attorney',
+                'filename' => 'Power of Attorney - ' . ($meta['appellant_name'] ?? $process->client->name ?? 'Client'),
+            ],
         ];
 
         if (!isset($templates[$document])) {
@@ -118,6 +122,7 @@ class ProcessDocumentController extends Controller
             'affidavit' => 'processes.documents.affidavit',
             'index' => 'processes.documents.index-page',
             'grounds-of-appeal' => 'processes.documents.grounds-of-appeal',
+            'power-of-attorney' => 'processes.documents.power-of-attorney',
         ];
 
         if (!isset($views[$document])) {
