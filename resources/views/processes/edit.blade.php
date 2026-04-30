@@ -292,14 +292,28 @@ function calcBalance() {
 }
 @endif
 
-// Sync contenteditable editors to hidden inputs on submit
+// Keep hidden inputs in lockstep with their contenteditable editors
+function bindEditor(editorId, hiddenId) {
+    var ed = document.getElementById(editorId);
+    var hi = document.getElementById(hiddenId);
+    if (!ed || !hi) return;
+    var sync = function() { hi.value = ed.innerHTML; };
+    sync(); // populate on load
+    ed.addEventListener('input', sync);
+    ed.addEventListener('blur', sync);
+    ed.addEventListener('keyup', sync);
+}
+bindEditor('grounds-editor', 'grounds-hidden');
+bindEditor('prayer-editor',  'prayer-hidden');
+bindEditor('stay-editor',    'stay-hidden');
+
+// Belt-and-braces: also sync on submit
 document.querySelector('form').addEventListener('submit', function() {
-    var g = document.getElementById('grounds-editor');
-    var p = document.getElementById('prayer-editor');
-    var s = document.getElementById('stay-editor');
-    if (g) document.getElementById('grounds-hidden').value = g.innerHTML;
-    if (p) document.getElementById('prayer-hidden').value = p.innerHTML;
-    if (s) document.getElementById('stay-hidden').value = s.innerHTML;
+    ['grounds', 'prayer', 'stay'].forEach(function(name) {
+        var ed = document.getElementById(name + '-editor');
+        var hi = document.getElementById(name + '-hidden');
+        if (ed && hi) hi.value = ed.innerHTML;
+    });
 });
 </script>
 @endsection
