@@ -8,6 +8,7 @@ $taxYear = trim($meta['tax_year'] ?? '');
 $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
+$taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 @endphp
 
 <table style="border: none; margin-left: auto; margin-right: 0; margin-bottom: 14pt; width: auto;">
@@ -29,7 +30,7 @@ $year = date('Y');
 
 <p><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
-<p><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</u></b></p>
+<p><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
 
 <p><b>RESPONDENTS:</b></p>
 <p class="indent">1. {{ strtoupper($respondent2) }}</p>

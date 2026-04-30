@@ -10,6 +10,7 @@ $assessmentOrderDate = $meta['assessment_order_date'] ?? '_______________';
 $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
 $referenceNo = $meta['reference_no'] ?? '_______________';
+$taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 @endphp
 
 <p>{{ $respondent2 }},<br>
@@ -18,7 +19,7 @@ Peshawar</p>
 
 <p class="right">Dated: {{ date('d-M-Y') }}<br>Ref: {{ $referenceNo }}</p>
 
-<p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</b></p>
+<p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}{!! $taxYearText !!}</b></p>
 
 <p>Respected Sir,</p>
 
