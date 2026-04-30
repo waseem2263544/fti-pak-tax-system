@@ -21,7 +21,7 @@ $templateNames = [
 @endphp
 
 @section('content')
-<form method="POST" action="{{ route('processes.update', $process) }}">
+<form method="POST" action="{{ route('processes.update', $process) }}" enctype="multipart/form-data">
     @csrf @method('PUT')
 
     <!-- Header -->
@@ -148,6 +148,25 @@ $templateNames = [
                     <input type="date" name="recovery_notice_date" class="form-control" value="{{ old('recovery_notice_date', $meta['recovery_notice_date'] ?? '') }}">
                 </div>
             </div>
+
+            @if($template === 'st-tribunal-stay')
+            <!-- Document Attachments (PDF or images) -->
+            <div class="row">
+                @foreach([
+                    'order_in_appeal_file' => 'Order in Appeal',
+                    'order_in_original_file' => 'Order in Original',
+                    'recovery_notice_file' => 'Recovery Notice',
+                ] as $field => $label)
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">{{ $label }} <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="{{ $field }}" class="form-control" accept=".pdf,image/*">
+                    @if(!empty($meta[$field]))
+                        <small class="d-block mt-1"><a href="{{ asset($meta[$field]) }}" target="_blank"><i class="bi bi-paperclip me-1"></i>View current file</a></small>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @endif
 
             @if(str_starts_with($template, 'st-'))
             <!-- Appeal Memo (Form B) Details -->

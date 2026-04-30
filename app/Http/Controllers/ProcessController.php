@@ -88,8 +88,46 @@ class ProcessController extends Controller
         }
 
         $process = Process::create($validated);
+        $this->handleStTribunalStayUploads($request, $process);
         $this->createTaskForAssignment($process);
         return redirect()->route('processes.show', $process)->with('success', 'Process created successfully');
+    }
+
+    /**
+     * Save uploaded Order in Appeal / Order in Original / Recovery Notice files
+     * for st-tribunal-stay processes into public/uploads/processes/{id}/
+     * and merge their public-relative paths into the process metadata.
+     */
+    private function handleStTribunalStayUploads(Request $request, Process $process)
+    {
+        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file'];
+        $metadata = $process->metadata ?? [];
+        $changed = false;
+        foreach ($fields as $field) {
+            if (!$request->hasFile($field)) continue;
+            $file = $request->file($field);
+            if (!$file->isValid()) continue;
+
+            $dir = public_path('uploads/processes/' . $process->id);
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+
+            // Delete old file if present
+            if (!empty($metadata[$field])) {
+                $oldAbs = public_path($metadata[$field]);
+                if (is_file($oldAbs)) @unlink($oldAbs);
+            }
+
+            $ext = $file->getClientOriginalExtension() ?: 'bin';
+            $filename = $field . '-' . time() . '.' . $ext;
+            $file->move($dir, $filename);
+            $metadata[$field] = 'uploads/processes/' . $process->id . '/' . $filename;
+            $changed = true;
+        }
+        if ($changed) {
+            $process->update(['metadata' => $metadata]);
+        }
     }
 
     public function show(Process $process)
@@ -154,6 +192,7 @@ class ProcessController extends Controller
 
         $oldAssignedTo = $process->assigned_to;
         $process->update($validated);
+        $this->handleStTribunalStayUploads($request, $process->fresh());
 
         $newAssignedTo = $validated['assigned_to'] ?? $process->assigned_to;
         if ($newAssignedTo && $newAssignedTo != $oldAssignedTo) {

@@ -35,7 +35,7 @@ $isStay = str_contains($template, 'stay');
     <span style="color: var(--primary); font-weight: 600;">{{ $templateTitle }}</span>
 </div>
 
-<form method="POST" action="{{ route('processes.store') }}">
+<form method="POST" action="{{ route('processes.store') }}" enctype="multipart/form-data">
     @csrf
     <input type="hidden" name="template" value="{{ $template }}">
 
@@ -175,6 +175,24 @@ $isStay = str_contains($template, 'stay');
                     <input type="date" name="recovery_notice_date" class="form-control" value="{{ old('recovery_notice_date') }}">
                 </div>
             </div>
+
+            @if($template === 'st-tribunal-stay')
+            <!-- Document Attachments (PDF or images) -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Order in Appeal <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="order_in_appeal_file" class="form-control" accept=".pdf,image/*">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Order in Original <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="order_in_original_file" class="form-control" accept=".pdf,image/*">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Recovery Notice <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="recovery_notice_file" class="form-control" accept=".pdf,image/*">
+                </div>
+            </div>
+            @endif
 
             @if(str_starts_with($template, 'st-'))
             <!-- Appeal Memo (Form B) Details -->

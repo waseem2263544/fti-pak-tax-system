@@ -10,6 +10,8 @@ $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeal
 $year = date('Y');
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
+$assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
 @endphp
 
 @if($isStTribunalStay)
@@ -50,6 +52,18 @@ $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
         </tr>
     </thead>
     <tbody>
+        @if($isStTribunalStay)
+        <tr><td class="center">1</td><td>INDEX</td><td></td></tr>
+        <tr><td class="center">2</td><td>APPEAL MEMO</td><td></td></tr>
+        <tr><td class="center">3</td><td>STAY APPLICATION</td><td></td></tr>
+        <tr><td class="center">4</td><td>GROUNDS OF APPEAL</td><td></td></tr>
+        <tr><td class="center">5</td><td>ORDER IN APPEAL {{ $ciraOrderNo }}</td><td></td></tr>
+        <tr><td class="center">6</td><td>ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td></td></tr>
+        <tr><td class="center">7</td><td>RECOVERY NOTICE</td><td></td></tr>
+        <tr><td class="center">8</td><td>INTIMATION LETTER</td><td></td></tr>
+        <tr><td class="center">9</td><td>POWER OF ATTORNEY</td><td></td></tr>
+        <tr><td class="center">10</td><td>AFFIDAVIT</td><td></td></tr>
+        @else
         <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
         <tr><td class="center">3</td><td>STAY APPLICATION</td><td></td></tr>
@@ -61,6 +75,7 @@ $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
         <tr><td class="center">9</td><td>INTIMATION LETTER</td><td></td></tr>
         <tr><td class="center">10</td><td>POWER OF ATTORNEY</td><td></td></tr>
         <tr><td class="center">11</td><td>STAY ORDER</td><td></td></tr>
+        @endif
     </tbody>
 </table>
 

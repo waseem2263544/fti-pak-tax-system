@@ -110,6 +110,36 @@
 </div>
 @endif
 
+@if($process->template === 'st-tribunal-stay')
+<!-- Attached Documents -->
+<div class="card mt-4">
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-paperclip" style="color: var(--accent);"></i>
+        <span style="font-weight: 700;">Attached Files</span>
+    </div>
+    <div class="card-body" style="padding: 20px;">
+        <div class="row g-3">
+            @foreach([
+                'order_in_appeal_file' => 'Order in Appeal',
+                'order_in_original_file' => 'Order in Original',
+                'recovery_notice_file' => 'Recovery Notice',
+            ] as $field => $label)
+            <div class="col-md-4">
+                <div class="card" style="padding: 14px; border: 1.5px solid #e8eaed;">
+                    <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem; margin-bottom: 6px;">{{ $label }}</div>
+                    @if(!empty($meta[$field]))
+                        <a href="{{ asset($meta[$field]) }}" target="_blank" style="font-size: 0.78rem; color: #2A8AB8;"><i class="bi bi-file-earmark me-1"></i>View / Download</a>
+                    @else
+                        <span style="font-size: 0.78rem; color: #9ca3af;">Not attached yet</span>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+
 @if($process->template && (str_contains($process->template, 'appeal') || str_contains($process->template, 'stay')))
 <!-- Generate Documents -->
 <div class="card mt-4">
