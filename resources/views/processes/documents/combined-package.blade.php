@@ -30,17 +30,40 @@ $sections = [
 @endphp
 
 <style>
-.cp-section { position: relative; page-break-before: always; }
+.cp-section { position: relative; page-break-before: always; padding-top: 6pt; }
 .cp-section:first-of-type { page-break-before: auto; }
 .cp-page-no {
     position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 11pt;
-    font-weight: bold;
+    top: -4pt;
+    right: -4pt;
+    font-size: 26pt;
+    font-weight: 900;
     color: #000;
+    line-height: 1;
     z-index: 10;
+    letter-spacing: -1pt;
 }
+/* On-screen separator between sections (hidden when printing - real page-break takes over) */
+.cp-separator {
+    height: 26pt;
+    margin: 18pt 0;
+    background: repeating-linear-gradient(
+        45deg,
+        #d1d5db 0,
+        #d1d5db 4pt,
+        transparent 4pt,
+        transparent 12pt
+    );
+    border-top: 2pt solid #303a50;
+    border-bottom: 2pt solid #303a50;
+    text-align: center;
+    color: #6b7280;
+    font-size: 9pt;
+    line-height: 26pt;
+    text-transform: uppercase;
+    letter-spacing: 2pt;
+}
+@media print { .cp-separator { display: none; } }
 .cp-attachment-img { max-width: 100%; max-height: 9in; display: block; margin: 0 auto; }
 .cp-placeholder {
     border: 2pt dashed #aaa;
@@ -57,7 +80,10 @@ $sections = [
 }
 </style>
 
-@foreach($sections as $section)
+@foreach($sections as $idx => $section)
+@if($idx > 0)
+<div class="cp-separator">— End of {{ $sections[$idx - 1]['title'] }} &nbsp;·&nbsp; Next: {{ $section['title'] }} —</div>
+@endif
 <div class="cp-section">
     @if($section['pageNo'])
     <div class="cp-page-no">{{ $section['pages'] > 1 ? $section['pageNo'] . '-' . ($section['pageNo'] + $section['pages'] - 1) : $section['pageNo'] }}</div>

@@ -159,101 +159,37 @@
         <span style="font-weight: 700;">Generate Documents</span>
     </div>
     <div class="card-body" style="padding: 20px;">
-        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Click to preview and download auto-generated documents with all case details filled in.</p>
+        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Documents are listed in the same order they appear in the Combined Package.</p>
+        @php
+            $isStTribunalStay = $process->template === 'st-tribunal-stay';
+            $docCards = [
+                ['key' => 'index',             'name' => 'Index',             'desc' => $isStTribunalStay ? 'Index of all documents' : 'Print 4× and tick the copy type', 'icon' => 'bi-list-columns-reverse', 'color' => '#303a50', 'bg' => 'rgba(48,58,80,0.06)'],
+                ['key' => 'appeal-memo',       'name' => 'Appeal Memo',       'desc' => 'Memorandum of appeal (Form B)',                              'icon' => 'bi-file-earmark-ruled',   'color' => '#dc2626', 'bg' => 'rgba(220,38,38,0.08)'],
+                ['key' => 'stay-application',  'name' => 'Stay Application',  'desc' => 'Application for interim relief',                             'icon' => 'bi-file-earmark-text',    'color' => '#7c3aed', 'bg' => 'rgba(139,92,246,0.08)'],
+                ['key' => 'grounds-of-appeal', 'name' => 'Grounds of Appeal', 'desc' => 'Brief facts, grounds, and prayer',                           'icon' => 'bi-list-ol',              'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.08)'],
+                ['key' => 'intimation',        'name' => 'Intimation Letter', 'desc' => 'To Commissioner regarding filing',                           'icon' => 'bi-envelope',             'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.08)'],
+                ['key' => 'power-of-attorney', 'name' => 'Power of Attorney', 'desc' => 'Print on Rs. 200 stamp paper',                               'icon' => 'bi-key',                  'color' => '#6366f1', 'bg' => 'rgba(99,102,241,0.08)', 'onlyStTribunalStay' => true],
+                ['key' => 'affidavit',         'name' => 'Affidavit',         'desc' => 'Sworn statement of truth',                                   'icon' => 'bi-patch-check',          'color' => '#10b981', 'bg' => 'rgba(16,185,129,0.08)'],
+            ];
+        @endphp
         <div class="row g-3">
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'appeal-memo']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(220,38,38,0.08); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-file-earmark-ruled" style="color: #dc2626; font-size: 1.1rem;"></i>
+            @foreach($docCards as $doc)
+                @if(empty($doc['onlyStTribunalStay']) || $isStTribunalStay)
+                <div class="col-md-4">
+                    <a href="{{ route('processes.document.preview', [$process, $doc['key']]) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: {{ $doc['bg'] }}; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi {{ $doc['icon'] }}" style="color: {{ $doc['color'] }}; font-size: 1.1rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">{{ $doc['name'] }}</div>
+                                <div style="font-size: 0.72rem; color: #9ca3af;">{{ $doc['desc'] }}</div>
+                            </div>
                         </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Appeal Memo</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Memorandum of appeal (Form B)</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'stay-application']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(139,92,246,0.08); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-file-earmark-text" style="color: #7c3aed; font-size: 1.1rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Stay Application</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Application for interim relief</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'grounds-of-appeal']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245,158,11,0.08); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-list-ol" style="color: #f59e0b; font-size: 1.1rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Grounds of Appeal</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Legal grounds and prayer</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'intimation']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59,130,246,0.08); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-envelope" style="color: #3b82f6; font-size: 1.1rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Intimation Letter</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">To Commissioner regarding filing</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'affidavit']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16,185,129,0.08); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-patch-check" style="color: #10b981; font-size: 1.1rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Affidavit</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Sworn statement of truth</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            @if($process->template === 'st-tribunal-stay')
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'power-of-attorney']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(99,102,241,0.08); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-key" style="color: #6366f1; font-size: 1.1rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Power of Attorney</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Print on Rs. 200 stamp paper</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            @endif
-            <div class="col-md-4">
-                <a href="{{ route('processes.document.preview', [$process, 'index']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(48,58,80,0.06); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-list-columns-reverse" style="color: var(--primary); font-size: 1.1rem;"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Index</div>
-                            <div style="font-size: 0.72rem; color: #9ca3af;">Print 4× and tick the copy type</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
+                @endif
+            @endforeach
         </div>
     </div>
 </div>

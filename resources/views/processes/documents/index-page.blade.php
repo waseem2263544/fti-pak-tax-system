@@ -31,8 +31,7 @@ $pAffidavit       = $pPOA + 1;
 
 @if($isStTribunalStay)
 @include('processes.documents._letterhead-header')
-@endif
-
+@else
 <table style="border: none; margin-left: auto; margin-right: 0; margin-bottom: 14pt; width: auto;">
     <tr>
         <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">MEMBER COPY</td>
@@ -47,6 +46,7 @@ $pAffidavit       = $pPOA + 1;
         <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-size: 8pt;">&nbsp;</td>
     </tr>
 </table>
+@endif
 
 <h1 style="font-size: 18pt; line-height: 1.3;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
@@ -68,16 +68,15 @@ $pAffidavit       = $pPOA + 1;
     </thead>
     <tbody>
         @if($isStTribunalStay)
-        <tr><td class="center">1</td><td>INDEX</td><td></td></tr>
-        <tr><td class="center">2</td><td>APPEAL MEMO</td><td class="center">{{ $pAppealMemo }}</td></tr>
-        <tr><td class="center">3</td><td>STAY APPLICATION</td><td class="center">{{ $pStayApp }}</td></tr>
-        <tr><td class="center">4</td><td>GROUNDS OF APPEAL</td><td class="center">{{ $pGrounds }}</td></tr>
-        <tr><td class="center">5</td><td>ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center">{{ $orderInAppealPages > 1 ? $pOrderInAppeal . '-' . ($pOrderInAppeal + $orderInAppealPages - 1) : $pOrderInAppeal }}</td></tr>
-        <tr><td class="center">6</td><td>ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center">{{ $orderInOriginalPages > 1 ? $pOrderInOriginal . '-' . ($pOrderInOriginal + $orderInOriginalPages - 1) : $pOrderInOriginal }}</td></tr>
-        <tr><td class="center">7</td><td>RECOVERY NOTICE</td><td class="center">{{ $recoveryNoticePages > 1 ? $pRecoveryNotice . '-' . ($pRecoveryNotice + $recoveryNoticePages - 1) : $pRecoveryNotice }}</td></tr>
-        <tr><td class="center">8</td><td>INTIMATION LETTER</td><td class="center">{{ $pIntimation }}</td></tr>
-        <tr><td class="center">9</td><td>POWER OF ATTORNEY</td><td class="center">{{ $pPOA }}</td></tr>
-        <tr><td class="center">10</td><td>AFFIDAVIT</td><td class="center">{{ $pAffidavit }}</td></tr>
+        <tr><td class="center">1</td><td>APPEAL MEMO</td><td class="center">{{ $pAppealMemo }}</td></tr>
+        <tr><td class="center">2</td><td>STAY APPLICATION</td><td class="center">{{ $pStayApp }}</td></tr>
+        <tr><td class="center">3</td><td>GROUNDS OF APPEAL</td><td class="center">{{ $pGrounds }}</td></tr>
+        <tr><td class="center">4</td><td>ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center">{{ $orderInAppealPages > 1 ? $pOrderInAppeal . '-' . ($pOrderInAppeal + $orderInAppealPages - 1) : $pOrderInAppeal }}</td></tr>
+        <tr><td class="center">5</td><td>ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center">{{ $orderInOriginalPages > 1 ? $pOrderInOriginal . '-' . ($pOrderInOriginal + $orderInOriginalPages - 1) : $pOrderInOriginal }}</td></tr>
+        <tr><td class="center">6</td><td>RECOVERY NOTICE</td><td class="center">{{ $recoveryNoticePages > 1 ? $pRecoveryNotice . '-' . ($pRecoveryNotice + $recoveryNoticePages - 1) : $pRecoveryNotice }}</td></tr>
+        <tr><td class="center">7</td><td>INTIMATION LETTER</td><td class="center">{{ $pIntimation }}</td></tr>
+        <tr><td class="center">8</td><td>POWER OF ATTORNEY</td><td class="center">{{ $pPOA }}</td></tr>
+        <tr><td class="center">9</td><td>AFFIDAVIT</td><td class="center">{{ $pAffidavit }}</td></tr>
         @else
         <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
