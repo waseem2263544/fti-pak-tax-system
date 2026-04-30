@@ -11,9 +11,9 @@ $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
 @if($isStTribunalStay)
 {{-- ── Title block ─────────────────────────────────────────────── --}}
 <div style="text-align: center; margin: 0 0 30pt;">
-    <p style="font-size: 16pt; font-weight: bold; margin: 0;">{{ strtoupper($clientName) }}</p>
-    <p style="font-size: 13pt; font-weight: bold; margin: 14pt 0 0;">GROUNDS OF APPEAL</p>
-    <p style="font-size: 12pt; margin: 4pt 0 0;">Against Assessment Order No. {{ $assessmentOrderNo }}</p>
+    <p style="font-size: 14pt; font-weight: bold; margin: 0;">{{ strtoupper($clientName) }}</p>
+    <p style="font-size: 14pt; font-weight: bold; margin: 12pt 0 0;">GROUNDS OF APPEAL</p>
+    <p style="font-size: 14pt; font-weight: bold; margin: 4pt 0 0;">Against Assessment Order No. {{ $assessmentOrderNo }}</p>
 </div>
 
 @php
@@ -35,14 +35,6 @@ $sections = [
     @endif
 @endforeach
 
-{{-- ── Signature block ─────────────────────────────────────────── --}}
-<div style="margin-top: 56pt; text-align: right;">
-    <p style="margin: 0; font-weight: bold;">Appellant</p>
-    <p style="margin: 4pt 0 0; font-weight: bold;">{{ strtoupper($clientName) }}</p>
-    <p style="margin: 14pt 0 4pt;">Through</p>
-    <p style="margin: 0; font-weight: bold;">Waseem Ur Rehman</p>
-    <p style="margin: 0;">Director - Fair Tax (Pvt) Ltd</p>
-</div>
 @else
 <h1>{{ strtoupper($clientName) }}</h1>
 
