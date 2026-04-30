@@ -25,7 +25,7 @@ $year = date('Y');
     </tr>
 </table>
 
-<h1>BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
+<h1 style="font-size: 18pt; line-height: 1.3;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
 <p><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
@@ -44,7 +44,7 @@ $year = date('Y');
         </tr>
     </thead>
     <tbody>
-        <tr><td class="center">1</td><td>FORM "B"</td><td></td></tr>
+        <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
         <tr><td class="center">3</td><td>STAY APPLICATION</td><td></td></tr>
         <tr><td class="center">4</td><td>GROUNDS OF APPEAL</td><td></td></tr>

@@ -120,6 +120,19 @@
         <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Click to preview and download auto-generated documents with all case details filled in.</p>
         <div class="row g-3">
             <div class="col-md-4">
+                <a href="{{ route('processes.document.preview', [$process, 'appeal-memo']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(220,38,38,0.08); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-file-earmark-ruled" style="color: #dc2626; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">Appeal Memo</div>
+                            <div style="font-size: 0.72rem; color: #9ca3af;">Memorandum of appeal (Form B)</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
                 <a href="{{ route('processes.document.preview', [$process, 'stay-application']) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
                     <div class="d-flex align-items-center gap-3">
                         <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(139,92,246,0.08); display: flex; align-items: center; justify-content: center;">

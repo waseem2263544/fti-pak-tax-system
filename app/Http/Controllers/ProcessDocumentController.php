@@ -13,6 +13,10 @@ class ProcessDocumentController extends Controller
         $process->load('client');
 
         $templates = [
+            'appeal-memo' => [
+                'view' => 'processes.documents.appeal-memo',
+                'filename' => 'Appeal Memo - ' . ($meta['appellant_name'] ?? $process->client->name ?? 'Client'),
+            ],
             'stay-application' => [
                 'view' => 'processes.documents.stay-application',
                 'filename' => 'Stay Application - ' . ($meta['appellant_name'] ?? $process->client->name ?? 'Client'),
@@ -95,6 +99,7 @@ class ProcessDocumentController extends Controller
         $process->load('client');
 
         $views = [
+            'appeal-memo' => 'processes.documents.appeal-memo',
             'stay-application' => 'processes.documents.stay-application',
             'intimation' => 'processes.documents.intimation',
             'affidavit' => 'processes.documents.affidavit',
