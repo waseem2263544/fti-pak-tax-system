@@ -14,6 +14,15 @@ $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
+$recoveryNoticeNo = $meta['recovery_notice_no'] ?? '_______________';
+$recoveryNoticeDateRaw = $meta['recovery_notice_date'] ?? '';
+$recoveryNoticeDate = '_______________';
+if ($isStTribunalStay && $recoveryNoticeDateRaw) {
+    try { $recoveryNoticeDate = \Carbon\Carbon::parse($recoveryNoticeDateRaw)->format('j F Y'); }
+    catch (\Exception $e) { $recoveryNoticeDate = $recoveryNoticeDateRaw; }
+} elseif ($recoveryNoticeDateRaw) {
+    $recoveryNoticeDate = $recoveryNoticeDateRaw;
+}
 @endphp
 
 @if($isStTribunalStay)
@@ -36,6 +45,24 @@ Peshawar</p>
 <p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}{!! $taxYearText !!}</b></p>
 @endif
 
+@if($isStTribunalStay)
+<p>Respected Sir/ Madam,</p>
+
+<p>With reference to the above-subject matter, the appellant is going to file a stay application before the Honorable Appellate Tribunal Inland Revenue, {{ $bench }}, against the recovery notice No. {{ $recoveryNoticeNo }}, dated {{ $recoveryNoticeDate }}, as per the grounds of appeal.</p>
+
+<p>Enclosed, please find the following documents;</p>
+
+<p class="indent" style="margin-top: 6pt;">
+    1. Stay Application<br>
+    2. Form B<br>
+    3. Grounds of Appeal<br>
+    4. Order in Original<br>
+    5. Order in Appeal<br>
+    6. Recovery Notice<br>
+    7. Power of Attorney<br>
+    8. Affidavit
+</p>
+@else
 <p>Respected Sir,</p>
 
 <p>Please refer to the above.</p>
@@ -48,6 +75,7 @@ Peshawar</p>
     3. Order U/s 129(1) (Order to Confirm/Modify/Remand-Back/Annul Appeal Application)<br>
     4. Order U/s 122(1) (Order to amend Self or Best Judgment or Provisional assessment)
 </p>
+@endif
 
 <p style="margin-top: 24pt;">Thanks</p>
 
