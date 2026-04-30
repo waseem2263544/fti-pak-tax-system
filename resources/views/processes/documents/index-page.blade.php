@@ -9,7 +9,12 @@ $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
+$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
 @endphp
+
+@if($isStTribunalStay)
+@include('processes.documents._letterhead-header')
+@endif
 
 <table style="border: none; margin-left: auto; margin-right: 0; margin-bottom: 14pt; width: auto;">
     <tr>
@@ -65,3 +70,7 @@ $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
     FAIR TAX (PVT) LTD<br>
     AUTHORIZED REPRESENTATIVE</p>
 </div>
+
+@if($isStTribunalStay)
+@include('processes.documents._letterhead-footer')
+@endif

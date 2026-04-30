@@ -26,6 +26,8 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 @endphp
 
 @if($isStTribunalStay)
+@include('processes.documents._letterhead-header')
+
 <div style="max-width: 280pt;">
     <p style="margin: 0;">{{ $respondent2 }},<br>
     Regional Tax Office,<br>
@@ -84,3 +86,7 @@ Peshawar</p>
     <p style="margin-top: 36pt;"><b>Waseem Ur Rehman</b><br>
     (Director - Fair Tax (Pvt) Ltd)</p>
 </div>
+
+@if($isStTribunalStay)
+@include('processes.documents._letterhead-footer')
+@endif
