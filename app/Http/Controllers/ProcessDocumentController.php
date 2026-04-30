@@ -160,7 +160,8 @@ class ProcessDocumentController extends Controller
 
         // Pre-render letterhead partials (used as running header/footer for Index + Intimation)
         $letterheadHeader = view('processes.documents._letterhead-header')->render();
-        $letterheadFooter = view('processes.documents._letterhead-footer')->render();
+        // Strip the inline-only margin-top so mPDF places the footer flush in the bottom margin band
+        $letterheadFooter = str_replace('margin-top: 36pt;', 'margin-top: 0;', view('processes.documents._letterhead-footer')->render());
 
         // Page-number-only running header (used for the rest)
         $pageNumHeader = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';

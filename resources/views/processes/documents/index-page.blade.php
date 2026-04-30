@@ -48,6 +48,28 @@ $pAffidavit       = $pPOA + 1;
 </table>
 @endif
 
+@if($isStTribunalStay)
+<div style="font-size: 10pt; line-height: 1.35;">
+
+<h1 style="font-size: 11pt; line-height: 1.2; margin: 0 0 4pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
+
+<p style="margin: 3pt 0; font-size: 10pt;"><b>In RE: CM No.____________________/{{ $year }}</b></p>
+
+<p style="margin: 3pt 0; font-size: 10pt;"><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
+
+<p style="margin: 4pt 0 1pt; font-size: 10pt;"><b>RESPONDENTS:</b></p>
+<p class="indent" style="margin: 0; font-size: 10pt;">1. {{ strtoupper($respondent2) }}</p>
+<p class="indent" style="margin: 0; font-size: 10pt;">2. {{ strtoupper($respondent1) }}</p>
+
+<table style="margin-top: 8pt; font-size: 9pt;">
+    <thead>
+        <tr>
+            <th style="width: 10%; padding: 3pt 6pt; font-size: 9pt;">S. NO</th>
+            <th style="width: 65%; padding: 3pt 6pt; font-size: 9pt;">DESCRIPTION</th>
+            <th style="width: 25%; padding: 3pt 6pt; font-size: 9pt;">PAGE NO.</th>
+        </tr>
+    </thead>
+@else
 <h1 style="font-size: 13pt; line-height: 1.2; margin: 0 0 6pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
 <p style="margin: 4pt 0;"><b>In RE: CM No.____________________/{{ $year }}</b></p>
@@ -66,17 +88,18 @@ $pAffidavit       = $pPOA + 1;
             <th style="width: 25%;">PAGE NO.</th>
         </tr>
     </thead>
+@endif
     <tbody>
         @if($isStTribunalStay)
-        <tr><td class="center">1</td><td>APPEAL MEMO</td><td class="center">{{ $pAppealMemo }}</td></tr>
-        <tr><td class="center">2</td><td>STAY APPLICATION</td><td class="center">{{ $pStayApp }}</td></tr>
-        <tr><td class="center">3</td><td>GROUNDS OF APPEAL</td><td class="center">{{ $pGrounds }}</td></tr>
-        <tr><td class="center">4</td><td>ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center">{{ $orderInAppealPages > 1 ? $pOrderInAppeal . '-' . ($pOrderInAppeal + $orderInAppealPages - 1) : $pOrderInAppeal }}</td></tr>
-        <tr><td class="center">5</td><td>ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center">{{ $orderInOriginalPages > 1 ? $pOrderInOriginal . '-' . ($pOrderInOriginal + $orderInOriginalPages - 1) : $pOrderInOriginal }}</td></tr>
-        <tr><td class="center">6</td><td>RECOVERY NOTICE</td><td class="center">{{ $recoveryNoticePages > 1 ? $pRecoveryNotice . '-' . ($pRecoveryNotice + $recoveryNoticePages - 1) : $pRecoveryNotice }}</td></tr>
-        <tr><td class="center">7</td><td>INTIMATION LETTER</td><td class="center">{{ $pIntimation }}</td></tr>
-        <tr><td class="center">8</td><td>POWER OF ATTORNEY</td><td class="center">{{ $pPOA }}</td></tr>
-        <tr><td class="center">9</td><td>AFFIDAVIT</td><td class="center">{{ $pAffidavit }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">1</td><td style="padding: 3pt 6pt;">APPEAL MEMO</td><td class="center" style="padding: 3pt 6pt;">{{ $pAppealMemo }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">2</td><td style="padding: 3pt 6pt;">STAY APPLICATION</td><td class="center" style="padding: 3pt 6pt;">{{ $pStayApp }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">3</td><td style="padding: 3pt 6pt;">GROUNDS OF APPEAL</td><td class="center" style="padding: 3pt 6pt;">{{ $pGrounds }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">4</td><td style="padding: 3pt 6pt;">ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center" style="padding: 3pt 6pt;">{{ $orderInAppealPages > 1 ? $pOrderInAppeal . '-' . ($pOrderInAppeal + $orderInAppealPages - 1) : $pOrderInAppeal }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">5</td><td style="padding: 3pt 6pt;">ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center" style="padding: 3pt 6pt;">{{ $orderInOriginalPages > 1 ? $pOrderInOriginal . '-' . ($pOrderInOriginal + $orderInOriginalPages - 1) : $pOrderInOriginal }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">6</td><td style="padding: 3pt 6pt;">RECOVERY NOTICE</td><td class="center" style="padding: 3pt 6pt;">{{ $recoveryNoticePages > 1 ? $pRecoveryNotice . '-' . ($pRecoveryNotice + $recoveryNoticePages - 1) : $pRecoveryNotice }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">7</td><td style="padding: 3pt 6pt;">INTIMATION LETTER</td><td class="center" style="padding: 3pt 6pt;">{{ $pIntimation }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">8</td><td style="padding: 3pt 6pt;">POWER OF ATTORNEY</td><td class="center" style="padding: 3pt 6pt;">{{ $pPOA }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">9</td><td style="padding: 3pt 6pt;">AFFIDAVIT</td><td class="center" style="padding: 3pt 6pt;">{{ $pAffidavit }}</td></tr>
         @else
         <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
@@ -93,12 +116,16 @@ $pAffidavit       = $pPOA + 1;
     </tbody>
 </table>
 
-<div class="signature right" style="margin-top: 18pt;">
-    <p style="margin: 0;"><b>WASEEM UR REHMAN</b><br>
+<div class="signature right" style="margin-top: 14pt;">
+    <p style="margin: 0; font-size: 10pt;"><b>WASEEM UR REHMAN</b><br>
     DIRECTOR<br>
     FAIR TAX (PVT) LTD<br>
     AUTHORIZED REPRESENTATIVE</p>
 </div>
+
+@if($isStTribunalStay)
+</div>
+@endif
 
 @if($isStTribunalStay && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-footer')
