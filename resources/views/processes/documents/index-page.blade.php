@@ -51,11 +51,11 @@ $pAffidavit       = $pPOA + 1;
 @if($isStTribunalStay)
 <div style="font-size: 10pt; line-height: 1.35;">
 
-<h1 style="font-size: 11pt; line-height: 1.2; margin: 0 0 4pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
+<h1 style="font-size: 14pt; line-height: 1.25; margin: 0 0 8pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
-<p style="margin: 3pt 0; font-size: 10pt;"><b>In RE: CM No.____________________/{{ $year }}</b></p>
+<p style="margin: 4pt 0; font-size: 10pt;"><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
-<p style="margin: 3pt 0; font-size: 10pt;"><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
+<p style="margin: 14pt 0 14pt; font-size: 10pt;"><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
 
 <p style="margin: 4pt 0 1pt; font-size: 10pt;"><b>RESPONDENTS:</b></p>
 <p class="indent" style="margin: 0; font-size: 10pt;">1. {{ strtoupper($respondent2) }}</p>

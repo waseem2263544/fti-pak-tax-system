@@ -143,9 +143,9 @@ class ProcessDocumentController extends Controller
             'margin_left' => 18,
             'margin_right' => 18,
             'margin_top' => 38,        // generous top margin to fit letterhead OR page-number header
-            'margin_bottom' => 28,     // accommodates letterhead footer where present
+            'margin_bottom' => 32,     // accommodates letterhead footer where present
             'margin_header' => 8,
-            'margin_footer' => 8,
+            'margin_footer' => 12,     // pushes footer up from the very bottom edge
             'tempDir' => $tempDir,
         ]);
 
@@ -160,8 +160,11 @@ class ProcessDocumentController extends Controller
 
         // Pre-render letterhead partials (used as running header/footer for Index + Intimation)
         $letterheadHeader = view('processes.documents._letterhead-header')->render();
-        // Strip the inline-only margin-top so mPDF places the footer flush in the bottom margin band
-        $letterheadFooter = str_replace('margin-top: 36pt;', 'margin-top: 0;', view('processes.documents._letterhead-footer')->render());
+        // Build a fresh footer HTML for mPDF's bottom margin band (no margin-top, simpler structure)
+        $letterheadFooter = '<div style="border-top: 0.6pt solid #303a50; padding-top: 4pt; font-size: 8.5pt; color: #444; text-align: center; line-height: 1.4;">'
+            . '<div style="text-align: center;"><b>Services:</b> Financial, Income Tax, Sales Tax, Federal Excise &amp; Corporate Service Providers</div>'
+            . '<div style="text-align: center;"><b>Address:</b> Office No. TF-121, 3rd Floor, Deans Trade Center, Islamia Road, Peshawar Cantt.</div>'
+            . '</div>';
 
         // Page-number-only running header (used for the rest)
         $pageNumHeader = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';
@@ -175,6 +178,7 @@ class ProcessDocumentController extends Controller
         // ── Page 1: INDEX (letterhead header + footer, NO page number) ────────
         $mpdf->SetHTMLHeader($letterheadHeader);
         $mpdf->SetHTMLFooter($letterheadFooter);
+        $mpdf->AddPage();   // explicit so the running footer attaches to the first page
         $mpdf->WriteHTML($renderDoc('processes.documents.index-page'));
 
         // From here on: page-number-only header (no footer), reset counter at 1
