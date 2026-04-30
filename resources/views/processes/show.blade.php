@@ -119,8 +119,7 @@
             <div style="font-size: 0.82rem; color: #6b7280;">All documents merged with running page numbers (Index page stays unnumbered).</div>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('processes.document.combined', $process) }}" target="_blank" class="btn btn-outline-primary"><i class="bi bi-eye me-1"></i>Preview</a>
-            <a href="{{ route('processes.document.combined-pdf', $process) }}" class="btn btn-accent"><i class="bi bi-file-earmark-pdf me-1"></i>Download Combined PDF</a>
+            <a href="{{ route('processes.document.combined-pdf', $process) }}" target="_blank" class="btn btn-accent"><i class="bi bi-file-earmark-pdf me-1"></i>Open Combined PDF</a>
         </div>
     </div>
 </div>

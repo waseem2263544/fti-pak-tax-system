@@ -218,7 +218,7 @@ class ProcessDocumentController extends Controller
 
         $clientName = $meta['appellant_name'] ?? $process->client->name ?? 'Process';
         $filename = 'Combined Package - ' . $clientName . '.pdf';
-        $mpdf->Output($filename, \Mpdf\Output\Destination::DOWNLOAD);
+        $mpdf->Output($filename, \Mpdf\Output\Destination::INLINE);
     }
 
     public function preview(Process $process, $document)
