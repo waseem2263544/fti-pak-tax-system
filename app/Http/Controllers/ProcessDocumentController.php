@@ -142,8 +142,8 @@ class ProcessDocumentController extends Controller
             'format' => 'A4',
             'margin_left' => 18,
             'margin_right' => 18,
-            'margin_top' => 22,
-            'margin_bottom' => 18,
+            'margin_top' => 38,        // generous top margin to fit letterhead OR page-number header
+            'margin_bottom' => 28,     // accommodates letterhead footer where present
             'margin_header' => 8,
             'margin_footer' => 8,
             'tempDir' => $tempDir,
@@ -158,19 +158,33 @@ class ProcessDocumentController extends Controller
             return view('processes.documents._pdf-wrapper', ['content' => $content])->render();
         };
 
-        // ── Page 1: INDEX (no page number) ─────────────────────────────────
-        $mpdf->SetHTMLHeader('');
+        // Pre-render letterhead partials (used as running header/footer for Index + Intimation)
+        $letterheadHeader = view('processes.documents._letterhead-header')->render();
+        $letterheadFooter = view('processes.documents._letterhead-footer')->render();
+
+        // Page-number-only running header (used for the rest)
+        $pageNumHeader = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';
+
+        // Letterhead + page-number combined header (Intimation only)
+        $letterheadWithPageNum = '<table style="width:100%; border:none; border-collapse:collapse;"><tr>'
+            . '<td style="border:none; padding:0; vertical-align:top;">' . $letterheadHeader . '</td>'
+            . '<td style="border:none; padding:0; vertical-align:top; width:50pt; text-align:right; font-size:22pt; font-weight:900;">{PAGENO}</td>'
+            . '</tr></table>';
+
+        // ── Page 1: INDEX (letterhead header + footer, NO page number) ────────
+        $mpdf->SetHTMLHeader($letterheadHeader);
+        $mpdf->SetHTMLFooter($letterheadFooter);
         $mpdf->WriteHTML($renderDoc('processes.documents.index-page'));
 
-        // From here on: enable bold top-right page number, restart counter at 1
-        $headerHtml = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';
-
+        // From here on: page-number-only header (no footer), reset counter at 1
         $first = true;
-        $emit = function ($view) use ($mpdf, $renderDoc, $headerHtml, &$first) {
+        $emit = function ($view, $headerHtml = null, $footerHtml = '') use ($mpdf, $renderDoc, $pageNumHeader, &$first) {
+            $headerHtml = $headerHtml ?? $pageNumHeader;
+            // Set header/footer BEFORE the page break so the new page picks them up
+            $mpdf->SetHTMLHeader($headerHtml);
+            $mpdf->SetHTMLFooter($footerHtml);
             if ($first) {
-                // Reset page counter so the first numbered page becomes 1
-                $mpdf->AddPage('', '', '1');
-                $mpdf->SetHTMLHeader($headerHtml);
+                $mpdf->AddPage('', '', '1');     // reset page counter so first numbered page = 1
                 $first = false;
             } else {
                 $mpdf->AddPage();
@@ -219,7 +233,8 @@ class ProcessDocumentController extends Controller
             }
         }
 
-        $emit('processes.documents.intimation');
+        // Intimation Letter: letterhead header + footer + page number
+        $emit('processes.documents.intimation', $letterheadWithPageNum, $letterheadFooter);
         $emit('processes.documents.power-of-attorney');
         $emit('processes.documents.affidavit');
 

@@ -26,7 +26,9 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 @endphp
 
 @if($isStTribunalStay)
+@if(!($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-header')
+@endif
 
 <div style="max-width: 280pt;">
     <p style="margin: 0;">{{ $respondent2 }},<br>
@@ -87,6 +89,6 @@ Peshawar</p>
     (Director - Fair Tax (Pvt) Ltd)</p>
 </div>
 
-@if($isStTribunalStay)
+@if($isStTribunalStay && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-footer')
 @endif

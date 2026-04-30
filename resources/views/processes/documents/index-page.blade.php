@@ -29,9 +29,9 @@ $pPOA             = $pIntimation + 1;
 $pAffidavit       = $pPOA + 1;
 @endphp
 
-@if($isStTribunalStay)
+@if($isStTribunalStay && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-header')
-@else
+@elseif(!$isStTribunalStay)
 <table style="border: none; margin-left: auto; margin-right: 0; margin-bottom: 14pt; width: auto;">
     <tr>
         <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">MEMBER COPY</td>
@@ -48,17 +48,17 @@ $pAffidavit       = $pPOA + 1;
 </table>
 @endif
 
-<h1 style="font-size: 18pt; line-height: 1.3;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
+<h1 style="font-size: 13pt; line-height: 1.2; margin: 0 0 6pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
-<p><b>In RE: CM No.____________________/{{ $year }}</b></p>
+<p style="margin: 4pt 0;"><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
-<p><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
+<p style="margin: 4pt 0;"><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
 
-<p><b>RESPONDENTS:</b></p>
-<p class="indent">1. {{ strtoupper($respondent2) }}</p>
-<p class="indent">2. {{ strtoupper($respondent1) }}</p>
+<p style="margin: 6pt 0 2pt;"><b>RESPONDENTS:</b></p>
+<p class="indent" style="margin: 0;">1. {{ strtoupper($respondent2) }}</p>
+<p class="indent" style="margin: 0;">2. {{ strtoupper($respondent1) }}</p>
 
-<table style="margin-top: 24pt;">
+<table style="margin-top: 10pt;">
     <thead>
         <tr>
             <th style="width: 10%;">S. NO</th>
@@ -93,13 +93,13 @@ $pAffidavit       = $pPOA + 1;
     </tbody>
 </table>
 
-<div class="signature right" style="margin-top: 36pt;">
-    <p><b>WASEEM UR REHMAN</b><br>
+<div class="signature right" style="margin-top: 18pt;">
+    <p style="margin: 0;"><b>WASEEM UR REHMAN</b><br>
     DIRECTOR<br>
     FAIR TAX (PVT) LTD<br>
     AUTHORIZED REPRESENTATIVE</p>
 </div>
 
-@if($isStTribunalStay)
+@if($isStTribunalStay && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-footer')
 @endif
