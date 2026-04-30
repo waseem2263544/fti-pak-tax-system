@@ -29,9 +29,9 @@ $year = date('Y');
 
 <p><b>In RE: CM No.____________________/{{ $year }}</b></p>
 
-<p><b><u>Subject:</u></b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</u></b></p>
+<p><b>SUBJECT:</b> <b><u>STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}@if($taxYear) FOR THE TAX YEAR {{ $taxYear }}@endif</u></b></p>
 
-<p><b>Respondents:</b></p>
+<p><b>RESPONDENTS:</b></p>
 <p class="indent">1. {{ strtoupper($respondent2) }}</p>
 <p class="indent">2. {{ strtoupper($respondent1) }}</p>
 
