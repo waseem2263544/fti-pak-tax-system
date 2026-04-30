@@ -48,11 +48,15 @@ class ProcessController extends Controller
             'service_id' => 'required|exists:services,id',
             'assigned_to' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
-            'stage' => 'required|in:intake,in_progress,review,completed',
+            'stage' => 'nullable|in:intake,in_progress,review,completed',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        // Sensible defaults for fields no longer collected on the form
+        $validated['stage'] = $validated['stage'] ?? 'intake';
+        $validated['start_date'] = $validated['start_date'] ?? now()->toDateString();
 
         // Save template and metadata
         $validated['template'] = $request->input('template');
@@ -108,12 +112,19 @@ class ProcessController extends Controller
             'service_id' => 'required|exists:services,id',
             'assigned_to' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
-            'stage' => 'required|in:intake,in_progress,review,completed',
+            'stage' => 'nullable|in:intake,in_progress,review,completed',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date',
             'completed_date' => 'nullable|date',
             'notes' => 'nullable|string',
         ]);
+
+        // Drop fields the form no longer submits so update() doesn't blank them out
+        foreach (['stage', 'assigned_to', 'start_date', 'due_date', 'completed_date', 'description'] as $f) {
+            if (!$request->has($f)) {
+                unset($validated[$f]);
+            }
+        }
 
         // Update metadata
         $metadataFields = [
