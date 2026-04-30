@@ -2,7 +2,7 @@
 <table class="no-border" style="width: 100%; border: none; margin: 0 0 22pt; padding: 0;">
     <tr>
         <td style="border: none; padding: 0; vertical-align: middle; width: 55%;">
-            <img src="{{ asset('images/logo.png') }}" alt="FairTax" style="height: 60pt; max-width: 220pt; display: block;">
+            <img src="{{ asset('images/logo.png') }}" alt="FairTax" style="height: 40pt; max-width: 160pt; display: block;">
         </td>
         <td style="border: none; padding: 0; vertical-align: top; text-align: right; width: 45%;">
             <table class="no-border" style="border: none; width: auto; margin-left: auto; font-size: 9pt; color: #444;">
