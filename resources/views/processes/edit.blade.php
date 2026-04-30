@@ -212,25 +212,25 @@ $templateNames = [
             </div>
             @endif
 
+            @if($isStay)
+            <div class="mb-3">
+                <label class="form-label">Brief Facts of the Case</label>
+                <div id="stay-editor" contenteditable="true" class="form-control" style="min-height: 100px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_reasons', $meta['stay_reasons'] ?? '') !!}</div>
+                <input type="hidden" name="stay_reasons" id="stay-hidden">
+            </div>
+            @endif
+
             <div class="mb-3">
                 <label class="form-label">Grounds of Appeal</label>
                 <div id="grounds-editor" contenteditable="true" class="form-control" style="min-height: 150px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('grounds', $meta['grounds'] ?? '') !!}</div>
                 <input type="hidden" name="grounds" id="grounds-hidden">
-                <small class="text-muted">You can paste formatted text here. Formatting will be preserved.</small>
+                <small class="text-muted">You can paste formatted text here or use the toolbar to add bullets/numbers.</small>
             </div>
             <div class="mb-3">
                 <label class="form-label">Prayer / Relief Sought</label>
                 <div id="prayer-editor" contenteditable="true" class="form-control" style="min-height: 80px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('prayer', $meta['prayer'] ?? '') !!}</div>
                 <input type="hidden" name="prayer" id="prayer-hidden">
             </div>
-
-            @if($isStay)
-            <div class="mb-3">
-                <label class="form-label">Reasons for Stay</label>
-                <div id="stay-editor" contenteditable="true" class="form-control" style="min-height: 80px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_reasons', $meta['stay_reasons'] ?? '') !!}</div>
-                <input type="hidden" name="stay_reasons" id="stay-hidden">
-            </div>
-            @endif
         </div>
     </div>
     @endif
@@ -243,7 +243,47 @@ $templateNames = [
 @endsection
 
 @section('scripts')
+<style>
+.editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid #ced4da; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 8px; background: #f8f9fb; }
+.ed-btn { background: #fff; border: 1px solid #e2e6ea; border-radius: 4px; font-size: 0.85rem; padding: 3px 9px; cursor: pointer; color: #303a50; line-height: 1.2; min-width: 30px; }
+.ed-btn:hover { background: #eef0f3; }
+.ed-sep { display: inline-block; border-left: 1px solid #d1d5db; height: 18px; margin: 0 4px; }
+[contenteditable="true"].form-control { border-top-left-radius: 0; border-top-right-radius: 0; }
+[contenteditable="true"] ul { list-style: disc; padding-left: 2em; margin: 0.5em 0; }
+[contenteditable="true"] ol { list-style: decimal; padding-left: 2em; margin: 0.5em 0; }
+</style>
 <script>
+// Inject formatting toolbar above each rich-text editor
+(function() {
+    var editors = document.querySelectorAll('[contenteditable="true"].form-control');
+    if (!editors.length) return;
+    var html = '<div class="editor-toolbar">' +
+        '<button type="button" class="ed-btn" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>' +
+        '<button type="button" class="ed-btn" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>' +
+        '<button type="button" class="ed-btn" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>' +
+        '<span class="ed-sep"></span>' +
+        '<button type="button" class="ed-btn" data-cmd="insertUnorderedList" title="Bullet list">&bull; List</button>' +
+        '<button type="button" class="ed-btn" data-cmd="insertOrderedList" title="Numbered list">1. List</button>' +
+        '<span class="ed-sep"></span>' +
+        '<button type="button" class="ed-btn" data-cmd="outdent" title="Decrease indent">&larr;</button>' +
+        '<button type="button" class="ed-btn" data-cmd="indent" title="Increase indent">&rarr;</button>' +
+        '<span class="ed-sep"></span>' +
+        '<button type="button" class="ed-btn" data-cmd="removeFormat" title="Clear formatting">&times;</button>' +
+    '</div>';
+    editors.forEach(function(editor) {
+        var t = document.createElement('div');
+        t.innerHTML = html;
+        var bar = t.firstElementChild;
+        editor.parentNode.insertBefore(bar, editor);
+        bar.querySelectorAll('.ed-btn').forEach(function(btn) {
+            btn.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                document.execCommand(btn.getAttribute('data-cmd'), false, null);
+            });
+        });
+    });
+})();
+
 @if($isStay)
 function calcBalance() {
     var d = parseFloat(document.querySelector('input[name="demand_amount"]').value) || 0;
