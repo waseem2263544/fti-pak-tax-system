@@ -183,10 +183,11 @@ class ProcessDocumentController extends Controller
             . '<div style="text-align: center;"><b>Address:</b> Office No. TF-121, 3rd Floor, Deans Trade Center, Islamia Road, Peshawar Cantt.</div>'
             . '</div>';
         $pageNumHeader = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';
-        $letterheadWithPageNum = '<table style="width:100%; border:none; border-collapse:collapse;"><tr>'
-            . '<td style="border:none; padding:0; vertical-align:top;">' . $letterheadHeader . '</td>'
-            . '<td style="border:none; padding:0; vertical-align:top; width:50pt; text-align:right; font-size:22pt; font-weight:900;">{PAGENO}</td>'
-            . '</tr></table>';
+        // Page number overlaid on top of the letterhead via absolute positioning - letterhead keeps its full width and original layout
+        $letterheadWithPageNum = '<div style="position: relative; width: 100%;">'
+            . $letterheadHeader
+            . '<div style="position: absolute; top: -4pt; right: -2pt; font-size: 24pt; font-weight: 900; line-height: 1;">{PAGENO}</div>'
+            . '</div>';
 
         // ─── PASS 1 ─── Render body, track section start pages ────────────
         $body = new \Mpdf\Mpdf($mpdfConfig);
