@@ -16,7 +16,7 @@ $verifierDesignation = $meta['verifier_designation'] ?? '';
 
 @if($isStTribunalStay)
 {{-- Reserve top space for stamp-paper printed header --}}
-<div style="height: 3in;"></div>
+<div style="height: 1in;"></div>
 
 @if(!($inCombinedPdf ?? false))
 {{-- Stamp-paper reminder watermark (screen-only preview, hidden in print + omitted from combined PDF) --}}
