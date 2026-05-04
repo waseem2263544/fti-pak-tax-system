@@ -77,6 +77,13 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 </p>
 @endif
 
+@if($isStTribunalStay)
+<div style="margin-top: 18pt; font-size: 10pt;">
+    <p style="margin: 0;">Yours' sincerely,</p>
+    <p style="margin: 24pt 0 0;"><b>Waseem Ur Rehman</b><br>
+    (Director - Fair Tax (Pvt) Ltd)</p>
+</div>
+@else
 <p style="margin-top: 24pt;">Thanks</p>
 
 <div class="signature">
@@ -84,6 +91,7 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
     <p style="margin-top: 36pt;"><b>Waseem Ur Rehman</b><br>
     (Director - Fair Tax (Pvt) Ltd)</p>
 </div>
+@endif
 
 @if($isStTribunalStay && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-footer')
