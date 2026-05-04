@@ -14,19 +14,26 @@ $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
 
 // Cumulative page numbering for st-tribunal-stay package.
-// Each generated doc assumed to be 1 page; uploaded files use stored page counts.
+// Generated docs use known page counts; uploaded files use auto-detected counts.
+$appealMemoPages    = 2;   // forced 2 pages via <pagebreak> before VERIFICATION
+$stayAppPages       = 1;
+$groundsPages       = max(1, (int) ($meta['grounds_pages_override']        ?? 1));
+$intimationPages    = 1;
+$poaPages           = 1;
+$affidavitPages     = 1;
 $orderInAppealPages   = max(1, (int) ($meta['order_in_appeal_file_pages']   ?? 1));
 $orderInOriginalPages = max(1, (int) ($meta['order_in_original_file_pages'] ?? 1));
 $recoveryNoticePages  = max(1, (int) ($meta['recovery_notice_file_pages']   ?? 1));
+
 $pAppealMemo      = 1;
-$pStayApp         = $pAppealMemo + 1;
-$pGrounds         = $pStayApp + 1;
-$pOrderInAppeal   = $pGrounds + 1;
-$pOrderInOriginal = $pOrderInAppeal + $orderInAppealPages;
+$pStayApp         = $pAppealMemo      + $appealMemoPages;
+$pGrounds         = $pStayApp         + $stayAppPages;
+$pOrderInAppeal   = $pGrounds         + $groundsPages;
+$pOrderInOriginal = $pOrderInAppeal   + $orderInAppealPages;
 $pRecoveryNotice  = $pOrderInOriginal + $orderInOriginalPages;
-$pIntimation      = $pRecoveryNotice + $recoveryNoticePages;
-$pPOA             = $pIntimation + 1;
-$pAffidavit       = $pPOA + 1;
+$pIntimation      = $pRecoveryNotice  + $recoveryNoticePages;
+$pPOA             = $pIntimation      + $intimationPages;
+$pAffidavit       = $pPOA             + $poaPages;
 @endphp
 
 @if($isStTribunalStay && !($inCombinedPdf ?? false))
@@ -91,9 +98,9 @@ $pAffidavit       = $pPOA + 1;
 @endif
     <tbody>
         @if($isStTribunalStay)
-        <tr><td class="center" style="padding: 3pt 6pt;">1</td><td style="padding: 3pt 6pt;">APPEAL MEMO</td><td class="center" style="padding: 3pt 6pt;">{{ $pAppealMemo }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">1</td><td style="padding: 3pt 6pt;">APPEAL MEMO</td><td class="center" style="padding: 3pt 6pt;">{{ $appealMemoPages > 1 ? $pAppealMemo . '-' . ($pAppealMemo + $appealMemoPages - 1) : $pAppealMemo }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">2</td><td style="padding: 3pt 6pt;">STAY APPLICATION</td><td class="center" style="padding: 3pt 6pt;">{{ $pStayApp }}</td></tr>
-        <tr><td class="center" style="padding: 3pt 6pt;">3</td><td style="padding: 3pt 6pt;">GROUNDS OF APPEAL</td><td class="center" style="padding: 3pt 6pt;">{{ $pGrounds }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">3</td><td style="padding: 3pt 6pt;">GROUNDS OF APPEAL</td><td class="center" style="padding: 3pt 6pt;">{{ $groundsPages > 1 ? $pGrounds . '-' . ($pGrounds + $groundsPages - 1) : $pGrounds }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">4</td><td style="padding: 3pt 6pt;">ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center" style="padding: 3pt 6pt;">{{ $orderInAppealPages > 1 ? $pOrderInAppeal . '-' . ($pOrderInAppeal + $orderInAppealPages - 1) : $pOrderInAppeal }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">5</td><td style="padding: 3pt 6pt;">ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center" style="padding: 3pt 6pt;">{{ $orderInOriginalPages > 1 ? $pOrderInOriginal . '-' . ($pOrderInOriginal + $orderInOriginalPages - 1) : $pOrderInOriginal }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">6</td><td style="padding: 3pt 6pt;">RECOVERY NOTICE</td><td class="center" style="padding: 3pt 6pt;">{{ $recoveryNoticePages > 1 ? $pRecoveryNotice . '-' . ($pRecoveryNotice + $recoveryNoticePages - 1) : $pRecoveryNotice }}</td></tr>
