@@ -189,87 +189,86 @@ class ProcessDocumentController extends Controller
             . '<div style="position: absolute; top: -4pt; right: -2pt; font-size: 24pt; font-weight: 900; line-height: 1;">{PAGENO}</div>'
             . '</div>';
 
-        // ─── PASS 1 ─── Render body, track section start pages ────────────
-        $body = new \Mpdf\Mpdf($mpdfConfig);
+        // ─── Body section renderer (used in both passes) ────────────────────
+        // Renders Appeal Memo through Affidavit + uploaded attachments. Returns the section_start map.
+        // mPDF lifecycle quirk: AddPage closes the previous page with the current HTMLFooter and opens the new page with the current HTMLHeader.
+        // Pattern used here: SetHTMLHeader before AddPage (so the new page opens with the new header), SetHTMLFooter after AddPage
+        // (so the new page closes with the new footer at its next page break).
+        $renderBodySections = function (\Mpdf\Mpdf $mpdf) use ($renderDoc, $pageNumHeader, $letterheadWithPageNum, $letterheadFooter, $letterheadMargins, $compactMargins, $meta) {
+            $starts = [];
+            $writeSection = function ($key, $view, $hdr, $ftr, $useLetterhead = false) use ($mpdf, $renderDoc, $letterheadMargins, $compactMargins, &$starts) {
+                $m = $useLetterhead ? $letterheadMargins : $compactMargins;
+                $resetpagenum = empty($starts) ? '1' : '';
+                $mpdf->SetHTMLHeader($hdr);
+                $mpdf->AddPage('', '', $resetpagenum, '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
+                $mpdf->SetHTMLFooter($ftr);
+                $starts[$key] = $mpdf->page;
+                $mpdf->WriteHTML($renderDoc($view));
+            };
 
-        $starts = [];
-        // mPDF behavior: AddPage closes the previous page with the current HTMLFooter and opens the new page with the current HTMLHeader.
-        // To switch headers/footers cleanly between sections:
-        //   1) Set the NEW HEADER before AddPage (so the new page picks it up at open)
-        //   2) AddPage (closes prev page with PREVIOUS footer, opens new page with new header)
-        //   3) Set the NEW FOOTER (so when this new page later closes via the next AddPage, it picks up the right footer)
-        $writeSection = function ($key, $view, $hdr, $ftr, $useLetterhead = false) use ($body, $renderDoc, $letterheadMargins, $compactMargins, &$starts) {
-            $m = $useLetterhead ? $letterheadMargins : $compactMargins;
-            $resetpagenum = empty($starts) ? '1' : '';
-            $body->SetHTMLHeader($hdr);
-            $body->AddPage('', '', $resetpagenum, '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
-            $body->SetHTMLFooter($ftr);
-            $starts[$key] = $body->page;
-            $body->WriteHTML($renderDoc($view));
+            $writeSection('appeal_memo',  'processes.documents.appeal-memo',        $pageNumHeader, '');
+            $writeSection('stay_app',     'processes.documents.stay-application',   $pageNumHeader, '');
+            $writeSection('grounds',      'processes.documents.grounds-of-appeal',  $pageNumHeader, '');
+
+            foreach ([
+                'order_in_appeal_file'   => 'order_in_appeal',
+                'order_in_original_file' => 'order_in_original',
+                'recovery_notice_file'   => 'recovery_notice',
+            ] as $field => $key) {
+                if (empty($meta[$field])) { $starts[$key] = null; continue; }
+                $abs = public_path($meta[$field]);
+                if (!file_exists($abs)) { $starts[$key] = null; continue; }
+
+                $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
+
+                if ($ext === 'pdf') {
+                    try {
+                        $pageCount = $mpdf->setSourceFile($abs);
+                        for ($i = 1; $i <= $pageCount; $i++) {
+                            $tplId = $mpdf->importPage($i);
+                            $size = $mpdf->getTemplateSize($tplId);
+                            $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+                            $mpdf->SetHTMLHeader('');
+                            $mpdf->AddPageByArray([
+                                'orientation' => $orientation,
+                                'sheet-size'  => [$size['width'], $size['height']],
+                                'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
+                            ]);
+                            $mpdf->SetHTMLFooter('');
+                            if ($i === 1) $starts[$key] = $mpdf->page;
+                            $mpdf->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
+                            $mpdf->SetFont('', 'B', 22);
+                            $mpdf->SetTextColor(0, 0, 0);
+                            $mpdf->SetXY($size['width'] - 22, 6);
+                            $mpdf->Cell(16, 8, (string) $mpdf->page, 0, 0, 'R');
+                        }
+                    } catch (\Exception $e) {
+                        $mpdf->AddPage();
+                        $starts[$key] = $mpdf->page;
+                        $mpdf->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment.</p>');
+                    }
+                } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                    $mpdf->SetHTMLHeader($pageNumHeader);
+                    $mpdf->AddPage('', '', '', '', '', $compactMargins['mgl'], $compactMargins['mgr'], $compactMargins['mgt'], $compactMargins['mgb'], $compactMargins['mgh'], $compactMargins['mgf']);
+                    $mpdf->SetHTMLFooter('');
+                    $starts[$key] = $mpdf->page;
+                    $mpdf->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
+                } else {
+                    $starts[$key] = null;
+                }
+            }
+
+            $writeSection('intimation', 'processes.documents.intimation',        $letterheadWithPageNum, $letterheadFooter, true);
+            $writeSection('poa',        'processes.documents.power-of-attorney', $pageNumHeader,         '');
+            $writeSection('affidavit',  'processes.documents.affidavit',         $pageNumHeader,         '');
+
+            return [$starts, $mpdf->page];
         };
 
-        $writeSection('appeal_memo',  'processes.documents.appeal-memo',        $pageNumHeader, '');
-        $writeSection('stay_app',     'processes.documents.stay-application',   $pageNumHeader, '');
-        $writeSection('grounds',      'processes.documents.grounds-of-appeal',  $pageNumHeader, '');
-
-        // Imported attachments
-        foreach ([
-            'order_in_appeal_file'    => 'order_in_appeal',
-            'order_in_original_file' => 'order_in_original',
-            'recovery_notice_file'   => 'recovery_notice',
-        ] as $field => $key) {
-            if (empty($meta[$field])) { $starts[$key] = null; continue; }
-            $abs = public_path($meta[$field]);
-            if (!file_exists($abs)) { $starts[$key] = null; continue; }
-
-            $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
-
-            if ($ext === 'pdf') {
-                try {
-                    $pageCount = $body->setSourceFile($abs);
-                    for ($i = 1; $i <= $pageCount; $i++) {
-                        $tplId = $body->importPage($i);
-                        $size = $body->getTemplateSize($tplId);
-                        $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                        // Set blank header BEFORE AddPage (closes prev page with whatever footer it had, opens this one with no header)
-                        $body->SetHTMLHeader('');
-                        $body->AddPageByArray([
-                            'orientation' => $orientation,
-                            'sheet-size'  => [$size['width'], $size['height']],
-                            'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
-                        ]);
-                        $body->SetHTMLFooter('');
-                        if ($i === 1) $starts[$key] = $body->page;
-                        $body->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
-                        // Stamp the running page number on top of the imported page (top-right corner)
-                        $body->SetFont('', 'B', 22);
-                        $body->SetTextColor(0, 0, 0);
-                        $body->SetXY($size['width'] - 22, 6);
-                        $body->Cell(16, 8, (string) $body->page, 0, 0, 'R');
-                    }
-                } catch (\Exception $e) {
-                    $body->AddPage();
-                    $starts[$key] = $body->page;
-                    $body->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment.</p>');
-                }
-            } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
-                $body->SetHTMLHeader($pageNumHeader);
-                $body->AddPage('', '', '', '', '', $compactMargins['mgl'], $compactMargins['mgr'], $compactMargins['mgt'], $compactMargins['mgb'], $compactMargins['mgh'], $compactMargins['mgf']);
-                $body->SetHTMLFooter('');
-                $starts[$key] = $body->page;
-                $body->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
-            } else {
-                $starts[$key] = null;
-            }
-        }
-
-        $writeSection('intimation', 'processes.documents.intimation',        $letterheadWithPageNum, $letterheadFooter, true);
-        $writeSection('poa',        'processes.documents.power-of-attorney', $pageNumHeader,         '');
-        $writeSection('affidavit',  'processes.documents.affidavit',         $pageNumHeader,         '');
-
-        $bodyTotalPages = $body->page;
-        $bodyPath = $tempDir . '/body-' . $process->id . '-' . uniqid() . '.pdf';
-        $body->Output($bodyPath, \Mpdf\Output\Destination::FILE);
+        // ─── PASS 1 ─── Render body to a throwaway mPDF just to count section page starts
+        $countingMpdf = new \Mpdf\Mpdf($mpdfConfig);
+        [$starts, $bodyTotalPages] = $renderBodySections($countingMpdf);
+        unset($countingMpdf);
 
         // Compute per-section page counts (end - start + 1) for the index ranges
         $orderedKeys = ['appeal_memo', 'stay_app', 'grounds', 'order_in_appeal', 'order_in_original', 'recovery_notice', 'intimation', 'poa', 'affidavit'];
@@ -282,9 +281,9 @@ class ProcessDocumentController extends Controller
             $sectionPages[$k] = $endP - $startP + 1;
         }
 
-        // ─── PASS 2 ─── Build final: Index (with measured counts) + body
+        // ─── PASS 2 ─── Build final PDF: Index page first (with measured counts), then re-render the body fresh
+        // Re-rendering the body in pass 2 (instead of FPDI re-importing the throwaway) avoids the slight whitespace introduced when imported PDFs round-trip through FPDI twice.
         $final = new \Mpdf\Mpdf($mpdfConfig);
-        // Set letterhead header BEFORE first AddPage so the Index page opens with it
         $final->SetHTMLHeader($letterheadHeader);
         $final->AddPage('', '', '', '', '', $letterheadMargins['mgl'], $letterheadMargins['mgr'], $letterheadMargins['mgt'], $letterheadMargins['mgb'], $letterheadMargins['mgh'], $letterheadMargins['mgf']);
         $final->SetHTMLFooter($letterheadFooter);
@@ -293,32 +292,12 @@ class ProcessDocumentController extends Controller
             '__section_pages'  => $sectionPages,
         ]));
 
-        // Import body pages -- clear header BEFORE the first AddPage so the new page opens with no header,
-        // and clear footer AFTER AddPage so the Index page closes with its letterhead footer intact
-        try {
-            $bodyCount = $final->setSourceFile($bodyPath);
-            for ($i = 1; $i <= $bodyCount; $i++) {
-                $tplId = $final->importPage($i);
-                $size = $final->getTemplateSize($tplId);
-                $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                $final->SetHTMLHeader('');
-                $final->AddPageByArray([
-                    'orientation' => $orientation,
-                    'sheet-size' => [$size['width'], $size['height']],
-                    'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
-                ]);
-                $final->SetHTMLFooter('');
-                $final->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
-            }
-        } catch (\Exception $e) {
-            // body PDF couldn't be re-imported; leave Index as is
-        }
+        // Re-render body fresh (each writeSection inside this call resets page counter at its first AddPage so body pages restart at 1)
+        $renderBodySections($final);
 
         $clientName = $meta['appellant_name'] ?? $process->client->name ?? 'Process';
         $filename = 'Combined Package - ' . $clientName . '.pdf';
         $final->Output($filename, \Mpdf\Output\Destination::INLINE);
-
-        @unlink($bodyPath);
     }
 
     public function preview(Process $process, $document)
