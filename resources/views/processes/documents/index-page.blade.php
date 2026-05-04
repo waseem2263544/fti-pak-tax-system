@@ -14,26 +14,51 @@ $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
 
 // Cumulative page numbering for st-tribunal-stay package.
-// Generated docs use known page counts; uploaded files use auto-detected counts.
-$appealMemoPages    = 2;   // forced 2 pages via <pagebreak> before VERIFICATION
-$stayAppPages       = 1;
-$groundsPages       = max(1, (int) ($meta['grounds_pages_override']        ?? 1));
-$intimationPages    = 1;
-$poaPages           = 1;
-$affidavitPages     = 1;
+// Prefer measured starts/counts from the two-pass renderer; fall back to estimates.
+$measuredStarts = $meta['__section_starts'] ?? null;
+$measuredPages  = $meta['__section_pages']  ?? null;
+
 $orderInAppealPages   = max(1, (int) ($meta['order_in_appeal_file_pages']   ?? 1));
 $orderInOriginalPages = max(1, (int) ($meta['order_in_original_file_pages'] ?? 1));
 $recoveryNoticePages  = max(1, (int) ($meta['recovery_notice_file_pages']   ?? 1));
 
-$pAppealMemo      = 1;
-$pStayApp         = $pAppealMemo      + $appealMemoPages;
-$pGrounds         = $pStayApp         + $stayAppPages;
-$pOrderInAppeal   = $pGrounds         + $groundsPages;
-$pOrderInOriginal = $pOrderInAppeal   + $orderInAppealPages;
-$pRecoveryNotice  = $pOrderInOriginal + $orderInOriginalPages;
-$pIntimation      = $pRecoveryNotice  + $recoveryNoticePages;
-$pPOA             = $pIntimation      + $intimationPages;
-$pAffidavit       = $pPOA             + $poaPages;
+if (is_array($measuredStarts) && is_array($measuredPages)) {
+    $pAppealMemo      = $measuredStarts['appeal_memo']       ?? 1;
+    $pStayApp         = $measuredStarts['stay_app']          ?? 0;
+    $pGrounds         = $measuredStarts['grounds']           ?? 0;
+    $pOrderInAppeal   = $measuredStarts['order_in_appeal']   ?? 0;
+    $pOrderInOriginal = $measuredStarts['order_in_original'] ?? 0;
+    $pRecoveryNotice  = $measuredStarts['recovery_notice']   ?? 0;
+    $pIntimation      = $measuredStarts['intimation']        ?? 0;
+    $pPOA             = $measuredStarts['poa']               ?? 0;
+    $pAffidavit       = $measuredStarts['affidavit']         ?? 0;
+    $appealMemoPages  = $measuredPages['appeal_memo']        ?? 1;
+    $stayAppPages     = $measuredPages['stay_app']           ?? 1;
+    $groundsPages     = $measuredPages['grounds']            ?? 1;
+    $intimationPages  = $measuredPages['intimation']         ?? 1;
+    $poaPages         = $measuredPages['poa']                ?? 1;
+    $affidavitPages   = $measuredPages['affidavit']          ?? 1;
+    $orderInAppealPages   = $measuredPages['order_in_appeal']   ?? $orderInAppealPages;
+    $orderInOriginalPages = $measuredPages['order_in_original'] ?? $orderInOriginalPages;
+    $recoveryNoticePages  = $measuredPages['recovery_notice']   ?? $recoveryNoticePages;
+} else {
+    // Fallback (HTML preview / estimate before PDF render)
+    $appealMemoPages    = 2;
+    $stayAppPages       = 1;
+    $groundsPages       = max(1, (int) ($meta['grounds_pages_override'] ?? 1));
+    $intimationPages    = 1;
+    $poaPages           = 1;
+    $affidavitPages     = 1;
+    $pAppealMemo      = 1;
+    $pStayApp         = $pAppealMemo      + $appealMemoPages;
+    $pGrounds         = $pStayApp         + $stayAppPages;
+    $pOrderInAppeal   = $pGrounds         + $groundsPages;
+    $pOrderInOriginal = $pOrderInAppeal   + $orderInAppealPages;
+    $pRecoveryNotice  = $pOrderInOriginal + $orderInOriginalPages;
+    $pIntimation      = $pRecoveryNotice  + $recoveryNoticePages;
+    $pPOA             = $pIntimation      + $intimationPages;
+    $pAffidavit       = $pPOA             + $poaPages;
+}
 @endphp
 
 @if($isStTribunalStay && !($inCombinedPdf ?? false))
