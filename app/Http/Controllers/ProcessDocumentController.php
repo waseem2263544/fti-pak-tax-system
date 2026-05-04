@@ -192,32 +192,25 @@ class ProcessDocumentController extends Controller
         // ─── PASS 1 ─── Render body, track section start pages ────────────
         $body = new \Mpdf\Mpdf($mpdfConfig);
 
-        // Register named headers/footers ONCE so each AddPage can bind exactly the right pair
-        $body->DefHTMLHeaderByName('h_pagenum',    $pageNumHeader);
-        $body->DefHTMLHeaderByName('h_letterhead', $letterheadWithPageNum);
-        $body->DefHTMLHeaderByName('h_blank',      '');
-        $body->DefHTMLFooterByName('f_letterhead', $letterheadFooter);
-        $body->DefHTMLFooterByName('f_blank',      '');
-
         $starts = [];
-        $writeSection = function ($key, $view, $headerName = 'h_pagenum', $footerName = 'f_blank', $useLetterhead = false) use ($body, $renderDoc, $letterheadMargins, $compactMargins, &$starts) {
+        // mPDF behavior: AddPage closes the previous page with the current HTMLFooter and opens the new page with the current HTMLHeader.
+        // To switch headers/footers cleanly between sections:
+        //   1) Set the NEW HEADER before AddPage (so the new page picks it up at open)
+        //   2) AddPage (closes prev page with PREVIOUS footer, opens new page with new header)
+        //   3) Set the NEW FOOTER (so when this new page later closes via the next AddPage, it picks up the right footer)
+        $writeSection = function ($key, $view, $hdr, $ftr, $useLetterhead = false) use ($body, $renderDoc, $letterheadMargins, $compactMargins, &$starts) {
             $m = $useLetterhead ? $letterheadMargins : $compactMargins;
             $resetpagenum = empty($starts) ? '1' : '';
-            // AddPage with explicit header/footer names so this page (and overflow) gets exactly the right pair.
-            // The previous page is closed with whatever header/footer it was opened with -- no leakage.
-            $body->AddPage(
-                '', '', $resetpagenum, '', '',
-                $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf'],
-                $headerName, $headerName,
-                $footerName, $footerName
-            );
+            $body->SetHTMLHeader($hdr);
+            $body->AddPage('', '', $resetpagenum, '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
+            $body->SetHTMLFooter($ftr);
             $starts[$key] = $body->page;
             $body->WriteHTML($renderDoc($view));
         };
 
-        $writeSection('appeal_memo',  'processes.documents.appeal-memo',        'h_pagenum', 'f_blank');
-        $writeSection('stay_app',     'processes.documents.stay-application',   'h_pagenum', 'f_blank');
-        $writeSection('grounds',      'processes.documents.grounds-of-appeal',  'h_pagenum', 'f_blank');
+        $writeSection('appeal_memo',  'processes.documents.appeal-memo',        $pageNumHeader, '');
+        $writeSection('stay_app',     'processes.documents.stay-application',   $pageNumHeader, '');
+        $writeSection('grounds',      'processes.documents.grounds-of-appeal',  $pageNumHeader, '');
 
         // Imported attachments
         foreach ([
@@ -238,14 +231,14 @@ class ProcessDocumentController extends Controller
                         $tplId = $body->importPage($i);
                         $size = $body->getTemplateSize($tplId);
                         $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                        // Bind blank header/footer explicitly so neither the page-num header nor the letterhead leaks onto this full-bleed page
+                        // Set blank header BEFORE AddPage (closes prev page with whatever footer it had, opens this one with no header)
+                        $body->SetHTMLHeader('');
                         $body->AddPageByArray([
                             'orientation' => $orientation,
                             'sheet-size'  => [$size['width'], $size['height']],
                             'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
-                            'ohname' => 'h_blank', 'ehname' => 'h_blank',
-                            'ofname' => 'f_blank', 'efname' => 'f_blank',
                         ]);
+                        $body->SetHTMLFooter('');
                         if ($i === 1) $starts[$key] = $body->page;
                         $body->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
                         // Stamp the running page number on top of the imported page (top-right corner)
@@ -260,11 +253,9 @@ class ProcessDocumentController extends Controller
                     $body->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment.</p>');
                 }
             } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
-                $body->AddPage(
-                    '', '', '', '', '',
-                    $compactMargins['mgl'], $compactMargins['mgr'], $compactMargins['mgt'], $compactMargins['mgb'], $compactMargins['mgh'], $compactMargins['mgf'],
-                    'h_pagenum', 'h_pagenum', 'f_blank', 'f_blank'
-                );
+                $body->SetHTMLHeader($pageNumHeader);
+                $body->AddPage('', '', '', '', '', $compactMargins['mgl'], $compactMargins['mgr'], $compactMargins['mgt'], $compactMargins['mgb'], $compactMargins['mgh'], $compactMargins['mgf']);
+                $body->SetHTMLFooter('');
                 $starts[$key] = $body->page;
                 $body->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
             } else {
@@ -272,9 +263,9 @@ class ProcessDocumentController extends Controller
             }
         }
 
-        $writeSection('intimation', 'processes.documents.intimation',         'h_letterhead', 'f_letterhead', true);
-        $writeSection('poa',        'processes.documents.power-of-attorney',  'h_pagenum',    'f_blank');
-        $writeSection('affidavit',  'processes.documents.affidavit',          'h_pagenum',    'f_blank');
+        $writeSection('intimation', 'processes.documents.intimation',        $letterheadWithPageNum, $letterheadFooter, true);
+        $writeSection('poa',        'processes.documents.power-of-attorney', $pageNumHeader,         '');
+        $writeSection('affidavit',  'processes.documents.affidavit',         $pageNumHeader,         '');
 
         $bodyTotalPages = $body->page;
         $bodyPath = $tempDir . '/body-' . $process->id . '-' . uniqid() . '.pdf';
@@ -293,37 +284,30 @@ class ProcessDocumentController extends Controller
 
         // ─── PASS 2 ─── Build final: Index (with measured counts) + body
         $final = new \Mpdf\Mpdf($mpdfConfig);
-        $final->DefHTMLHeaderByName('h_letterhead_only', $letterheadHeader);
-        $final->DefHTMLHeaderByName('h_blank',           '');
-        $final->DefHTMLFooterByName('f_letterhead',      $letterheadFooter);
-        $final->DefHTMLFooterByName('f_blank',           '');
-
-        // Index page binds the letterhead-only header and letterhead footer
-        $final->AddPage(
-            '', '', '', '', '',
-            $letterheadMargins['mgl'], $letterheadMargins['mgr'], $letterheadMargins['mgt'], $letterheadMargins['mgb'], $letterheadMargins['mgh'], $letterheadMargins['mgf'],
-            'h_letterhead_only', 'h_letterhead_only',
-            'f_letterhead',      'f_letterhead'
-        );
+        // Set letterhead header BEFORE first AddPage so the Index page opens with it
+        $final->SetHTMLHeader($letterheadHeader);
+        $final->AddPage('', '', '', '', '', $letterheadMargins['mgl'], $letterheadMargins['mgr'], $letterheadMargins['mgt'], $letterheadMargins['mgb'], $letterheadMargins['mgh'], $letterheadMargins['mgf']);
+        $final->SetHTMLFooter($letterheadFooter);
         $final->WriteHTML($renderDoc('processes.documents.index-page', [
             '__section_starts' => $starts,
             '__section_pages'  => $sectionPages,
         ]));
 
-        // Import body pages -- each binds blank header/footer so the index's letterhead does not leak
+        // Import body pages -- clear header BEFORE the first AddPage so the new page opens with no header,
+        // and clear footer AFTER AddPage so the Index page closes with its letterhead footer intact
         try {
             $bodyCount = $final->setSourceFile($bodyPath);
             for ($i = 1; $i <= $bodyCount; $i++) {
                 $tplId = $final->importPage($i);
                 $size = $final->getTemplateSize($tplId);
                 $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+                $final->SetHTMLHeader('');
                 $final->AddPageByArray([
                     'orientation' => $orientation,
                     'sheet-size' => [$size['width'], $size['height']],
                     'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
-                    'ohname' => 'h_blank', 'ehname' => 'h_blank',
-                    'ofname' => 'f_blank', 'efname' => 'f_blank',
                 ]);
+                $final->SetHTMLFooter('');
                 $final->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
             }
         } catch (\Exception $e) {
