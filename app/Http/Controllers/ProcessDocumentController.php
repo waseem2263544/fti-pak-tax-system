@@ -164,8 +164,9 @@ class ProcessDocumentController extends Controller
             'tempDir' => $tempDir,
         ];
 
-        // Letterhead pages need bigger top/bottom margins to fit the running letterhead header/footer
-        $letterheadMargins = ['mgl' => 18, 'mgr' => 18, 'mgt' => 35, 'mgb' => 28, 'mgh' => 8, 'mgf' => 12];
+        // Letterhead pages need top/bottom margins big enough to fit the running letterhead header/footer
+        // (mgt reduced by ~25mm = 1 inch from earlier 35mm; mgh reduced from 8 to 3 so letterhead sits near the top edge)
+        $letterheadMargins = ['mgl' => 18, 'mgr' => 18, 'mgt' => 18, 'mgb' => 22, 'mgh' => 3, 'mgf' => 8];
         $compactMargins    = ['mgl' => 18, 'mgr' => 18, 'mgt' => 22, 'mgb' => 18, 'mgh' => 8, 'mgf' => 8];
 
         $renderDoc = function ($view, $extraMeta = []) use ($process, $meta) {
