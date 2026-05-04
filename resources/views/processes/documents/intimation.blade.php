@@ -30,9 +30,8 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 @include('processes.documents._letterhead-header')
 @endif
 
-<div style="margin: 0 0 8pt; max-width: 280pt;">
-    <p style="margin: 0; font-size: 11pt;">To,</p>
-    <p style="margin: 2pt 0 0; font-size: 11pt; line-height: 1.5;"><b>{{ $respondent2 }}</b></p>
+<div style="margin: 18pt 0 8pt; width: 40%;">
+    <p style="margin: 0; font-size: 11pt; line-height: 1.5;"><b>{{ $respondent2 }}</b></p>
 </div>
 @else
 <p>{{ $respondent2 }}</p>
