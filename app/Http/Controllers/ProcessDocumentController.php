@@ -143,7 +143,7 @@ class ProcessDocumentController extends Controller
      * That way the Index reflects actual page positions even when generated
      * docs (e.g. Grounds of Appeal) overflow to multiple pages.
      */
-    public function combinedPdf(Process $process)
+    public function combinedPdf(Process $process, Request $request)
     {
         @set_time_limit(300);
         @ini_set('memory_limit', '512M');
@@ -345,7 +345,8 @@ class ProcessDocumentController extends Controller
 
         $clientName = $meta['appellant_name'] ?? $process->client->name ?? 'Process';
         $filename = 'Combined Package - ' . $clientName . '.pdf';
-        $final->Output($filename, \Mpdf\Output\Destination::INLINE);
+        $destination = $request->boolean('download') ? \Mpdf\Output\Destination::DOWNLOAD : \Mpdf\Output\Destination::INLINE;
+        $final->Output($filename, $destination);
     }
 
     public function preview(Process $process, $document)
