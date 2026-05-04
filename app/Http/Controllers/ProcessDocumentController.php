@@ -183,11 +183,9 @@ class ProcessDocumentController extends Controller
             . '<div style="text-align: center;"><b>Address:</b> Office No. TF-121, 3rd Floor, Deans Trade Center, Islamia Road, Peshawar Cantt.</div>'
             . '</div>';
         $pageNumHeader = '<div style="text-align: right; font-size: 26pt; font-weight: 900; color: #000;">{PAGENO}</div>';
-        // Page number overlaid on top of the letterhead via absolute positioning - letterhead keeps its full width and original layout
-        $letterheadWithPageNum = '<div style="position: relative; width: 100%;">'
-            . $letterheadHeader
-            . '<div style="position: absolute; top: -4pt; right: -2pt; font-size: 24pt; font-weight: 900; line-height: 1;">{PAGENO}</div>'
-            . '</div>';
+        // Page number sits as a top-right line above the letterhead (mPDF's CSS position:absolute is unreliable in running headers, so a stacked layout is more predictable)
+        $letterheadWithPageNum = '<div style="text-align: right; font-size: 18pt; font-weight: 900; line-height: 1; margin: 0 0 2pt;">{PAGENO}</div>'
+            . $letterheadHeader;
 
         // ─── Body section renderer (used in both passes) ────────────────────
         // Renders Appeal Memo through Affidavit + uploaded attachments. Returns the section_start map.
