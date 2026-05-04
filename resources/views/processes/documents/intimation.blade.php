@@ -30,7 +30,7 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 @include('processes.documents._letterhead-header')
 @endif
 
-<div style="margin: 0 0 6pt;">
+<div style="margin: 0 0 6pt; max-width: 240pt;">
     <p style="margin: 0; font-size: 11pt;">To,</p>
     <p style="margin: 2pt 0 0; font-size: 11pt; line-height: 1.6;"><b>{{ $respondent2 }}</b><br>
     Regional Tax Office,<br>
