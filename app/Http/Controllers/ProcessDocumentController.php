@@ -85,8 +85,17 @@ class ProcessDocumentController extends Controller
                 td, th { border: 1px solid #000; padding: 6pt 8pt; font-size: 11pt; }
                 th { background-color: #f0f0f0; font-weight: bold; }
                 .no-border td, .no-border th { border: none; }
-                /* Strip pasted highlights from rich-text content (Quill / Word paste) */
-                .rich-content, .rich-content * { background-color: transparent !important; }
+                /* Aggressively normalise rich-text content (Quill / Word paste) so it matches the surrounding doc */
+                .rich-content, .rich-content * {
+                    background: transparent !important;
+                    background-color: transparent !important;
+                    border: 0 none !important;
+                    box-shadow: none !important;
+                    outline: 0 none !important;
+                    text-shadow: none !important;
+                    font-family: "Times New Roman", Times, serif !important;
+                    color: #000 !important;
+                }
                 .rich-content { line-height: 1.5; font-size: 12pt; }
                 .rich-content p { margin: 0 0 10pt; line-height: 1.5; text-align: justify; }
                 .rich-content p:last-child { margin-bottom: 0; }
