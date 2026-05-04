@@ -68,6 +68,7 @@ CNIC/NTN No. {{ $ntn }}</p>
 
 <p>Any other relief deemed appropriate in the circumstances may be granted.</p>
 
+@if(!$isStTribunalStay)
 <div class="signature right">
     <p><b>{{ strtoupper($clientName) }}</b></p>
     <p>Through</p>
@@ -77,3 +78,4 @@ CNIC/NTN No. {{ $ntn }}</p>
     TF – 121, Deans Trade Centre<br>
     Peshawar Cantt, Peshawar.</p>
 </div>
+@endif

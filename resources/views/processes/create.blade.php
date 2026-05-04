@@ -222,6 +222,13 @@ $isStay = str_contains($template, 'stay');
                 </div>
             </div>
             <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Commissioner (Appeals) passing the appellate order</label>
+                    <input type="text" name="commissioner_appeals" class="form-control" value="{{ old('commissioner_appeals') }}" placeholder="e.g. Mr. Ahmed Khan, Commissioner Inland Revenue (Appeals), Peshawar">
+                    <small class="text-muted">Specific name and posting of the CIR(A) who passed the order being appealed.</small>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Verifier Name <small class="text-muted">(for companies/AOPs)</small></label>
                     <input type="text" name="verifier_name" class="form-control" value="{{ old('verifier_name') }}" placeholder="e.g. Zakir Khan">

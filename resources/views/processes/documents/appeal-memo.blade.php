@@ -17,6 +17,7 @@ if ($contactLine === '') $contactLine = '';
 $irOfficeAssessment = $meta['ir_office_assessment'] ?? '';
 $irOfficeLocation = $meta['ir_office_location'] ?? '';
 $communicationDate = $meta['communication_date'] ?? $ciraOrderDate;
+$commissionerAppeals = $meta['commissioner_appeals'] ?? '';
 $verifierName = $meta['verifier_name'] ?? '';
 $verifierDesignation = $meta['verifier_designation'] ?? '';
 $typeOfAppeal = $meta['type_of_appeal'] ?? 'sales_tax';
@@ -138,27 +139,27 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 10pt;">
     <tr>
-        <td style="{{ $rowLabel }} width: 60%;">Inland Revenue Office in which assessment was made</td>
+        <td style="{{ $rowLabel }} width: 38%;">Inland Revenue Office in which assessment was made</td>
         <td style="{{ $rowValue }}">{{ strtoupper($irOfficeAssessment) }}</td>
     </tr>
     <tr>
-        <td style="{{ $rowLabel }}">and one which it is located</td>
+        <td style="{{ $rowLabel }} width: 38%;">and one which it is located</td>
         <td style="{{ $rowValue }}">{{ strtoupper($irOfficeLocation) }}</td>
     </tr>
     <tr>
-        <td style="{{ $rowLabel }}">Tax year/ Tax period to which the appeal relates.</td>
+        <td style="{{ $rowLabel }} width: 38%;">Tax year/ Tax period to which the appeal relates.</td>
         <td style="{{ $rowValue }}">{{ $taxYear }}</td>
     </tr>
     <tr>
-        <td style="{{ $rowLabel }}">Section of the Ordinance/Act under which Commissioner passed the order</td>
+        <td style="{{ $rowLabel }} width: 38%;">Section of the Ordinance/Act under which Commissioner passed the order</td>
         <td style="{{ $rowValue }}">{{ $section !== '_______________' ? $section : '' }}</td>
     </tr>
     <tr>
-        <td style="{{ $rowLabel }}">Commissioner (Appeals) passing the appellate order</td>
-        <td style="{{ $rowValue }}">{{ strtoupper($respondent1) }}</td>
+        <td style="{{ $rowLabel }} width: 38%;">Commissioner (Appeals) passing the appellate order</td>
+        <td style="{{ $rowValue }}">{{ strtoupper($commissionerAppeals) }}</td>
     </tr>
     <tr>
-        <td style="{{ $rowLabel }}">Date of communication of the order appeal against</td>
+        <td style="{{ $rowLabel }} width: 38%;">Date of communication of the order appeal against</td>
         <td style="{{ $rowValue }}">{{ $communicationDateDisplay }}</td>
     </tr>
 </table>
@@ -173,7 +174,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 
 <p style="line-height: 1.5; margin: 4pt 0 0; font-size: 10pt;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 18pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 50pt;">
     <tr>
         <td style="border: none; padding: 0; width: 50%; text-align: center;">
             <div style="border-top: 1px solid #000; padding-top: 4pt; font-size: 10pt;">Signature of Appellant/Applicant</div>
