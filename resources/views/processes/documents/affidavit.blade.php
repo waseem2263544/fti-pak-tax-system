@@ -72,7 +72,7 @@ NTN/CNIC No. {{ $ntn }}</p>
 
 @if($isStTribunalStay && !$isIndividual)
 {{-- Company / AOP signature: verifier signs on behalf of the company --}}
-<div class="signature right" style="margin-top: 72pt;">
+<div class="signature right" style="margin-top: 36pt;">
     <p>________________________<br>
     <b>Signature</b></p>
     <p style="margin-top: 12pt;"><b>{{ strtoupper($verifierName ?: '_______________') }}</b></p>
@@ -80,7 +80,7 @@ NTN/CNIC No. {{ $ntn }}</p>
     <p style="margin: 0;"><b>{{ strtoupper($clientName) }}</b></p>
 </div>
 @else
-<div class="signature right" style="margin-top: 72pt;">
+<div class="signature right" style="margin-top: 36pt;">
     <p>________________________<br>
     <b>Signature</b></p>
     <p style="margin-top: 12pt;"><b>{{ strtoupper($clientName) }}</b></p>
