@@ -53,31 +53,33 @@ if ($communicationDate && $communicationDate !== '_______________') {
 }
 
 // Reusable inline styles
-$rowLabel = 'border: none; padding: 6pt 8pt 6pt 0; vertical-align: top;';
-$rowValue = 'border: none; border-bottom: 1px solid #000; padding: 6pt 8pt; vertical-align: bottom; font-weight: bold;';
-$rowBlank = 'border: none; padding: 6pt 8pt; vertical-align: top;';
+$rowLabel = 'border: none; padding: 3pt 8pt 3pt 0; vertical-align: top; font-size: 10pt;';
+$rowValue = 'border: none; border-bottom: 1px solid #000; padding: 3pt 8pt; vertical-align: bottom; font-weight: bold; font-size: 10pt;';
+$rowBlank = 'border: none; padding: 3pt 8pt; vertical-align: top;';
 $boxOpen  = '<span style="display:inline-block; width: 10pt; height: 10pt; border: 1px solid #000; vertical-align: middle; margin-right: 5pt;"></span>';
 $boxCheck = '<span style="display:inline-block; width: 10pt; height: 10pt; border: 1px solid #000; vertical-align: middle; margin-right: 5pt; text-align: center; line-height: 10pt; font-size: 10pt;">&#10003;</span>';
-$cell = 'border: 1px solid #000; padding: 4pt 8pt; background: #fff; font-size: 11pt;';
+$cell = 'border: 1px solid #000; padding: 2pt 6pt; background: #fff; font-size: 10pt;';
 $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: bold;';
 @endphp
 
-<div style="margin-bottom: 6pt;">
-    <p style="margin: 0; text-align: center; font-size: 14pt;"><b>FORM &ldquo;B&rdquo;</b></p>
-    <p style="margin: 4pt 0; text-align: center;"><b>[see rule 7]</b></p>
-    <p style="margin: 4pt 0 0; text-align: center; line-height: 1.5;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 46 OF THE SALES TAX ACT, 1990 OR SECTION 34 OF THE FEDERAL EXCISE ACT, 2005</u></b></p>
+<div style="font-size: 10pt;">
+
+<div style="margin-bottom: 4pt;">
+    <p style="margin: 0; text-align: center; font-size: 12pt;"><b>FORM &ldquo;B&rdquo;</b></p>
+    <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[see rule 7]</b></p>
+    <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 10pt;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 46 OF THE SALES TAX ACT, 1990 OR SECTION 34 OF THE FEDERAL EXCISE ACT, 2005</u></b></p>
 </div>
 
-<p style="margin-top: 22pt; text-align: center; font-size: 12pt;">BEFORE THE APPELLATE TRIBUNAL INLAND REVENUE&nbsp;<b><u>{{ strtoupper($bench) }}</u></b></p>
+<p style="margin-top: 10pt; text-align: center; font-size: 11pt;">BEFORE THE APPELLATE TRIBUNAL INLAND REVENUE&nbsp;<b><u>{{ strtoupper($bench) }}</u></b></p>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 18pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 8pt;">
     <tr>
         <td style="{{ $rowLabel }} width: 38%;">Appeal/Application No.</td>
         <td style="{{ $rowValue }}">&nbsp;</td>
     </tr>
 </table>
 
-<table style="margin-top: 14pt; border-collapse: collapse; width: 100%;">
+<table style="margin-top: 6pt; border-collapse: collapse; width: 100%;">
     <tr>
         <td style="{{ $labelCell }} width: 22%;">Type of Appeal</td>
         <td style="{{ $cell }} width: 39%;">{!! $isSalesTax ? $boxCheck : $boxOpen !!}@if($isSalesTax)<b>1. Sales Tax</b>@else 1. Sales Tax @endif</td>
@@ -100,7 +102,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 22pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 10pt;">
     <tr>
         <td style="{{ $rowLabel }} width: 38%;">Name and Address of Appellant/Applicant</td>
         <td style="{{ $rowValue }}">{{ strtoupper($clientName) }}, {{ strtoupper($address) }}</td>
@@ -111,7 +113,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 14pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 6pt;">
     <tr>
         <td style="{{ $rowLabel }} width: 38%;">Name and Address of Advocate/Representative</td>
         <td style="{{ $rowValue }}">WASEEM UR REHMAN, FAIR TAX (PVT) LTD, TF-121, DEANS TRADE CENTRE, PESHAWAR CANTT, PESHAWAR.</td>
@@ -122,19 +124,19 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 14pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 6pt;">
     <tr>
         <td rowspan="2" style="{{ $rowLabel }} width: 38%;">Name &amp; Address of Respondent(s)</td>
-        <td style="border: none; padding: 6pt 4pt 6pt 8pt; vertical-align: bottom; font-weight: bold; width: 4%;">1.</td>
+        <td style="border: none; padding: 3pt 4pt 3pt 8pt; vertical-align: bottom; font-weight: bold; width: 4%; font-size: 10pt;">1.</td>
         <td style="{{ $rowValue }}">{{ strtoupper($respondent1) }}</td>
     </tr>
     <tr>
-        <td style="border: none; padding: 6pt 4pt 6pt 8pt; vertical-align: bottom; font-weight: bold;">2.</td>
+        <td style="border: none; padding: 3pt 4pt 3pt 8pt; vertical-align: bottom; font-weight: bold; font-size: 10pt;">2.</td>
         <td style="{{ $rowValue }}">{{ strtoupper($respondent2) }}</td>
     </tr>
 </table>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 22pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 10pt;">
     <tr>
         <td style="{{ $rowLabel }} width: 60%;">Inland Revenue Office in which assessment was made</td>
         <td style="{{ $rowValue }}">{{ strtoupper($irOfficeAssessment) }}</td>
@@ -161,26 +163,28 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<p style="text-align: center; margin: 18pt 0 8pt; font-size: 12pt;"><b><u>VERIFICATION</u></b></p>
+<p style="text-align: center; margin: 10pt 0 6pt; font-size: 11pt;"><b><u>VERIFICATION</u></b></p>
 
 @if($isIndividual)
-<p style="line-height: 1.7; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
+<p style="line-height: 1.5; margin: 0; text-align: justify; font-size: 10pt;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
 @else
-<p style="line-height: 1.7; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
+<p style="line-height: 1.5; margin: 0; text-align: justify; font-size: 10pt;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
 @endif
 
-<p style="line-height: 1.7; margin: 6pt 0 0;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
+<p style="line-height: 1.5; margin: 4pt 0 0; font-size: 10pt;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 30pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 18pt;">
     <tr>
         <td style="border: none; padding: 0; width: 50%; text-align: center;">
-            <div style="border-top: 1px solid #000; padding-top: 6pt; font-size: 11pt;">Signature of Appellant/Applicant</div>
+            <div style="border-top: 1px solid #000; padding-top: 4pt; font-size: 10pt;">Signature of Appellant/Applicant</div>
         </td>
         <td style="border: none; padding: 0; width: 50%; text-align: center;">
-            <div style="border-top: 1px solid #000; padding-top: 6pt; font-size: 11pt;">Signature of Authorized Representative</div>
+            <div style="border-top: 1px solid #000; padding-top: 4pt; font-size: 10pt;">Signature of Authorized Representative</div>
         </td>
     </tr>
 </table>
+
+</div>
 
 <pagebreak />
 <p style="margin: 0 0 6pt;"><b><u>Enclosures</u></b></p>
