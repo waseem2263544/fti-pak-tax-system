@@ -164,31 +164,31 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<p style="text-align: center; margin: 10pt 0 6pt; font-size: 11pt;"><b><u>VERIFICATION</u></b></p>
+</div>
+
+<pagebreak />
+<p style="text-align: center; margin: 0 0 8pt; font-size: 12pt;"><b><u>VERIFICATION</u></b></p>
 
 @if($isIndividual)
-<p style="line-height: 1.5; margin: 0; text-align: justify; font-size: 10pt;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
+<p style="line-height: 1.6; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($clientName) }}</span>, CNIC #&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $ntn }}</span>, do hereby declare that which is stated above is true to my information and belief.</p>
 @else
-<p style="line-height: 1.5; margin: 0; text-align: justify; font-size: 10pt;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
+<p style="line-height: 1.6; margin: 0; text-align: justify;">I,&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierName) }}</span>, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verifierDesignation) }}</span>&nbsp;of the company, do hereby declare that which is stated above is true to my information and belief.</p>
 @endif
 
-<p style="line-height: 1.5; margin: 4pt 0 0; font-size: 10pt;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
+<p style="line-height: 1.6; margin: 6pt 0 0;">Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationDay) }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ strtoupper($verificationMonth) }} {{ $verificationYear }}</span></p>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 50pt;">
     <tr>
         <td style="border: none; padding: 0; width: 50%; text-align: center;">
-            <div style="border-top: 1px solid #000; padding-top: 4pt; font-size: 10pt;">Signature of Appellant/Applicant</div>
+            <div style="border-top: 1px solid #000; padding-top: 4pt;">Signature of Appellant/Applicant</div>
         </td>
         <td style="border: none; padding: 0; width: 50%; text-align: center;">
-            <div style="border-top: 1px solid #000; padding-top: 4pt; font-size: 10pt;">Signature of Authorized Representative</div>
+            <div style="border-top: 1px solid #000; padding-top: 4pt;">Signature of Authorized Representative</div>
         </td>
     </tr>
 </table>
 
-</div>
-
-<pagebreak />
-<p style="margin: 0 0 6pt;"><b><u>Enclosures</u></b></p>
+<p style="margin: 24pt 0 6pt;"><b><u>Enclosures</u></b></p>
 
 <table style="width: 100%; border-collapse: collapse;">
     <tr>
