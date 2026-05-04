@@ -18,7 +18,7 @@ $pronounObject = $isIndividual ? 'me' : 'us';
 
 @if($isStTribunalStay)
 {{-- Reserve top space for stamp-paper printed header --}}
-<div style="height: 3in;"></div>
+<div style="height: 3.3in;"></div>
 
 @if(!($inCombinedPdf ?? false))
 {{-- Stamp-paper reminder watermark (screen-only preview, hidden in print + omitted from combined PDF) --}}
