@@ -145,6 +145,9 @@ class ProcessDocumentController extends Controller
      */
     public function combinedPdf(Process $process)
     {
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
+
         $meta = $process->metadata ?? [];
         $process->load('client');
 
@@ -264,21 +267,67 @@ class ProcessDocumentController extends Controller
             return [$starts, $mpdf->page];
         };
 
-        // ─── PASS 1 ─── Render body to a throwaway mPDF just to count section page starts
-        $countingMpdf = new \Mpdf\Mpdf($mpdfConfig);
-        [$starts, $bodyTotalPages] = $renderBodySections($countingMpdf);
-        unset($countingMpdf);
+        // ─── PASS 1 ─── Quick count: render each generated doc to a tiny throwaway mPDF and count pages.
+        // User PDFs are not imported here -- we already know their page counts from upload-time auto-detection.
+        $countDocPages = function ($view, $marginType = 'compact') use ($mpdfConfig, $renderDoc, $compactMargins, $letterheadMargins) {
+            $temp = new \Mpdf\Mpdf($mpdfConfig);
+            $m = $marginType === 'letterhead' ? $letterheadMargins : $compactMargins;
+            $temp->AddPage('', '', '', '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
+            $temp->WriteHTML($renderDoc($view));
+            $count = $temp->page;
+            unset($temp);
+            return max(1, (int) $count);
+        };
 
-        // Compute per-section page counts (end - start + 1) for the index ranges
-        $orderedKeys = ['appeal_memo', 'stay_app', 'grounds', 'order_in_appeal', 'order_in_original', 'recovery_notice', 'intimation', 'poa', 'affidavit'];
-        $present = array_filter($orderedKeys, fn($k) => isset($starts[$k]) && $starts[$k] !== null);
-        $present = array_values($present);
-        $sectionPages = [];
-        foreach ($present as $i => $k) {
-            $startP = $starts[$k];
-            $endP = $i + 1 < count($present) ? ($starts[$present[$i + 1]] - 1) : $bodyTotalPages;
-            $sectionPages[$k] = $endP - $startP + 1;
-        }
+        $amPages   = $countDocPages('processes.documents.appeal-memo');
+        $saPages   = $countDocPages('processes.documents.stay-application');
+        $grPages   = $countDocPages('processes.documents.grounds-of-appeal');
+        $intPages  = $countDocPages('processes.documents.intimation',         'letterhead');
+        $poaPages  = $countDocPages('processes.documents.power-of-attorney');
+        $affPages  = $countDocPages('processes.documents.affidavit');
+
+        $orderInAppealPages   = max(1, (int) ($meta['order_in_appeal_file_pages']   ?? 1));
+        $orderInOriginalPages = max(1, (int) ($meta['order_in_original_file_pages'] ?? 1));
+        $recoveryNoticePages  = max(1, (int) ($meta['recovery_notice_file_pages']   ?? 1));
+
+        // Section starts are 1-based (Appeal Memo = page 1, since the page counter resets when body rendering begins)
+        $pAppealMemo      = 1;
+        $pStayApp         = $pAppealMemo      + $amPages;
+        $pGrounds         = $pStayApp         + $saPages;
+        $pOrderInAppeal   = $pGrounds         + $grPages;
+        $pOrderInOriginal = $pOrderInAppeal   + $orderInAppealPages;
+        $pRecoveryNotice  = $pOrderInOriginal + $orderInOriginalPages;
+        $pIntimation      = $pRecoveryNotice  + $recoveryNoticePages;
+        $pPOA             = $pIntimation      + $intPages;
+        $pAffidavit       = $pPOA             + $poaPages;
+
+        // For uploaded slots that the user didn't upload, drop them from $starts so the Index hides their row
+        $hasOrderInAppeal   = !empty($meta['order_in_appeal_file']);
+        $hasOrderInOriginal = !empty($meta['order_in_original_file']);
+        $hasRecoveryNotice  = !empty($meta['recovery_notice_file']);
+
+        $starts = [
+            'appeal_memo'       => $pAppealMemo,
+            'stay_app'          => $pStayApp,
+            'grounds'           => $pGrounds,
+            'order_in_appeal'   => $hasOrderInAppeal   ? $pOrderInAppeal   : null,
+            'order_in_original' => $hasOrderInOriginal ? $pOrderInOriginal : null,
+            'recovery_notice'   => $hasRecoveryNotice  ? $pRecoveryNotice  : null,
+            'intimation'        => $pIntimation,
+            'poa'               => $pPOA,
+            'affidavit'         => $pAffidavit,
+        ];
+        $sectionPages = [
+            'appeal_memo'       => $amPages,
+            'stay_app'          => $saPages,
+            'grounds'           => $grPages,
+            'order_in_appeal'   => $orderInAppealPages,
+            'order_in_original' => $orderInOriginalPages,
+            'recovery_notice'   => $recoveryNoticePages,
+            'intimation'        => $intPages,
+            'poa'               => $poaPages,
+            'affidavit'         => $affPages,
+        ];
 
         // ─── PASS 2 ─── Build final PDF: Index page first (with measured counts), then re-render the body fresh
         // Re-rendering the body in pass 2 (instead of FPDI re-importing the throwaway) avoids the slight whitespace introduced when imported PDFs round-trip through FPDI twice.
