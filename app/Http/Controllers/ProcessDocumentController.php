@@ -240,7 +240,8 @@ class ProcessDocumentController extends Controller
                             $mpdf->SetFont('', 'B', 22);
                             $mpdf->SetTextColor(0, 0, 0);
                             $mpdf->SetXY($size['width'] - 22, 6);
-                            $mpdf->Cell(16, 8, (string) $mpdf->page, 0, 0, 'R');
+                            // docPageNum honours resetpagenum + pagenumStyle, matching what {PAGENO} prints on generated pages
+                            $mpdf->Cell(16, 8, (string) $mpdf->docPageNum($mpdf->page), 0, 0, 'R');
                         }
                     } catch (\Exception $e) {
                         $mpdf->AddPage();
