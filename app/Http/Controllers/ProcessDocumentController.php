@@ -196,11 +196,14 @@ class ProcessDocumentController extends Controller
 
         $starts = [];
         $writeSection = function ($key, $view, $hdr = null, $ftr = '', $useLetterhead = false) use ($body, $renderDoc, $pageNumHeader, $letterheadMargins, $compactMargins, &$starts) {
-            $body->SetHTMLHeader($hdr ?? $pageNumHeader);
-            $body->SetHTMLFooter($ftr);
             $m = $useLetterhead ? $letterheadMargins : $compactMargins;
             $resetpagenum = empty($starts) ? '1' : '';
+            // IMPORTANT: AddPage first so the previous page is closed with its EXISTING header/footer.
+            // Setting new header/footer BEFORE AddPage would otherwise apply them to the page being closed.
             $body->AddPage('', '', $resetpagenum, '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
+            // Now set header/footer for the newly-opened page (and any overflow pages from this section)
+            $body->SetHTMLHeader($hdr ?? $pageNumHeader);
+            $body->SetHTMLFooter($ftr);
             $starts[$key] = $body->page;
             $body->WriteHTML($renderDoc($view));
         };
@@ -222,21 +225,21 @@ class ProcessDocumentController extends Controller
             $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
 
             if ($ext === 'pdf') {
-                // Suppress mPDF's running header on imported pages - we'll stamp the page number manually on top
-                $body->SetHTMLHeader('');
-                $body->SetHTMLFooter('');
                 try {
                     $pageCount = $body->setSourceFile($abs);
                     for ($i = 1; $i <= $pageCount; $i++) {
                         $tplId = $body->importPage($i);
                         $size = $body->getTemplateSize($tplId);
                         $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                        // Add a page sized exactly like the imported template, with zero margins so it occupies the whole sheet
+                        // AddPage first - closes previous page with its OLD header/footer
                         $body->AddPageByArray([
                             'orientation' => $orientation,
                             'sheet-size'  => [$size['width'], $size['height']],
                             'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
                         ]);
+                        // Now suppress header/footer for THIS imported page (no margin space for them anyway)
+                        $body->SetHTMLHeader('');
+                        $body->SetHTMLFooter('');
                         if ($i === 1) $starts[$key] = $body->page;
                         // Place the imported page edge-to-edge
                         $body->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
@@ -251,12 +254,10 @@ class ProcessDocumentController extends Controller
                     $starts[$key] = $body->page;
                     $body->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment.</p>');
                 }
-                // Restore default running header for the docs that follow
-                $body->SetHTMLHeader($pageNumHeader);
             } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                $body->AddPage();
                 $body->SetHTMLHeader($pageNumHeader);
                 $body->SetHTMLFooter('');
-                $body->AddPage();
                 $starts[$key] = $body->page;
                 $body->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
             } else {
@@ -285,24 +286,29 @@ class ProcessDocumentController extends Controller
 
         // ─── PASS 2 ─── Build final: Index (with measured counts) + body
         $final = new \Mpdf\Mpdf($mpdfConfig);
+        $final->AddPage('', '', '', '', '', $letterheadMargins['mgl'], $letterheadMargins['mgr'], $letterheadMargins['mgt'], $letterheadMargins['mgb'], $letterheadMargins['mgh'], $letterheadMargins['mgf']);
         $final->SetHTMLHeader($letterheadHeader);
         $final->SetHTMLFooter($letterheadFooter);
-        $final->AddPage('', '', '', '', '', $letterheadMargins['mgl'], $letterheadMargins['mgr'], $letterheadMargins['mgt'], $letterheadMargins['mgb'], $letterheadMargins['mgh'], $letterheadMargins['mgf']);
         $final->WriteHTML($renderDoc('processes.documents.index-page', [
             '__section_starts' => $starts,
             '__section_pages'  => $sectionPages,
         ]));
 
         // Import body pages with no extra running header (page numbers already baked in)
-        $final->SetHTMLHeader('');
-        $final->SetHTMLFooter('');
         try {
             $bodyCount = $final->setSourceFile($bodyPath);
             for ($i = 1; $i <= $bodyCount; $i++) {
                 $tplId = $final->importPage($i);
                 $size = $final->getTemplateSize($tplId);
                 $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                $final->AddPage($orientation);
+                // AddPage first (closes previous page with its existing header/footer), THEN clear them for this imported page
+                $final->AddPageByArray([
+                    'orientation' => $orientation,
+                    'sheet-size' => [$size['width'], $size['height']],
+                    'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
+                ]);
+                $final->SetHTMLHeader('');
+                $final->SetHTMLFooter('');
                 $final->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
             }
         } catch (\Exception $e) {
