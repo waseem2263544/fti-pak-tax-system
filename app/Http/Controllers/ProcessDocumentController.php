@@ -220,30 +220,42 @@ class ProcessDocumentController extends Controller
             if (!file_exists($abs)) { $starts[$key] = null; continue; }
 
             $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
-            $body->SetHTMLHeader($pageNumHeader);
-            $body->SetHTMLFooter('');
 
             if ($ext === 'pdf') {
+                // Suppress mPDF's running header on imported pages - we'll stamp the page number manually on top
+                $body->SetHTMLHeader('');
+                $body->SetHTMLFooter('');
                 try {
                     $pageCount = $body->setSourceFile($abs);
                     for ($i = 1; $i <= $pageCount; $i++) {
                         $tplId = $body->importPage($i);
                         $size = $body->getTemplateSize($tplId);
                         $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                        $body->AddPage($orientation);
+                        // Add a page sized exactly like the imported template, with zero margins so it occupies the whole sheet
+                        $body->AddPageByArray([
+                            'orientation' => $orientation,
+                            'sheet-size'  => [$size['width'], $size['height']],
+                            'mgl' => 0, 'mgr' => 0, 'mgt' => 0, 'mgb' => 0, 'mgh' => 0, 'mgf' => 0,
+                        ]);
                         if ($i === 1) $starts[$key] = $body->page;
-                        $contentH = $body->h - $body->tMargin - $body->bMargin;
-                        $scale = min($body->w / $size['width'], $contentH / $size['height']);
-                        $placedW = $size['width'] * $scale;
-                        $placedH = $size['height'] * $scale;
-                        $body->useTemplate($tplId, ($body->w - $placedW) / 2, $body->tMargin, $placedW, $placedH);
+                        // Place the imported page edge-to-edge
+                        $body->useTemplate($tplId, 0, 0, $size['width'], $size['height']);
+                        // Stamp the running page number on top of the imported page (top-right corner)
+                        $body->SetFont('', 'B', 22);
+                        $body->SetTextColor(0, 0, 0);
+                        $body->SetXY($size['width'] - 22, 6);
+                        $body->Cell(16, 8, (string) $body->page, 0, 0, 'R');
                     }
                 } catch (\Exception $e) {
                     $body->AddPage();
                     $starts[$key] = $body->page;
                     $body->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment.</p>');
                 }
+                // Restore default running header for the docs that follow
+                $body->SetHTMLHeader($pageNumHeader);
             } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                $body->SetHTMLHeader($pageNumHeader);
+                $body->SetHTMLFooter('');
                 $body->AddPage();
                 $starts[$key] = $body->page;
                 $body->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
