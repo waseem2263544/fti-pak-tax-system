@@ -81,6 +81,7 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
 @endif
 
 @if($isStTribunalStay)
+<div style="height: 28pt;"></div>
 <div style="font-size: 10pt; line-height: 1.35;">
 
 <h1 style="font-size: 14pt; line-height: 1.25; margin: 0 0 8pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
