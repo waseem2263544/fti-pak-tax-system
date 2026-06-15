@@ -7,6 +7,7 @@ $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 $isIndividual = $idType === 'CNIC';
@@ -14,7 +15,7 @@ $verifierName = $meta['verifier_name'] ?? '';
 $verifierDesignation = $meta['verifier_designation'] ?? '';
 @endphp
 
-@if($isStTribunalStay)
+@if($isStTribunalStay || $isItTribunalAppeal)
 {{-- Reserve top space for stamp-paper printed header --}}
 <div style="height: 3.2in;"></div>
 
