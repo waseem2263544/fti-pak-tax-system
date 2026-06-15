@@ -165,10 +165,11 @@
         <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Documents are listed in the same order they appear in the Combined Package.</p>
         @php
             $isStTribunalStay = $process->template === 'st-tribunal-stay';
+            $isItTribunalAppeal = $process->template === 'it-tribunal-appeal';
             $docCards = [
                 ['key' => 'index',             'name' => 'Index',             'desc' => $isStTribunalStay ? 'Index of all documents' : 'Print 4× and tick the copy type', 'icon' => 'bi-list-columns-reverse', 'color' => '#303a50', 'bg' => 'rgba(48,58,80,0.06)'],
                 ['key' => 'appeal-memo',       'name' => 'Appeal Memo',       'desc' => 'Memorandum of appeal (Form B)',                              'icon' => 'bi-file-earmark-ruled',   'color' => '#dc2626', 'bg' => 'rgba(220,38,38,0.08)'],
-                ['key' => 'stay-application',  'name' => 'Stay Application',  'desc' => 'Application for interim relief',                             'icon' => 'bi-file-earmark-text',    'color' => '#7c3aed', 'bg' => 'rgba(139,92,246,0.08)'],
+                ['key' => 'stay-application',  'name' => 'Stay Application',  'desc' => 'Application for interim relief',                             'icon' => 'bi-file-earmark-text',    'color' => '#7c3aed', 'bg' => 'rgba(139,92,246,0.08)', 'hideForItAppeal' => true],
                 ['key' => 'grounds-of-appeal', 'name' => 'Grounds of Appeal', 'desc' => 'Brief facts, grounds, and prayer',                           'icon' => 'bi-list-ol',              'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.08)'],
                 ['key' => 'intimation',        'name' => 'Intimation Letter', 'desc' => 'To Commissioner regarding filing',                           'icon' => 'bi-envelope',             'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.08)'],
                 ['key' => 'power-of-attorney', 'name' => 'Power of Attorney', 'desc' => 'Print on Rs. 200 stamp paper',                               'icon' => 'bi-key',                  'color' => '#6366f1', 'bg' => 'rgba(99,102,241,0.08)', 'onlyStTribunalStay' => true],
@@ -177,7 +178,7 @@
         @endphp
         <div class="row g-3">
             @foreach($docCards as $doc)
-                @if(empty($doc['onlyStTribunalStay']) || $isStTribunalStay)
+                @if((empty($doc['onlyStTribunalStay']) || $isStTribunalStay) && !(($doc['hideForItAppeal'] ?? false) && $isItTribunalAppeal))
                 <div class="col-md-4">
                     <a href="{{ route('processes.document.preview', [$process, $doc['key']]) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
                         <div class="d-flex align-items-center gap-3">
