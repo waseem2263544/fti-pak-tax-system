@@ -48,10 +48,10 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
     <p style="margin: 0; font-size: 11pt; line-height: 1.5;">{{ $respondent2 }}</p>
 </div>
 @elseif($isItTribunalAppeal)
-{{-- space below the letterhead header, then a multi-line addressee block --}}
+{{-- space below the letterhead header, then a narrow addressee block (~35% wide) that wraps by word --}}
 <div style="height: 48pt;"></div>
-<div style="margin: 0 0 10pt;">
-    <p style="margin: 0; line-height: 1.6;">{!! str_replace(', ', '<br>', e($respondent2)) !!}</p>
+<div style="width: 35%; margin: 0 0 10pt;">
+    <p style="margin: 0; line-height: 1.6;">{{ $respondent2 }}</p>
 </div>
 @else
 <p>{{ $respondent2 }}</p>
