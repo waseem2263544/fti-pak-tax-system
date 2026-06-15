@@ -16,6 +16,7 @@ $templateNames = [
     'st-commissioner-appeal' => 'Sales Tax/FED Appeal - Commissioner Appeals',
     'st-tribunal-appeal' => 'Sales Tax/FED Appeal - ATIR',
     'st-tribunal-stay' => 'Sales Tax/FED Stay Application - ATIR',
+    'st-tribunal-stay-extension' => 'Sales Tax/FED Extension of Stay - ATIR',
     'st-commissioner-stay' => 'Sales Tax/FED Stay Application - CIR(A)',
 ];
 @endphp
@@ -151,7 +152,7 @@ $templateNames = [
             </div>
             @endif
 
-            @if($template === 'st-tribunal-stay')
+            @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
             <!-- Document Attachments (PDF or images) -->
             <div class="row">
                 @foreach([
@@ -305,7 +306,7 @@ $templateNames = [
             </div>
             @endif
 
-            @if($template === 'st-tribunal-stay')
+            @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
             <div class="mb-3 form-check">
                 <input type="hidden" name="bank_accounts_attached" value="0">
                 <input class="form-check-input" type="checkbox" name="bank_accounts_attached" value="1" id="bank-accounts-attached" {{ old('bank_accounts_attached', $meta['bank_accounts_attached'] ?? '0') == '1' ? 'checked' : '' }}>
@@ -347,7 +348,7 @@ $templateNames = [
 @endsection
 
 @section('scripts')
-@if($template === 'st-tribunal-stay')
+@if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <style>
@@ -367,7 +368,7 @@ $templateNames = [
 </style>
 @endif
 <script>
-@if($template === 'st-tribunal-stay')
+@if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
 // Replace contenteditable editors with Quill (paste-sanitized, MS-Word-style behavior)
 (function() {
     var qToolbar = [

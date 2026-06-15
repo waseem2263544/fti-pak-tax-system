@@ -12,6 +12,7 @@ $templateNames = [
     'st-commissioner-appeal' => 'Sales Tax/FED Appeal - Commissioner Appeals',
     'st-tribunal-appeal' => 'Sales Tax/FED Appeal - ATIR',
     'st-tribunal-stay' => 'Sales Tax/FED Stay Application - ATIR',
+    'st-tribunal-stay-extension' => 'Sales Tax/FED Extension of Stay - ATIR',
     'st-commissioner-stay' => 'Sales Tax/FED Stay Application - CIR(A)',
 ];
 $templateTitle = $templateNames[$template] ?? 'New Process';
@@ -66,6 +67,18 @@ $isStay = str_contains($template, 'stay');
                     @endforeach
                 </select>
             </div>
+            @if($template === 'st-tribunal-stay-extension')
+            <div class="mb-3">
+                <label class="form-label">Copy data from Stay Application</label>
+                <select class="form-select" onchange="if(this.value){window.location='{{ route('processes.create') }}?template=st-tribunal-stay-extension&from='+this.value;}">
+                    <option value="">— Select an existing Sales Tax Stay (ATIR) to copy —</option>
+                    @foreach($stayProcesses as $sp)
+                        <option value="{{ $sp->id }}" {{ request('from') == $sp->id ? 'selected' : '' }}>{{ $sp->client->name ?? 'Client' }} — {{ $sp->title }} ({{ $sp->created_at?->format('d M Y') }})</option>
+                    @endforeach
+                </select>
+                <small class="text-muted">Selecting a stay application pre-fills all case details below — then adjust as needed for the extension.</small>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -178,7 +191,7 @@ $isStay = str_contains($template, 'stay');
             </div>
             @endif
 
-            @if($template === 'st-tribunal-stay')
+            @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
             <!-- Document Attachments (PDF or images) -->
             <div class="row">
                 <div class="col-md-4 mb-3">
@@ -333,7 +346,7 @@ $isStay = str_contains($template, 'stay');
             </div>
             @endif
 
-            @if($template === 'st-tribunal-stay')
+            @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
             <div class="mb-3 form-check">
                 <input type="hidden" name="bank_accounts_attached" value="0">
                 <input class="form-check-input" type="checkbox" name="bank_accounts_attached" value="1" id="bank-accounts-attached" {{ old('bank_accounts_attached') == '1' ? 'checked' : '' }}>
@@ -377,7 +390,7 @@ $isStay = str_contains($template, 'stay');
 @endsection
 
 @section('scripts')
-@if($template === 'st-tribunal-stay')
+@if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <style>
@@ -397,7 +410,7 @@ $isStay = str_contains($template, 'stay');
 </style>
 @endif
 <script>
-@if($template === 'st-tribunal-stay')
+@if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
 // Replace contenteditable editors with Quill (paste-sanitized, MS-Word-style behavior)
 (function() {
     var qToolbar = [

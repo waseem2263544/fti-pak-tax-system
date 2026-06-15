@@ -5,7 +5,7 @@ $section = $meta['section'] ?? '122(1)/129';
 $grounds = $meta['grounds'] ?? '';
 $taxYearLine = $taxYear !== '' ? '<br>FOR THE TAX YEAR ' . e($taxYear) : '';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
-$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
 @endphp
 
 @if($isStTribunalStay)

@@ -11,7 +11,7 @@ $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
 $referenceNo = $meta['reference_no'] ?? '_______________';
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
-$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
 $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 
 // Intimation letter date. For it-tribunal-appeal anchor to a STORED date (filing date, else the

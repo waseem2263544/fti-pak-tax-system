@@ -32,12 +32,34 @@ class ProcessController extends Controller
         return view('processes.index', compact('processes', 'stats'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $clients = Client::orderBy('name')->get();
         $services = Service::orderBy('display_name')->get();
         $users = User::orderBy('name')->get();
-        return view('processes.create', compact('clients', 'services', 'users'));
+
+        // Extension of Stay: offer existing Sales Tax stay applications to copy data from.
+        $stayProcesses = collect();
+        if ($request->input('template') === 'st-tribunal-stay-extension') {
+            $stayProcesses = Process::with('client')
+                ->where('template', 'st-tribunal-stay')
+                ->orderByDesc('created_at')
+                ->get();
+
+            // When a source stay is picked, prefill the whole form by flashing its data as old input
+            // (so every old() call -- including the rich-text editors -- fills automatically).
+            // Skip if real old input already exists (e.g. returning from a validation error).
+            if ($request->filled('from') && empty($request->old())) {
+                $source = Process::find($request->input('from'));
+                if ($source) {
+                    $prefill = $source->metadata ?? [];
+                    $prefill['client_id'] = $source->client_id;
+                    $request->session()->flashInput($prefill);
+                }
+            }
+        }
+
+        return view('processes.create', compact('clients', 'services', 'users', 'stayProcesses'));
     }
 
     public function store(Request $request)

@@ -223,6 +223,15 @@
         </a>
     </div>
     <div class="col-md-6">
+        <a href="{{ route('processes.create', ['template' => 'st-tribunal-stay-extension']) }}" class="sub-option text-decoration-none">
+            <div class="sub-icon" style="background: rgba(16,185,129,0.08);"><i class="bi bi-arrow-clockwise" style="color: #10b981;"></i></div>
+            <div>
+                <h6>Extension of Stay Application to ATIR</h6>
+                <small>Extend an existing stay — pulls all data from the original stay application</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'st-commissioner-stay']) }}" class="sub-option text-decoration-none">
             <div class="sub-icon" style="background: rgba(245,158,11,0.08);"><i class="bi bi-pause-circle" style="color: #f59e0b;"></i></div>
             <div>

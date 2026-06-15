@@ -111,7 +111,7 @@
 @endif
 
 @php
-    $combinedEnabled = in_array($process->template, ['st-tribunal-stay', 'it-tribunal-appeal']);
+    $combinedEnabled = in_array($process->template, ['st-tribunal-stay', 'st-tribunal-stay-extension', 'it-tribunal-appeal']);
     $attachedFiles = $process->template === 'it-tribunal-appeal'
         ? ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Original Order', 'fee_challan_file' => 'Fee Challan']
         : ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
@@ -166,7 +166,7 @@
     <div class="card-body" style="padding: 20px;">
         <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Documents are listed in the same order they appear in the Combined Package.</p>
         @php
-            $isStTribunalStay = $process->template === 'st-tribunal-stay';
+            $isStTribunalStay = in_array($process->template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
             $isItTribunalAppeal = $process->template === 'it-tribunal-appeal';
             $docCards = [
                 ['key' => 'index',             'name' => 'Index',             'desc' => $isStTribunalStay ? 'Index of all documents' : 'Print 4× and tick the copy type', 'icon' => 'bi-list-columns-reverse', 'color' => '#303a50', 'bg' => 'rgba(48,58,80,0.06)'],

@@ -6,7 +6,7 @@ $address = $meta['appellant_address'] ?? '_______________';
 $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
-$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
 $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';

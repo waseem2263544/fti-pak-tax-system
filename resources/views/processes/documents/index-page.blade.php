@@ -9,7 +9,7 @@ $respondent1 = $meta['respondent_1'] ?? 'The Commissioner Inland Revenue';
 $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeals)';
 $year = date('Y');
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
-$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
 $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';

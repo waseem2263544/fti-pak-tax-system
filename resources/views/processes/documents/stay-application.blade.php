@@ -14,7 +14,7 @@ $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeal
 $recoveryNoticeNo = $meta['recovery_notice_no'] ?? '_______________';
 $recoveryNoticeDate = $meta['recovery_notice_date'] ?? '_______________';
 $year = date('Y');
-$isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
 $bankAccountsAttached = !empty($meta['bank_accounts_attached']) && $meta['bank_accounts_attached'] !== '0';
 $bankPhrase = $bankAccountsAttached ? ', bank accounts may be de-attached' : '';
 
