@@ -12,6 +12,7 @@ $ciraOrderDate = $meta['cira_order_date'] ?? '_______________';
 $referenceNo = $meta['reference_no'] ?? '_______________';
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 $recoveryNoticeNo = $meta['recovery_notice_no'] ?? '_______________';
@@ -33,6 +34,12 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 <div style="margin: 64pt 0 10pt; width: 40%;">
     <p style="margin: 0; font-size: 11pt; line-height: 1.5;">{{ $respondent2 }}</p>
 </div>
+@elseif($isItTribunalAppeal)
+{{-- space below the letterhead header, then a multi-line addressee block --}}
+<div style="height: 48pt;"></div>
+<div style="margin: 0 0 10pt;">
+    <p style="margin: 0; line-height: 1.6;">{!! str_replace(', ', '<br>', e($respondent2)) !!}</p>
+</div>
 @else
 <p>{{ $respondent2 }}</p>
 @endif
@@ -41,6 +48,8 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 
 @if($isStTribunalStay)
 <p><b>SUBJECT:</b> <b><u>INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }}, {{ $idType }} {{ $ntn }}, FOR THE ASSESSMENT ORDER NO. {{ strtoupper($assessmentOrderNo) }}.</u></b></p>
+@elseif($isItTribunalAppeal)
+<p><b>SUBJECT:</b> <b><u>INTIMATION FOR FILING OF APPEAL IN THE CASE OF {{ strtoupper($clientName) }}, {{ $idType }} {{ $ntn }}{!! $taxYearText !!}</u></b></p>
 @else
 <p><b>Subject: INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }} NTN/CNIC NO. {{ $ntn }}{!! $taxYearText !!}</b></p>
 @endif
@@ -62,6 +71,22 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
     7. Power of Attorney<br>
     8. Affidavit
 </p>
+@elseif($isItTribunalAppeal)
+<p>Respected Sir/ Madam,</p>
+
+<p>With reference to the above-subject matter, the appellant is going to file an appeal before the Honorable Appellate Tribunal Inland Revenue, {{ $bench }}, against the order passed by the {{ $respondent1 }}, as per the grounds of appeal.</p>
+
+<p>Enclosed, please find the following documents;</p>
+
+<p class="indent" style="margin-top: 6pt;">
+    1. Form A<br>
+    2. Grounds of Appeal<br>
+    3. Order in Appeal<br>
+    4. Original Order<br>
+    5. Fee Challan<br>
+    6. Power of Attorney<br>
+    7. Affidavit
+</p>
 @else
 <p>Respected Sir,</p>
 
@@ -79,6 +104,12 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 
 @if($isStTribunalStay)
 <div style="margin-top: 18pt; font-size: 10pt;">
+    <p style="margin: 0;">Yours' sincerely,</p>
+    <p style="margin: 24pt 0 0;"><b>Waseem Ur Rehman</b><br>
+    (Director - Fair Tax (Pvt) Ltd)</p>
+</div>
+@elseif($isItTribunalAppeal)
+<div style="margin-top: 18pt;">
     <p style="margin: 0;">Yours' sincerely,</p>
     <p style="margin: 24pt 0 0;"><b>Waseem Ur Rehman</b><br>
     (Director - Fair Tax (Pvt) Ltd)</p>
