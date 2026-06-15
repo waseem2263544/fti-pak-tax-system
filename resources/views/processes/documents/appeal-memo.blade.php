@@ -24,17 +24,17 @@ $typeOfAppeal = $meta['type_of_appeal'] ?? 'sales_tax';
 $isSalesTax = $typeOfAppeal === 'sales_tax';
 $isIncomeTaxAtir = in_array($process->template ?? '', ['it-tribunal-appeal', 'it-tribunal-stay'], true);
 
-// Appellant identification line / verification opener
-$verificationOpener = $isIndividual
-    ? 'I, <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e(strtoupper($clientName)) . '</span>, CNIC# <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e($ntn) . '</span>, the Appellant'
-    : 'I, <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e(strtoupper($verifierName)) . '</span>, the <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e($verifierDesignation) . '</span> of <span style="border-bottom: 1px solid #000; font-weight: bold;">M/s ' . e($clientName) . '</span>, the Appellant';
-
 $shortYear = date('y');
 $officeLine = trim($irOfficeAssessment . ($irOfficeLocation ? ', ' . $irOfficeLocation : ''));
 
 // Determine individual vs company from registration number digits
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $isIndividual = strlen($ntnDigits) === 13;
+
+// Appellant identification line / verification opener (Form A)
+$verificationOpener = $isIndividual
+    ? 'I, <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e(strtoupper($clientName)) . '</span>, CNIC# <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e($ntn) . '</span>, the Appellant'
+    : 'I, <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e(strtoupper($verifierName)) . '</span>, the <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e($verifierDesignation) . '</span> of <span style="border-bottom: 1px solid #000; font-weight: bold;">M/s ' . e($clientName) . '</span>, the Appellant';
 
 // Derive verification day / month / year from filing date
 $filingDate = $meta['filing_date'] ?? null;
