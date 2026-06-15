@@ -27,6 +27,16 @@ $isIncomeTaxAtir = in_array($process->template ?? '', ['it-tribunal-appeal', 'it
 $shortYear = date('y');
 $officeLine = trim($irOfficeAssessment . ($irOfficeLocation ? ', ' . $irOfficeLocation : ''));
 
+// Income-tax Form A verification date: use the filing date, else default to today ("Verified today, the ...")
+try {
+    $itVerifyDt = !empty($meta['filing_date']) ? \Carbon\Carbon::parse($meta['filing_date']) : \Carbon\Carbon::now();
+} catch (\Exception $e) {
+    $itVerifyDt = \Carbon\Carbon::now();
+}
+$itVerificationDay = $itVerifyDt->format('jS');
+$itVerificationMonth = $itVerifyDt->format('F');
+$itVerificationYear = $itVerifyDt->format('Y');
+
 // Determine individual vs company from registration number digits
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $isIndividual = strlen($ntnDigits) === 13;
@@ -96,7 +106,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
         <td colspan="2" style="border: 1px solid #000; padding: 5pt 8pt; text-align: center; font-weight: bold;">{{ strtoupper($clientName) }} &nbsp;Vs&nbsp; {{ strtoupper($meta['respondent_2'] ?? 'The Commissioner Inland Revenue') }}</td>
     </tr>
     <tr>
-        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Income tax Office in which assessment was made and on in which it is located.</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Inland Revenue Office in which assessment was made and one in which it is located</td>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $officeLine }}</td>
     </tr>
     <tr>
@@ -108,7 +118,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $section !== '_______________' ? $section : '' }}</td>
     </tr>
     <tr>
-        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['respondent_1'] ?? 'The Deputy Commissioner Inland Revenue') }}</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Commissioner (Appeals) passing the appellate order</td>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['assessing_officer_name'] ?? '') }}</td>
     </tr>
     <tr>
@@ -120,8 +130,12 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $address }}</td>
     </tr>
     <tr>
-        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Address to which notices may be sent to the respondent.<br>Claim in appeal</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Address to which notices may be sent to the respondent.</td>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['respondent_2'] ?? 'The Commissioner Inland Revenue') }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Claim in appeal</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">&nbsp;</td>
     </tr>
 </table>
 
@@ -150,7 +164,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 
 <p style="text-align: center; margin: 20pt 0 8pt; font-weight: bold; text-decoration: underline;">VERIFICATION</p>
 
-<p style="line-height: 1.6; margin: 0; text-align: justify;">{!! $verificationOpener !!} do hereby declare that what is stated above is true to the best of my information and belief. Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationDay }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationMonth }}, {{ $verificationYear }}</span>.</p>
+<p style="line-height: 1.6; margin: 0; text-align: justify;">{!! $verificationOpener !!} do hereby declare that what is stated above is true to the best of my information and belief. Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $itVerificationDay }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $itVerificationMonth }}, {{ $itVerificationYear }}</span>.</p>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 28pt;">
     <tr>
