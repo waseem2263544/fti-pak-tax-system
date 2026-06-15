@@ -86,8 +86,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 
 <table style="width: 100%; border-collapse: collapse;">
     <tr>
-        <td style="border: 1px solid #000; padding: 4pt 8pt; text-align: center; font-weight: bold; width: 50%;">APPELLANT</td>
-        <td style="border: 1px solid #000; padding: 4pt 8pt; text-align: center; font-weight: bold; width: 50%;">RESPONDENT</td>
+        <td colspan="2" style="border: 1px solid #000; padding: 5pt 8pt; text-align: center; font-weight: bold;">{{ strtoupper($clientName) }} &nbsp;Vs&nbsp; {{ strtoupper($meta['respondent_2'] ?? 'The Commissioner Inland Revenue') }}</td>
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Income tax Office in which assessment was made and on in which it is located.</td>
