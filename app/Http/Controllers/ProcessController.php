@@ -41,8 +41,9 @@ class ProcessController extends Controller
         // Extension of Stay: offer existing Sales Tax stay applications to copy data from.
         $stayProcesses = collect();
         if ($request->input('template') === 'st-tribunal-stay-extension') {
+            // Include prior extensions too, so a 2nd/3rd extension can chain off the previous one.
             $stayProcesses = Process::with('client')
-                ->where('template', 'st-tribunal-stay')
+                ->whereIn('template', ['st-tribunal-stay', 'st-tribunal-stay-extension'])
                 ->orderByDesc('created_at')
                 ->get();
 

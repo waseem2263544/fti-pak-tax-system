@@ -69,14 +69,14 @@ $isStay = str_contains($template, 'stay');
             </div>
             @if($template === 'st-tribunal-stay-extension')
             <div class="mb-3">
-                <label class="form-label">Copy data from Stay Application</label>
+                <label class="form-label">Copy data from Stay Application / prior Extension</label>
                 <select class="form-select" onchange="if(this.value){window.location='{{ route('processes.create') }}?template=st-tribunal-stay-extension&from='+this.value;}">
-                    <option value="">— Select an existing Sales Tax Stay (ATIR) to copy —</option>
+                    <option value="">— Select an existing Sales Tax Stay or Extension (ATIR) to copy —</option>
                     @foreach($stayProcesses as $sp)
-                        <option value="{{ $sp->id }}" {{ request('from') == $sp->id ? 'selected' : '' }}>{{ $sp->client->name ?? 'Client' }} — {{ $sp->title }} ({{ $sp->created_at?->format('d M Y') }})</option>
+                        <option value="{{ $sp->id }}" {{ request('from') == $sp->id ? 'selected' : '' }}>{{ $sp->client->name ?? 'Client' }} — {{ $sp->title }}{{ $sp->template === 'st-tribunal-stay-extension' ? ' [Extension]' : '' }} ({{ $sp->created_at?->format('d M Y') }})</option>
                     @endforeach
                 </select>
-                <small class="text-muted">Selecting a stay application pre-fills all case details below — then adjust as needed for the extension.</small>
+                <small class="text-muted">For a repeat extension, copy from the most recent extension. Pre-fills all case details + base files; then upload the latest Stay Order.</small>
             </div>
             @if(request('from'))<input type="hidden" name="copy_files_from" value="{{ request('from') }}">@endif
             @endif
