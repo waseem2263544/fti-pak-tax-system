@@ -62,6 +62,14 @@ if ($communicationDate && $communicationDate !== '_______________') {
     }
 }
 
+// Income-tax Form A: communication date comes ONLY from its own field (independent of the order date)
+$itCommunicationDateDisplay = '';
+$itCommunicationRaw = $meta['communication_date'] ?? '';
+if ($itCommunicationRaw && $itCommunicationRaw !== '_______________') {
+    try { $itCommunicationDateDisplay = \Carbon\Carbon::parse($itCommunicationRaw)->format('d-M-Y'); }
+    catch (\Exception $e) { $itCommunicationDateDisplay = $itCommunicationRaw; }
+}
+
 // Reusable inline styles
 $rowLabel = 'border: none; padding: 3pt 8pt 3pt 0; vertical-align: top; font-size: 10pt;';
 $rowValue = 'border: none; border-bottom: 1px solid #000; padding: 3pt 8pt; vertical-align: bottom; font-weight: bold; font-size: 10pt;';
@@ -105,7 +113,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Date of Communication of the order appeal against</td>
-        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $communicationDateDisplay }}</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $itCommunicationDateDisplay }}</td>
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Address to which notices may be sent to the appellant</td>
@@ -118,8 +126,8 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 </table>
 
 <div style="text-align: center; margin-top: 16pt;">
-    <p style="margin: 0; font-weight: bold; text-decoration: underline;">GROUNDS OF APPEAL</p>
-    <p style="margin: 2pt 0 0;">(Attached separately)</p>
+    <p style="margin: 0; font-weight: bold; text-decoration: underline; text-align: center;">GROUNDS OF APPEAL</p>
+    <p style="margin: 2pt 0 0; text-align: center;">(Attached separately)</p>
 </div>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 28pt;">
