@@ -22,7 +22,15 @@ $verifierName = $meta['verifier_name'] ?? '';
 $verifierDesignation = $meta['verifier_designation'] ?? '';
 $typeOfAppeal = $meta['type_of_appeal'] ?? 'sales_tax';
 $isSalesTax = $typeOfAppeal === 'sales_tax';
-$isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
+$isIncomeTaxAtir = in_array($process->template ?? '', ['it-tribunal-appeal', 'it-tribunal-stay'], true);
+
+// Appellant identification line / verification opener
+$verificationOpener = $isIndividual
+    ? 'I, <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e(strtoupper($clientName)) . '</span>, CNIC# <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e($ntn) . '</span>, the Appellant'
+    : 'I, <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e(strtoupper($verifierName)) . '</span>, the <span style="border-bottom: 1px solid #000; font-weight: bold;">' . e($verifierDesignation) . '</span> of <span style="border-bottom: 1px solid #000; font-weight: bold;">M/s ' . e($clientName) . '</span>, the Appellant';
+
+$shortYear = date('y');
+$officeLine = trim($irOfficeAssessment . ($irOfficeLocation ? ', ' . $irOfficeLocation : ''));
 
 // Determine individual vs company from registration number digits
 $ntnDigits = preg_replace('/\D/', '', $ntn);
@@ -64,18 +72,97 @@ $cell = 'border: 1px solid #000; padding: 2pt 6pt; background: #fff; font-size: 
 $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: bold;';
 @endphp
 
+@if($isIncomeTaxAtir)
+{{-- ───────────────── FORM "A" — Income Tax appeal/stay to ATIR (s.131) ───────────────── --}}
+<div style="font-size: 11pt;">
+
+<div style="margin-bottom: 6pt;">
+    <p style="margin: 0; text-align: center; font-size: 13pt;"><b>FORM &ldquo;A&rdquo;</b></p>
+    <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[See rule 7]</b></p>
+    <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 11pt;"><b><u>FORM OF APPEAL TO THE TRIBUNAL UNDER SECTION 131 OF THE INCOME TAX ORDINANCE, 2001</u></b></p>
+</div>
+
+<p style="text-align: center; margin: 10pt 0 12pt; font-size: 11pt;">No.&nbsp;____________ of /{{ $shortYear }}</p>
+
+<table style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <td style="border: 1px solid #000; padding: 4pt 8pt; text-align: center; font-weight: bold; width: 50%;">APPELLANT</td>
+        <td style="border: 1px solid #000; padding: 4pt 8pt; text-align: center; font-weight: bold; width: 50%;">RESPONDENT</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Income tax Office in which assessment was made and on in which it is located.</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $officeLine }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Tax year to which the appeal relates.</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $taxYear }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Section of the Income Tax Ordinance, 2001 under which Commissioner passed the order</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $section !== '_______________' ? $section : '' }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['respondent_1'] ?? 'The Deputy Commissioner Inland Revenue') }}</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($clientName) }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Date of Communication of the order appeal against</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $communicationDateDisplay }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Address to which notices may be sent to the appellant</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ $address }}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Address to which notices may be sent to the respondent.<br>Claim in appeal</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['respondent_2'] ?? 'The Commissioner Inland Revenue') }}</td>
+    </tr>
+</table>
+
+<div style="text-align: center; margin-top: 30pt;">
+    <p style="margin: 0; font-weight: bold; text-decoration: underline;">GROUNDS OF APPEAL</p>
+    <p style="margin: 2pt 0 0;">(Attached separately)</p>
+</div>
+
+<table style="width: 100%; border-collapse: collapse; margin-top: 54pt;">
+    <tr>
+        <td style="border: none; padding: 0; width: 45%;">&nbsp;</td>
+        <td style="border: none; padding: 0; width: 55%; text-align: center;">
+            <div style="border-top: 1px solid #000; padding-top: 4pt;">Appellant</div>
+        </td>
+    </tr>
+</table>
+
+<table style="width: 100%; border-collapse: collapse; margin-top: 32pt;">
+    <tr>
+        <td style="border: none; padding: 0; width: 45%;">&nbsp;</td>
+        <td style="border: none; padding: 0; width: 55%; text-align: center;">
+            <div style="border-top: 1px solid #000; padding-top: 4pt;">Authorized Representative</div>
+        </td>
+    </tr>
+</table>
+
+<p style="text-align: center; margin: 36pt 0 10pt; font-weight: bold; text-decoration: underline;">VERIFICATION</p>
+
+<p style="line-height: 1.7; margin: 0; text-align: justify;">{!! $verificationOpener !!} do hereby declare that what is stated above is true to the best of my information and belief. Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationDay }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationMonth }}, {{ $verificationYear }}</span>.</p>
+
+<table style="width: 100%; border-collapse: collapse; margin-top: 54pt;">
+    <tr>
+        <td style="border: none; padding: 0; width: 45%;">&nbsp;</td>
+        <td style="border: none; padding: 0; width: 55%; text-align: center;">
+            <div style="border-top: 1px solid #000; padding-top: 4pt;">Appellant</div>
+        </td>
+    </tr>
+</table>
+
+</div>
+@else
 <div style="font-size: 10pt;">
 
 <div style="margin-bottom: 4pt;">
-@if($isItTribunalAppeal)
-    <p style="margin: 0; text-align: center; font-size: 12pt;"><b>FORM &ldquo;A&rdquo;</b></p>
-    <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[see rule 16]</b></p>
-    <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 10pt;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 131 OF THE INCOME TAX ORDINANCE, 2001</u></b></p>
-@else
     <p style="margin: 0; text-align: center; font-size: 12pt;"><b>FORM &ldquo;B&rdquo;</b></p>
     <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[see rule 7]</b></p>
     <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 10pt;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 46 OF THE SALES TAX ACT, 1990 OR SECTION 34 OF THE FEDERAL EXCISE ACT, 2005</u></b></p>
-@endif
 </div>
 
 <p style="margin-top: 10pt; text-align: center; font-size: 11pt;">BEFORE THE APPELLATE TRIBUNAL INLAND REVENUE&nbsp;<b><u>{{ strtoupper($bench) }}</u></b></p>
@@ -247,3 +334,4 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 
     <p style="text-align: right; margin-top: 36pt;"><b>Assistant Registrar</b></p>
 </div>
+@endif
