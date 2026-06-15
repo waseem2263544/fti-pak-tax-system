@@ -117,7 +117,7 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
 
 <p style="margin: 4pt 0;"><b>Income Tax Appeal No. ____________________/{{ $year }}</b></p>
 
-<p style="margin: 4pt 0;"><b>SUBJECT:</b> <b><u>INDEX IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
+<p style="margin: 4pt 0;"><b>SUBJECT:</b> <b><u>APPEAL IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
 
 <p style="margin: 6pt 0 2pt;"><b>RESPONDENTS:</b></p>
 <p class="indent" style="margin: 0;">1. {{ strtoupper($respondent2) }}</p>
