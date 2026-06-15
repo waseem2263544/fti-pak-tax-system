@@ -22,6 +22,7 @@ $verifierName = $meta['verifier_name'] ?? '';
 $verifierDesignation = $meta['verifier_designation'] ?? '';
 $typeOfAppeal = $meta['type_of_appeal'] ?? 'sales_tax';
 $isSalesTax = $typeOfAppeal === 'sales_tax';
+$isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 
 // Determine individual vs company from registration number digits
 $ntnDigits = preg_replace('/\D/', '', $ntn);
@@ -66,9 +67,15 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 <div style="font-size: 10pt;">
 
 <div style="margin-bottom: 4pt;">
+@if($isItTribunalAppeal)
+    <p style="margin: 0; text-align: center; font-size: 12pt;"><b>FORM &ldquo;A&rdquo;</b></p>
+    <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[see rule 16]</b></p>
+    <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 10pt;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 131 OF THE INCOME TAX ORDINANCE, 2001</u></b></p>
+@else
     <p style="margin: 0; text-align: center; font-size: 12pt;"><b>FORM &ldquo;B&rdquo;</b></p>
     <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[see rule 7]</b></p>
     <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 10pt;"><b><u>FORM OF APPEAL TO THE APPELLATE TRIBUNAL INLAND REVENUE UNDER SECTION 46 OF THE SALES TAX ACT, 1990 OR SECTION 34 OF THE FEDERAL EXCISE ACT, 2005</u></b></p>
+@endif
 </div>
 
 <p style="margin-top: 10pt; text-align: center; font-size: 11pt;">BEFORE THE APPELLATE TRIBUNAL INLAND REVENUE&nbsp;<b><u>{{ strtoupper($bench) }}</u></b></p>

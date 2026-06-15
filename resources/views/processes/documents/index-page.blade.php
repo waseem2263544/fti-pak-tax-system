@@ -10,6 +10,7 @@ $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeal
 $year = date('Y');
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
+$isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
 
@@ -102,6 +103,27 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
             <th style="width: 25%; padding: 3pt 6pt; font-size: 9pt;">PAGE NO.</th>
         </tr>
     </thead>
+@elseif($isItTribunalAppeal)
+<h1 style="font-size: 13pt; line-height: 1.2; margin: 0 0 6pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
+
+<p style="margin: 4pt 0;"><b>Income Tax Appeal No. ____________________/{{ $year }}</b></p>
+
+<p style="margin: 4pt 0;"><b>SUBJECT:</b> <b><u>INDEX IN THE CASE OF {{ strtoupper($clientName) }} {{ $idType }} NO. {{ $ntn }}{!! $taxYearText !!}</u></b></p>
+
+<p style="margin: 6pt 0 2pt;"><b>RESPONDENTS:</b></p>
+<p class="indent" style="margin: 0;">1. {{ strtoupper($respondent2) }}</p>
+<p class="indent" style="margin: 0;">2. {{ strtoupper($respondent1) }}</p>
+
+<p style="text-align: center; font-weight: bold; margin: 14pt 0 6pt;">INDEX</p>
+
+<table style="margin-top: 6pt;">
+    <thead>
+        <tr>
+            <th style="width: 10%;">S. NO</th>
+            <th style="width: 65%;">DESCRIPTION</th>
+            <th style="width: 25%;">PAGE NO.</th>
+        </tr>
+    </thead>
 @else
 <h1 style="font-size: 13pt; line-height: 1.2; margin: 0 0 6pt;">BEFORE THE APPELLATE TRIBUNAL INLAND<br>REVENUE {{ strtoupper($bench) }}</h1>
 
@@ -133,6 +155,15 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
         <tr><td class="center" style="padding: 3pt 6pt;">7</td><td style="padding: 3pt 6pt;">INTIMATION LETTER</td><td class="center" style="padding: 3pt 6pt;">{{ $pIntimation }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">8</td><td style="padding: 3pt 6pt;">POWER OF ATTORNEY</td><td class="center" style="padding: 3pt 6pt;">{{ $pPOA }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">9</td><td style="padding: 3pt 6pt;">AFFIDAVIT</td><td class="center" style="padding: 3pt 6pt;">{{ $pAffidavit }}</td></tr>
+        @elseif($isItTribunalAppeal)
+        <tr><td class="center">1</td><td>FORM A</td><td></td></tr>
+        <tr><td class="center">2</td><td>GROUNDS OF APPEAL</td><td></td></tr>
+        <tr><td class="center">3</td><td>ORDER IN APPEAL</td><td></td></tr>
+        <tr><td class="center">4</td><td>ORIGINAL ORDER</td><td></td></tr>
+        <tr><td class="center">5</td><td>INTIMATION LETTER</td><td></td></tr>
+        <tr><td class="center">6</td><td>FEE CHALLAN</td><td></td></tr>
+        <tr><td class="center">7</td><td>POWER OF ATTORNEY</td><td></td></tr>
+        <tr><td class="center">8</td><td>AFFIDAVIT</td><td></td></tr>
         @else
         <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
