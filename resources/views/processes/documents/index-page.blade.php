@@ -10,6 +10,7 @@ $respondent2 = $meta['respondent_2'] ?? 'The Commissioner Inland Revenue (Appeal
 $year = date('Y');
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 $isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
+$isStExtension = ($process->template ?? '') === 'st-tribunal-stay-extension';
 $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
 $ciraOrderNo = $meta['cira_order_no'] ?? '_______________';
 $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
@@ -154,7 +155,18 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
     </thead>
 @endif
     <tbody>
-        @if($isStTribunalStay)
+        @if($isStExtension)
+        <tr><td class="center" style="padding: 3pt 6pt;">1</td><td style="padding: 3pt 6pt;">APPEAL MEMO</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('appeal_memo') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">2</td><td style="padding: 3pt 6pt;">STAY APPLICATION</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('stay_app') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">3</td><td style="padding: 3pt 6pt;">GROUNDS OF APPEAL</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('grounds') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">4</td><td style="padding: 3pt 6pt;">ORDER IN APPEAL {{ $ciraOrderNo }}</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('order_in_appeal') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">5</td><td style="padding: 3pt 6pt;">ORDER IN ORIGINAL {{ $assessmentOrderNo }}</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('order_in_original') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">6</td><td style="padding: 3pt 6pt;">RECOVERY NOTICE</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('recovery_notice') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">7</td><td style="padding: 3pt 6pt;">STAY ORDER</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('stay_order') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">8</td><td style="padding: 3pt 6pt;">INTIMATION LETTER</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('intimation') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">9</td><td style="padding: 3pt 6pt;">POWER OF ATTORNEY</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('poa') }}</td></tr>
+        <tr><td class="center" style="padding: 3pt 6pt;">10</td><td style="padding: 3pt 6pt;">AFFIDAVIT</td><td class="center" style="padding: 3pt 6pt;">{{ $rangeCell('affidavit') }}</td></tr>
+        @elseif($isStTribunalStay)
         <tr><td class="center" style="padding: 3pt 6pt;">1</td><td style="padding: 3pt 6pt;">APPEAL MEMO</td><td class="center" style="padding: 3pt 6pt;">{{ $appealMemoPages > 1 ? $pAppealMemo . '-' . ($pAppealMemo + $appealMemoPages - 1) : $pAppealMemo }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">2</td><td style="padding: 3pt 6pt;">STAY APPLICATION</td><td class="center" style="padding: 3pt 6pt;">{{ $pStayApp }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">3</td><td style="padding: 3pt 6pt;">GROUNDS OF APPEAL</td><td class="center" style="padding: 3pt 6pt;">{{ $groundsPages > 1 ? $pGrounds . '-' . ($pGrounds + $groundsPages - 1) : $pGrounds }}</td></tr>

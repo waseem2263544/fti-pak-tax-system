@@ -78,6 +78,7 @@ $isStay = str_contains($template, 'stay');
                 </select>
                 <small class="text-muted">Selecting a stay application pre-fills all case details below — then adjust as needed for the extension.</small>
             </div>
+            @if(request('from'))<input type="hidden" name="copy_files_from" value="{{ request('from') }}">@endif
             @endif
         </div>
     </div>
@@ -206,6 +207,12 @@ $isStay = str_contains($template, 'stay');
                     <label class="form-label">Recovery Notice <small class="text-muted">(PDF / image)</small></label>
                     <input type="file" name="recovery_notice_file" class="form-control" accept=".pdf,image/*">
                 </div>
+                @if($template === 'st-tribunal-stay-extension')
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Previous Stay Order(s) <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="stay_order_file" class="form-control" accept=".pdf,image/*">
+                </div>
+                @endif
             </div>
             @endif
 

@@ -154,12 +154,12 @@ $templateNames = [
 
             @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
             <!-- Document Attachments (PDF or images) -->
+            @php
+                $stayFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
+                if ($template === 'st-tribunal-stay-extension') $stayFiles['stay_order_file'] = 'Previous Stay Order(s)';
+            @endphp
             <div class="row">
-                @foreach([
-                    'order_in_appeal_file' => 'Order in Appeal',
-                    'order_in_original_file' => 'Order in Original',
-                    'recovery_notice_file' => 'Recovery Notice',
-                ] as $field => $label)
+                @foreach($stayFiles as $field => $label)
                 <div class="col-md-4 mb-3">
                     <label class="form-label">{{ $label }} <small class="text-muted">(PDF / image)</small></label>
                     <input type="file" name="{{ $field }}" class="form-control" accept=".pdf,image/*">

@@ -112,9 +112,13 @@
 
 @php
     $combinedEnabled = in_array($process->template, ['st-tribunal-stay', 'st-tribunal-stay-extension', 'it-tribunal-appeal']);
-    $attachedFiles = $process->template === 'it-tribunal-appeal'
-        ? ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Original Order', 'fee_challan_file' => 'Fee Challan']
-        : ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
+    if ($process->template === 'it-tribunal-appeal') {
+        $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Original Order', 'fee_challan_file' => 'Fee Challan'];
+    } elseif ($process->template === 'st-tribunal-stay-extension') {
+        $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice', 'stay_order_file' => 'Previous Stay Order(s)'];
+    } else {
+        $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
+    }
 @endphp
 @if($combinedEnabled)
 <!-- Combined Package -->

@@ -112,6 +112,7 @@ class ProcessController extends Controller
 
         $process = Process::create($validated);
         $this->handleStTribunalStayUploads($request, $process);
+        $this->copyFilesFromSource($request, $process);
         $this->createTaskForAssignment($process);
         return redirect()->route('processes.show', $process)->with('success', 'Process created successfully');
     }
@@ -123,7 +124,7 @@ class ProcessController extends Controller
      */
     private function handleStTribunalStayUploads(Request $request, Process $process)
     {
-        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file', 'fee_challan_file'];
+        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file', 'fee_challan_file', 'stay_order_file'];
         $metadata = $process->metadata ?? [];
         $changed = false;
         foreach ($fields as $field) {
@@ -152,6 +153,43 @@ class ProcessController extends Controller
         if ($changed) {
             $process->update(['metadata' => $metadata]);
         }
+    }
+
+    /**
+     * Extension of Stay: copy the source stay's attached files (Order in Appeal / Original / Recovery
+     * Notice) into the new process, unless the user uploaded their own on the extension form.
+     * Driven by the hidden `copy_files_from` field carrying the source process id.
+     */
+    private function copyFilesFromSource(Request $request, Process $process)
+    {
+        $sourceId = $request->input('copy_files_from');
+        if (!$sourceId) return;
+        $source = Process::find($sourceId);
+        if (!$source) return;
+
+        $sourceMeta = $source->metadata ?? [];
+        $metadata = $process->metadata ?? [];
+        $changed = false;
+
+        foreach (['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file'] as $field) {
+            if (!empty($metadata[$field])) continue;          // user uploaded one directly -> keep it
+            if (empty($sourceMeta[$field])) continue;
+            $srcAbs = public_path($sourceMeta[$field]);
+            if (!is_file($srcAbs)) continue;
+
+            $dir = public_path('uploads/processes/' . $process->id);
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+
+            $ext = pathinfo($srcAbs, PATHINFO_EXTENSION) ?: 'pdf';
+            $filename = $field . '-' . time() . '.' . $ext;
+            if (@copy($srcAbs, $dir . '/' . $filename)) {
+                $metadata[$field] = 'uploads/processes/' . $process->id . '/' . $filename;
+                $metadata[$field . '_pages'] = $sourceMeta[$field . '_pages'] ?? 1;
+                $changed = true;
+            }
+        }
+
+        if ($changed) $process->update(['metadata' => $metadata]);
     }
 
     /**

@@ -152,10 +152,25 @@ class ProcessDocumentController extends Controller
         $process->load('client');
 
         $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
+        $isStExtension = ($process->template ?? '') === 'st-tribunal-stay-extension';
 
         // Section sequence per template. 'doc' = generated Blade; 'file' = uploaded attachment.
         // Both render passes iterate this single source of truth.
-        if ($isItTribunalAppeal) {
+        if ($isStExtension) {
+            // Same as st-tribunal-stay, plus the previous Stay Order after the recovery notice.
+            $sequence = [
+                ['key' => 'appeal_memo',       'type' => 'doc',  'view' => 'processes.documents.appeal-memo'],
+                ['key' => 'stay_app',          'type' => 'doc',  'view' => 'processes.documents.stay-application'],
+                ['key' => 'grounds',           'type' => 'doc',  'view' => 'processes.documents.grounds-of-appeal'],
+                ['key' => 'order_in_appeal',   'type' => 'file', 'field' => 'order_in_appeal_file'],
+                ['key' => 'order_in_original', 'type' => 'file', 'field' => 'order_in_original_file'],
+                ['key' => 'recovery_notice',   'type' => 'file', 'field' => 'recovery_notice_file'],
+                ['key' => 'stay_order',        'type' => 'file', 'field' => 'stay_order_file'],
+                ['key' => 'intimation',        'type' => 'doc',  'view' => 'processes.documents.intimation', 'letterhead' => true],
+                ['key' => 'poa',               'type' => 'doc',  'view' => 'processes.documents.power-of-attorney'],
+                ['key' => 'affidavit',         'type' => 'doc',  'view' => 'processes.documents.affidavit'],
+            ];
+        } elseif ($isItTribunalAppeal) {
             $sequence = [
                 ['key' => 'appeal_memo',       'type' => 'doc',  'view' => 'processes.documents.appeal-memo'],
                 ['key' => 'grounds',           'type' => 'doc',  'view' => 'processes.documents.grounds-of-appeal'],
