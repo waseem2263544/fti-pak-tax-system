@@ -13,6 +13,19 @@ $referenceNo = $meta['reference_no'] ?? '_______________';
 $taxYearText = $taxYear !== '' ? ' FOR THE TAX YEAR ' . e($taxYear) : '';
 $isStTribunalStay = ($process->template ?? '') === 'st-tribunal-stay';
 $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
+
+// Intimation letter date. For it-tribunal-appeal anchor to a STORED date (filing date, else the
+// process creation date) so it doesn't drift to "today" each time the document is re-opened.
+if ($isItTribunalAppeal) {
+    try {
+        $intimationDt = !empty($meta['filing_date']) ? \Carbon\Carbon::parse($meta['filing_date']) : ($process->created_at ?? \Carbon\Carbon::now());
+    } catch (\Exception $e) {
+        $intimationDt = $process->created_at ?? \Carbon\Carbon::now();
+    }
+    $intimationDate = $intimationDt->format('d-M-Y');
+} else {
+    $intimationDate = date('d-M-Y');
+}
 $ntnDigits = preg_replace('/\D/', '', $ntn);
 $idType = strlen($ntnDigits) === 13 ? 'CNIC' : 'NTN';
 $recoveryNoticeNo = $meta['recovery_notice_no'] ?? '_______________';
@@ -44,7 +57,7 @@ if ($isStTribunalStay && $recoveryNoticeDateRaw) {
 <p>{{ $respondent2 }}</p>
 @endif
 
-<p class="right">Dated: {{ date('d-M-Y') }}<br>Ref: {{ $referenceNo }}</p>
+<p class="right">Dated: {{ $intimationDate }}<br>Ref: {{ $referenceNo }}</p>
 
 @if($isStTribunalStay)
 <p><b>SUBJECT:</b> <b><u>INTIMATION FOR FILING OF STAY APPLICATION IN THE CASE OF {{ strtoupper($clientName) }}, {{ $idType }} {{ $ntn }}, FOR THE ASSESSMENT ORDER NO. {{ strtoupper($assessmentOrderNo) }}.</u></b></p>

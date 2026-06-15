@@ -27,11 +27,12 @@ $isIncomeTaxAtir = in_array($process->template ?? '', ['it-tribunal-appeal', 'it
 $shortYear = date('y');
 $officeLine = trim($irOfficeAssessment . ($irOfficeLocation ? ', ' . $irOfficeLocation : ''));
 
-// Income-tax Form A verification date: use the filing date, else default to today ("Verified today, the ...")
+// Income-tax Form A verification date: use the filing date; else the stored process creation date
+// (NOT today's date, so the document doesn't change every time it is re-opened).
 try {
-    $itVerifyDt = !empty($meta['filing_date']) ? \Carbon\Carbon::parse($meta['filing_date']) : \Carbon\Carbon::now();
+    $itVerifyDt = !empty($meta['filing_date']) ? \Carbon\Carbon::parse($meta['filing_date']) : ($process->created_at ?? \Carbon\Carbon::now());
 } catch (\Exception $e) {
-    $itVerifyDt = \Carbon\Carbon::now();
+    $itVerifyDt = $process->created_at ?? \Carbon\Carbon::now();
 }
 $itVerificationDay = $itVerifyDt->format('jS');
 $itVerificationMonth = $itVerifyDt->format('F');
