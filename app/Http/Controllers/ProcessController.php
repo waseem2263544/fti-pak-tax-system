@@ -101,7 +101,7 @@ class ProcessController extends Controller
      */
     private function handleStTribunalStayUploads(Request $request, Process $process)
     {
-        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file'];
+        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file', 'fee_challan_file'];
         $metadata = $process->metadata ?? [];
         $changed = false;
         foreach ($fields as $field) {

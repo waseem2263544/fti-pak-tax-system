@@ -110,7 +110,13 @@
 </div>
 @endif
 
-@if($process->template === 'st-tribunal-stay')
+@php
+    $combinedEnabled = in_array($process->template, ['st-tribunal-stay', 'it-tribunal-appeal']);
+    $attachedFiles = $process->template === 'it-tribunal-appeal'
+        ? ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Original Order', 'fee_challan_file' => 'Fee Challan']
+        : ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
+@endphp
+@if($combinedEnabled)
 <!-- Combined Package -->
 <div class="card mt-4">
     <div class="card-body" style="padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
@@ -133,11 +139,7 @@
     </div>
     <div class="card-body" style="padding: 20px;">
         <div class="row g-3">
-            @foreach([
-                'order_in_appeal_file' => 'Order in Appeal',
-                'order_in_original_file' => 'Order in Original',
-                'recovery_notice_file' => 'Recovery Notice',
-            ] as $field => $label)
+            @foreach($attachedFiles as $field => $label)
             <div class="col-md-4">
                 <div class="card" style="padding: 14px; border: 1.5px solid #e8eaed;">
                     <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem; margin-bottom: 6px;">{{ $label }}</div>

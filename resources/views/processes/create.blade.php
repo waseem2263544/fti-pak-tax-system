@@ -164,6 +164,7 @@ $isStay = str_contains($template, 'stay');
                 </div>
             </div>
 
+            @if($template !== 'it-tribunal-appeal')
             <!-- Recovery Notice -->
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -175,6 +176,7 @@ $isStay = str_contains($template, 'stay');
                     <input type="date" name="recovery_notice_date" class="form-control" value="{{ old('recovery_notice_date') }}">
                 </div>
             </div>
+            @endif
 
             @if($template === 'st-tribunal-stay')
             <!-- Document Attachments (PDF or images) -->
@@ -237,6 +239,63 @@ $isStay = str_contains($template, 'stay');
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Verifier Designation <small class="text-muted">(for companies/AOPs)</small></label>
                     <input type="text" name="verifier_designation" class="form-control" value="{{ old('verifier_designation') }}" placeholder="e.g. Director, Partner">
+                </div>
+            </div>
+            @endif
+
+            @if($template === 'it-tribunal-appeal')
+            <!-- Form A (Income Tax appeal to ATIR) Details -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Section of the Income Tax Ordinance, 2001</label>
+                    <input type="text" name="section" class="form-control" value="{{ old('section') }}" placeholder="e.g. 122(1), 129">
+                    <small class="text-muted">Section under which the order being appealed was passed.</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Date of Communication of Order</label>
+                    <input type="date" name="communication_date" class="form-control" value="{{ old('communication_date') }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Date of Filing of Appeal</label>
+                    <input type="date" name="filing_date" class="form-control" value="{{ old('filing_date') }}">
+                    <small class="text-muted">Used as the verification date on Form A.</small>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Income Tax Office (where assessment was made)</label>
+                    <input type="text" name="ir_office_assessment" class="form-control" value="{{ old('ir_office_assessment') }}" placeholder="e.g. Regional Tax Office, Peshawar">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Office Location</label>
+                    <input type="text" name="ir_office_location" class="form-control" value="{{ old('ir_office_location') }}" placeholder="e.g. Jamrud Road, University Town, Peshawar">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Verifier Name <small class="text-muted">(for companies/AOPs)</small></label>
+                    <input type="text" name="verifier_name" class="form-control" value="{{ old('verifier_name') }}" placeholder="e.g. Arafat Khan">
+                    <small class="text-muted">For individuals (13-digit CNIC), appellant name + CNIC are used automatically.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Verifier Designation <small class="text-muted">(for companies/AOPs)</small></label>
+                    <input type="text" name="verifier_designation" class="form-control" value="{{ old('verifier_designation') }}" placeholder="e.g. Director, Partner">
+                </div>
+            </div>
+
+            <!-- Document Attachments (PDF or images) -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Order in Appeal <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="order_in_appeal_file" class="form-control" accept=".pdf,image/*">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Original Order <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="order_in_original_file" class="form-control" accept=".pdf,image/*">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Fee Challan <small class="text-muted">(PDF / image)</small></label>
+                    <input type="file" name="fee_challan_file" class="form-control" accept=".pdf,image/*">
                 </div>
             </div>
             @endif

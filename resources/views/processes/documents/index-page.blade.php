@@ -19,6 +19,15 @@ $assessmentOrderNo = $meta['assessment_order_no'] ?? '_______________';
 $measuredStarts = $meta['__section_starts'] ?? null;
 $measuredPages  = $meta['__section_pages']  ?? null;
 
+// Page-number cell for a section: "5" or "5-7" (range), or blank when not measured / not present
+$rangeCell = function ($key) use ($measuredStarts, $measuredPages) {
+    if (!is_array($measuredStarts)) return '';
+    $start = $measuredStarts[$key] ?? null;
+    if ($start === null) return '';
+    $pages = is_array($measuredPages) ? max(1, (int) ($measuredPages[$key] ?? 1)) : 1;
+    return $pages > 1 ? $start . '-' . ($start + $pages - 1) : (string) $start;
+};
+
 $orderInAppealPages   = max(1, (int) ($meta['order_in_appeal_file_pages']   ?? 1));
 $orderInOriginalPages = max(1, (int) ($meta['order_in_original_file_pages'] ?? 1));
 $recoveryNoticePages  = max(1, (int) ($meta['recovery_notice_file_pages']   ?? 1));
@@ -62,9 +71,9 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
 }
 @endphp
 
-@if($isStTribunalStay && !($inCombinedPdf ?? false))
+@if(($isStTribunalStay || $isItTribunalAppeal) && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-header')
-@elseif(!$isStTribunalStay)
+@elseif(!$isStTribunalStay && !$isItTribunalAppeal)
 <table style="border: none; margin-left: auto; margin-right: 0; margin-bottom: 14pt; width: auto;">
     <tr>
         <td style="border: 1px solid #000; padding: 3pt 6pt; text-align: center; font-weight: bold; font-size: 8pt;">MEMBER COPY</td>
@@ -156,14 +165,14 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
         <tr><td class="center" style="padding: 3pt 6pt;">8</td><td style="padding: 3pt 6pt;">POWER OF ATTORNEY</td><td class="center" style="padding: 3pt 6pt;">{{ $pPOA }}</td></tr>
         <tr><td class="center" style="padding: 3pt 6pt;">9</td><td style="padding: 3pt 6pt;">AFFIDAVIT</td><td class="center" style="padding: 3pt 6pt;">{{ $pAffidavit }}</td></tr>
         @elseif($isItTribunalAppeal)
-        <tr><td class="center">1</td><td>FORM A</td><td></td></tr>
-        <tr><td class="center">2</td><td>GROUNDS OF APPEAL</td><td></td></tr>
-        <tr><td class="center">3</td><td>ORDER IN APPEAL</td><td></td></tr>
-        <tr><td class="center">4</td><td>ORIGINAL ORDER</td><td></td></tr>
-        <tr><td class="center">5</td><td>INTIMATION LETTER</td><td></td></tr>
-        <tr><td class="center">6</td><td>FEE CHALLAN</td><td></td></tr>
-        <tr><td class="center">7</td><td>POWER OF ATTORNEY</td><td></td></tr>
-        <tr><td class="center">8</td><td>AFFIDAVIT</td><td></td></tr>
+        <tr><td class="center">1</td><td>FORM A</td><td class="center">{{ $rangeCell('appeal_memo') }}</td></tr>
+        <tr><td class="center">2</td><td>GROUNDS OF APPEAL</td><td class="center">{{ $rangeCell('grounds') }}</td></tr>
+        <tr><td class="center">3</td><td>ORDER IN APPEAL</td><td class="center">{{ $rangeCell('order_in_appeal') }}</td></tr>
+        <tr><td class="center">4</td><td>ORIGINAL ORDER</td><td class="center">{{ $rangeCell('order_in_original') }}</td></tr>
+        <tr><td class="center">5</td><td>INTIMATION LETTER</td><td class="center">{{ $rangeCell('intimation') }}</td></tr>
+        <tr><td class="center">6</td><td>FEE CHALLAN</td><td class="center">{{ $rangeCell('fee_challan') }}</td></tr>
+        <tr><td class="center">7</td><td>POWER OF ATTORNEY</td><td class="center">{{ $rangeCell('poa') }}</td></tr>
+        <tr><td class="center">8</td><td>AFFIDAVIT</td><td class="center">{{ $rangeCell('affidavit') }}</td></tr>
         @else
         <tr><td class="center">1</td><td>APPEAL MEMO</td><td></td></tr>
         <tr><td class="center">2</td><td>INDEX OF APPEAL</td><td></td></tr>
@@ -191,6 +200,6 @@ if (is_array($measuredStarts) && is_array($measuredPages)) {
 </div>
 @endif
 
-@if($isStTribunalStay && !($inCombinedPdf ?? false))
+@if(($isStTribunalStay || $isItTribunalAppeal) && !($inCombinedPdf ?? false))
 @include('processes.documents._letterhead-footer')
 @endif

@@ -151,6 +151,36 @@ class ProcessDocumentController extends Controller
         $meta = $process->metadata ?? [];
         $process->load('client');
 
+        $isItTribunalAppeal = ($process->template ?? '') === 'it-tribunal-appeal';
+
+        // Section sequence per template. 'doc' = generated Blade; 'file' = uploaded attachment.
+        // Both render passes iterate this single source of truth.
+        if ($isItTribunalAppeal) {
+            $sequence = [
+                ['key' => 'appeal_memo',       'type' => 'doc',  'view' => 'processes.documents.appeal-memo'],
+                ['key' => 'grounds',           'type' => 'doc',  'view' => 'processes.documents.grounds-of-appeal'],
+                ['key' => 'order_in_appeal',   'type' => 'file', 'field' => 'order_in_appeal_file'],
+                ['key' => 'order_in_original', 'type' => 'file', 'field' => 'order_in_original_file'],
+                ['key' => 'intimation',        'type' => 'doc',  'view' => 'processes.documents.intimation', 'letterhead' => true],
+                ['key' => 'fee_challan',       'type' => 'file', 'field' => 'fee_challan_file'],
+                ['key' => 'poa',               'type' => 'doc',  'view' => 'processes.documents.power-of-attorney'],
+                ['key' => 'affidavit',         'type' => 'doc',  'view' => 'processes.documents.affidavit'],
+            ];
+        } else {
+            // st-tribunal-stay (and default)
+            $sequence = [
+                ['key' => 'appeal_memo',       'type' => 'doc',  'view' => 'processes.documents.appeal-memo'],
+                ['key' => 'stay_app',          'type' => 'doc',  'view' => 'processes.documents.stay-application'],
+                ['key' => 'grounds',           'type' => 'doc',  'view' => 'processes.documents.grounds-of-appeal'],
+                ['key' => 'order_in_appeal',   'type' => 'file', 'field' => 'order_in_appeal_file'],
+                ['key' => 'order_in_original', 'type' => 'file', 'field' => 'order_in_original_file'],
+                ['key' => 'recovery_notice',   'type' => 'file', 'field' => 'recovery_notice_file'],
+                ['key' => 'intimation',        'type' => 'doc',  'view' => 'processes.documents.intimation', 'letterhead' => true],
+                ['key' => 'poa',               'type' => 'doc',  'view' => 'processes.documents.power-of-attorney'],
+                ['key' => 'affidavit',         'type' => 'doc',  'view' => 'processes.documents.affidavit'],
+            ];
+        }
+
         $tempDir = storage_path('app/mpdf-temp');
         if (!is_dir($tempDir)) @mkdir($tempDir, 0775, true);
 
@@ -195,27 +225,30 @@ class ProcessDocumentController extends Controller
         // mPDF lifecycle quirk: AddPage closes the previous page with the current HTMLFooter and opens the new page with the current HTMLHeader.
         // Pattern used here: SetHTMLHeader before AddPage (so the new page opens with the new header), SetHTMLFooter after AddPage
         // (so the new page closes with the new footer at its next page break).
-        $renderBodySections = function (\Mpdf\Mpdf $mpdf) use ($renderDoc, $pageNumHeader, $letterheadWithPageNum, $letterheadFooter, $letterheadMargins, $compactMargins, $meta) {
+        $renderBodySections = function (\Mpdf\Mpdf $mpdf) use ($renderDoc, $pageNumHeader, $letterheadWithPageNum, $letterheadFooter, $letterheadMargins, $compactMargins, $meta, $sequence) {
             $starts = [];
-            $writeSection = function ($key, $view, $hdr, $ftr, $useLetterhead = false) use ($mpdf, $renderDoc, $letterheadMargins, $compactMargins, &$starts) {
-                $m = $useLetterhead ? $letterheadMargins : $compactMargins;
-                $resetpagenum = empty($starts) ? '1' : '';
-                $mpdf->SetHTMLHeader($hdr);
-                $mpdf->AddPage('', '', $resetpagenum, '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
-                $mpdf->SetHTMLFooter($ftr);
-                $starts[$key] = $mpdf->page;
-                $mpdf->WriteHTML($renderDoc($view));
-            };
+            $first = true;
 
-            $writeSection('appeal_memo',  'processes.documents.appeal-memo',        $pageNumHeader, '');
-            $writeSection('stay_app',     'processes.documents.stay-application',   $pageNumHeader, '');
-            $writeSection('grounds',      'processes.documents.grounds-of-appeal',  $pageNumHeader, '');
+            foreach ($sequence as $item) {
+                $key = $item['key'];
 
-            foreach ([
-                'order_in_appeal_file'   => 'order_in_appeal',
-                'order_in_original_file' => 'order_in_original',
-                'recovery_notice_file'   => 'recovery_notice',
-            ] as $field => $key) {
+                if ($item['type'] === 'doc') {
+                    $useLetterhead = !empty($item['letterhead']);
+                    $hdr = $useLetterhead ? $letterheadWithPageNum : $pageNumHeader;
+                    $ftr = $useLetterhead ? $letterheadFooter : '';
+                    $m   = $useLetterhead ? $letterheadMargins : $compactMargins;
+                    $resetpagenum = $first ? '1' : '';
+                    $mpdf->SetHTMLHeader($hdr);
+                    $mpdf->AddPage('', '', $resetpagenum, '', '', $m['mgl'], $m['mgr'], $m['mgt'], $m['mgb'], $m['mgh'], $m['mgf']);
+                    $mpdf->SetHTMLFooter($ftr);
+                    $starts[$key] = $mpdf->page;
+                    $mpdf->WriteHTML($renderDoc($item['view']));
+                    $first = false;
+                    continue;
+                }
+
+                // type === 'file' (uploaded attachment)
+                $field = $item['field'];
                 if (empty($meta[$field])) { $starts[$key] = null; continue; }
                 $abs = public_path($meta[$field]);
                 if (!file_exists($abs)) { $starts[$key] = null; continue; }
@@ -244,10 +277,12 @@ class ProcessDocumentController extends Controller
                             // docPageNum honours resetpagenum + pagenumStyle, matching what {PAGENO} prints on generated pages
                             $mpdf->Cell(16, 8, (string) $mpdf->docPageNum($mpdf->page), 0, 0, 'R');
                         }
+                        $first = false;
                     } catch (\Exception $e) {
                         $mpdf->AddPage();
                         $starts[$key] = $mpdf->page;
                         $mpdf->WriteHTML('<p style="text-align:center; padding-top: 3in;">Could not embed attachment.</p>');
+                        $first = false;
                     }
                 } elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
                     $mpdf->SetHTMLHeader($pageNumHeader);
@@ -255,14 +290,11 @@ class ProcessDocumentController extends Controller
                     $mpdf->SetHTMLFooter('');
                     $starts[$key] = $mpdf->page;
                     $mpdf->WriteHTML('<img src="' . $abs . '" style="max-width: 100%; max-height: 9.5in;">');
+                    $first = false;
                 } else {
                     $starts[$key] = null;
                 }
             }
-
-            $writeSection('intimation', 'processes.documents.intimation',        $letterheadWithPageNum, $letterheadFooter, true);
-            $writeSection('poa',        'processes.documents.power-of-attorney', $pageNumHeader,         '');
-            $writeSection('affidavit',  'processes.documents.affidavit',         $pageNumHeader,         '');
 
             return [$starts, $mpdf->page];
         };
@@ -279,55 +311,30 @@ class ProcessDocumentController extends Controller
             return max(1, (int) $count);
         };
 
-        $amPages   = $countDocPages('processes.documents.appeal-memo');
-        $saPages   = $countDocPages('processes.documents.stay-application');
-        $grPages   = $countDocPages('processes.documents.grounds-of-appeal');
-        $intPages  = $countDocPages('processes.documents.intimation',         'letterhead');
-        $poaPages  = $countDocPages('processes.documents.power-of-attorney');
-        $affPages  = $countDocPages('processes.documents.affidavit');
-
-        $orderInAppealPages   = max(1, (int) ($meta['order_in_appeal_file_pages']   ?? 1));
-        $orderInOriginalPages = max(1, (int) ($meta['order_in_original_file_pages'] ?? 1));
-        $recoveryNoticePages  = max(1, (int) ($meta['recovery_notice_file_pages']   ?? 1));
-
-        // Section starts are 1-based (Appeal Memo = page 1, since the page counter resets when body rendering begins)
-        $pAppealMemo      = 1;
-        $pStayApp         = $pAppealMemo      + $amPages;
-        $pGrounds         = $pStayApp         + $saPages;
-        $pOrderInAppeal   = $pGrounds         + $grPages;
-        $pOrderInOriginal = $pOrderInAppeal   + $orderInAppealPages;
-        $pRecoveryNotice  = $pOrderInOriginal + $orderInOriginalPages;
-        $pIntimation      = $pRecoveryNotice  + $recoveryNoticePages;
-        $pPOA             = $pIntimation      + $intPages;
-        $pAffidavit       = $pPOA             + $poaPages;
-
-        // For uploaded slots that the user didn't upload, drop them from $starts so the Index hides their row
-        $hasOrderInAppeal   = !empty($meta['order_in_appeal_file']);
-        $hasOrderInOriginal = !empty($meta['order_in_original_file']);
-        $hasRecoveryNotice  = !empty($meta['recovery_notice_file']);
-
-        $starts = [
-            'appeal_memo'       => $pAppealMemo,
-            'stay_app'          => $pStayApp,
-            'grounds'           => $pGrounds,
-            'order_in_appeal'   => $hasOrderInAppeal   ? $pOrderInAppeal   : null,
-            'order_in_original' => $hasOrderInOriginal ? $pOrderInOriginal : null,
-            'recovery_notice'   => $hasRecoveryNotice  ? $pRecoveryNotice  : null,
-            'intimation'        => $pIntimation,
-            'poa'               => $pPOA,
-            'affidavit'         => $pAffidavit,
-        ];
-        $sectionPages = [
-            'appeal_memo'       => $amPages,
-            'stay_app'          => $saPages,
-            'grounds'           => $grPages,
-            'order_in_appeal'   => $orderInAppealPages,
-            'order_in_original' => $orderInOriginalPages,
-            'recovery_notice'   => $recoveryNoticePages,
-            'intimation'        => $intPages,
-            'poa'               => $poaPages,
-            'affidavit'         => $affPages,
-        ];
+        // Walk the same sequence used in pass 2. Generated docs are measured now;
+        // uploaded files use the page counts auto-detected at upload time.
+        $cursor = 1;
+        $starts = [];
+        $sectionPages = [];
+        foreach ($sequence as $item) {
+            $key = $item['key'];
+            if ($item['type'] === 'doc') {
+                $pages = $countDocPages($item['view'], !empty($item['letterhead']) ? 'letterhead' : 'compact');
+                $starts[$key] = $cursor;
+                $sectionPages[$key] = $pages;
+                $cursor += $pages;
+            } else {
+                $field = $item['field'];
+                $pages = max(1, (int) ($meta[$field . '_pages'] ?? 1));
+                $sectionPages[$key] = $pages;
+                if (!empty($meta[$field])) {
+                    $starts[$key] = $cursor;     // 1-based page where this attachment begins
+                    $cursor += $pages;
+                } else {
+                    $starts[$key] = null;        // not uploaded -> Index hides the row
+                }
+            }
+        }
 
         // ─── PASS 2 ─── Build final PDF: Index page first (with measured counts), then re-render the body fresh
         // Re-rendering the body in pass 2 (instead of FPDI re-importing the throwaway) avoids the slight whitespace introduced when imported PDFs round-trip through FPDI twice.
