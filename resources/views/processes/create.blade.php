@@ -246,6 +246,13 @@ $isStay = str_contains($template, 'stay');
             @if($template === 'it-tribunal-appeal')
             <!-- Form A (Income Tax appeal to ATIR) Details -->
             <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Assessing Officer Name</label>
+                    <input type="text" name="assessing_officer_name" class="form-control" value="{{ old('assessing_officer_name') }}" placeholder="e.g. Muhammad Yasir Nabi">
+                    <small class="text-muted">Name of the officer who passed the order — shown opposite the office/designation (Respondent 1) on Form A.</small>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Section of the Income Tax Ordinance, 2001</label>
                     <input type="text" name="section" class="form-control" value="{{ old('section') }}" placeholder="e.g. 122(1), 129">

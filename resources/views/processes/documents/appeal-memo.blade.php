@@ -76,13 +76,12 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
 {{-- ───────────────── FORM "A" — Income Tax appeal/stay to ATIR (s.131) ───────────────── --}}
 <div style="font-size: 11pt;">
 
-<div style="margin-bottom: 6pt;">
+<div style="margin-bottom: 4pt;">
     <p style="margin: 0; text-align: center; font-size: 13pt;"><b>FORM &ldquo;A&rdquo;</b></p>
-    <p style="margin: 2pt 0; text-align: center; font-size: 10pt;"><b>[See rule 7]</b></p>
-    <p style="margin: 2pt 0 0; text-align: center; line-height: 1.3; font-size: 11pt;"><b><u>FORM OF APPEAL TO THE TRIBUNAL UNDER SECTION 131 OF THE INCOME TAX ORDINANCE, 2001</u></b></p>
+    <p style="margin: 4pt 0 0; text-align: center; line-height: 1.25; font-size: 11pt;"><b><u>FORM OF APPEAL TO THE TRIBUNAL UNDER SECTION 131 OF THE INCOME TAX ORDINANCE, 2001</u></b></p>
 </div>
 
-<p style="text-align: center; margin: 10pt 0 12pt; font-size: 11pt;">No.&nbsp;____________ of /{{ $shortYear }}</p>
+<p style="text-align: center; margin: 6pt 0 8pt; font-size: 11pt;">No.&nbsp;____________ of /{{ $shortYear }}</p>
 
 <table style="width: 100%; border-collapse: collapse;">
     <tr>
@@ -102,7 +101,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['respondent_1'] ?? 'The Deputy Commissioner Inland Revenue') }}</td>
-        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($clientName) }}</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['assessing_officer_name'] ?? '') }}</td>
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Date of Communication of the order appeal against</td>
@@ -118,12 +117,12 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<div style="text-align: center; margin-top: 30pt;">
+<div style="text-align: center; margin-top: 16pt;">
     <p style="margin: 0; font-weight: bold; text-decoration: underline;">GROUNDS OF APPEAL</p>
     <p style="margin: 2pt 0 0;">(Attached separately)</p>
 </div>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 54pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 28pt;">
     <tr>
         <td style="border: none; padding: 0; width: 45%;">&nbsp;</td>
         <td style="border: none; padding: 0; width: 55%; text-align: center;">
@@ -132,7 +131,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 32pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 20pt;">
     <tr>
         <td style="border: none; padding: 0; width: 45%;">&nbsp;</td>
         <td style="border: none; padding: 0; width: 55%; text-align: center;">
@@ -141,11 +140,11 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
 </table>
 
-<p style="text-align: center; margin: 36pt 0 10pt; font-weight: bold; text-decoration: underline;">VERIFICATION</p>
+<p style="text-align: center; margin: 20pt 0 8pt; font-weight: bold; text-decoration: underline;">VERIFICATION</p>
 
-<p style="line-height: 1.7; margin: 0; text-align: justify;">{!! $verificationOpener !!} do hereby declare that what is stated above is true to the best of my information and belief. Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationDay }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationMonth }}, {{ $verificationYear }}</span>.</p>
+<p style="line-height: 1.6; margin: 0; text-align: justify;">{!! $verificationOpener !!} do hereby declare that what is stated above is true to the best of my information and belief. Verified today, the&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationDay }}</span>&nbsp;day of&nbsp;<span style="border-bottom: 1px solid #000; font-weight: bold;">{{ $verificationMonth }}, {{ $verificationYear }}</span>.</p>
 
-<table style="width: 100%; border-collapse: collapse; margin-top: 54pt;">
+<table style="width: 100%; border-collapse: collapse; margin-top: 28pt;">
     <tr>
         <td style="border: none; padding: 0; width: 45%;">&nbsp;</td>
         <td style="border: none; padding: 0; width: 55%; text-align: center;">
