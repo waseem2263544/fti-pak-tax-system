@@ -120,7 +120,7 @@ $labelCell = $cell . ' text-align: center; vertical-align: middle; font-weight: 
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Commissioner (Appeals) passing the appellate order</td>
-        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['assessing_officer_name'] ?? '') }}</td>
+        <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">{{ strtoupper($meta['commissioner_appeals'] ?? '') }}</td>
     </tr>
     <tr>
         <td style="border: 1px solid #000; padding: 5pt 8pt; vertical-align: top;">Date of Communication of the order appeal against</td>

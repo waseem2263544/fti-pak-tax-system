@@ -247,9 +247,9 @@ $isStay = str_contains($template, 'stay');
             <!-- Form A (Income Tax appeal to ATIR) Details -->
             <div class="row">
                 <div class="col-md-12 mb-3">
-                    <label class="form-label">Assessing Officer Name</label>
-                    <input type="text" name="assessing_officer_name" class="form-control" value="{{ old('assessing_officer_name') }}" placeholder="e.g. Muhammad Yasir Nabi">
-                    <small class="text-muted">Name of the officer who passed the order — shown opposite the office/designation (Respondent 1) on Form A.</small>
+                    <label class="form-label">Commissioner (Appeals) passing the appellate order</label>
+                    <input type="text" name="commissioner_appeals" class="form-control" value="{{ old('commissioner_appeals') }}" placeholder="e.g. Mr. Ahmed Khan, Commissioner Inland Revenue (Appeals), Peshawar">
+                    <small class="text-muted">Shown opposite the "Commissioner (Appeals) passing the appellate order" row on Form A.</small>
                 </div>
             </div>
             <div class="row">
