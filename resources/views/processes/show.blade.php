@@ -8,6 +8,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 style="font-weight: 700; color: var(--primary); margin: 0; flex: 1;">{{ $process->title }}</h4>
             <div class="d-flex gap-2">
+                @if(in_array($process->template, ['st-tribunal-stay', 'st-tribunal-stay-extension']))
+                <a href="{{ route('processes.create', ['template' => 'st-tribunal-stay-extension', 'from' => $process->id]) }}" class="btn btn-sm btn-accent"><i class="bi bi-arrow-clockwise me-1"></i>Create Extension</a>
+                @endif
                 <a href="{{ route('processes.edit', $process) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil me-1"></i>Edit</a>
                 <form action="{{ route('processes.destroy', $process) }}" method="POST" onsubmit="return confirm('Delete this process?')">
                     @csrf @method('DELETE')
