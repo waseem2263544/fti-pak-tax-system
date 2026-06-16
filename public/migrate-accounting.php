@@ -245,6 +245,25 @@ $tables = [
   UNIQUE KEY `uk_key` (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
+"CREATE TABLE IF NOT EXISTS `acc_recurring_invoices` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `client_id` BIGINT UNSIGNED NOT NULL,
+  `frequency` VARCHAR(20) NOT NULL DEFAULT 'monthly',
+  `next_date` DATE NOT NULL,
+  `due_days` INT NOT NULL DEFAULT 30,
+  `reference` VARCHAR(255) NULL,
+  `notes` TEXT NULL,
+  `terms` TEXT NULL,
+  `discount_amount` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
+  `items` TEXT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `last_generated_date` DATE NULL,
+  `created_by` BIGINT UNSIGNED NULL,
+  `created_at` TIMESTAMP NULL,
+  `updated_at` TIMESTAMP NULL,
+  INDEX `idx_next` (`next_date`, `is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
 "CREATE TABLE IF NOT EXISTS `acc_audit_logs` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` BIGINT UNSIGNED NULL,

@@ -447,6 +447,9 @@
                     <a href="{{ route('accounting.sales-invoices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.sales-invoices')) active @endif">
                         <i class="bi bi-receipt"></i> Sales Invoices
                     </a>
+                    <a href="{{ route('accounting.recurring-invoices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.recurring-invoices')) active @endif">
+                        <i class="bi bi-arrow-repeat"></i> Recurring Invoices
+                    </a>
                     <a href="{{ route('accounting.purchase-invoices.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.purchase-invoices')) active @endif">
                         <i class="bi bi-cart-check"></i> Purchase Invoices
                     </a>

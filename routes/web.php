@@ -125,6 +125,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('journal-entries/{journalEntry}/post', [\App\Http\Controllers\Accounting\JournalEntryController::class, 'post'])->name('journal-entries.post');
         Route::post('journal-entries/{journalEntry}/reverse', [\App\Http\Controllers\Accounting\JournalEntryController::class, 'reverse'])->name('journal-entries.reverse');
 
+        Route::post('recurring-invoices/generate-due', [\App\Http\Controllers\Accounting\AccRecurringInvoiceController::class, 'generateDue'])->name('recurring-invoices.generate-due');
+        Route::post('recurring-invoices/{recurringInvoice}/generate', [\App\Http\Controllers\Accounting\AccRecurringInvoiceController::class, 'generate'])->name('recurring-invoices.generate');
+        Route::resource('recurring-invoices', \App\Http\Controllers\Accounting\AccRecurringInvoiceController::class)->except(['show'])->parameters(['recurring-invoices' => 'recurringInvoice']);
+
         Route::resource('sales-invoices', \App\Http\Controllers\Accounting\SalesInvoiceController::class)->parameters(['sales-invoices' => 'salesInvoice']);
         Route::post('sales-invoices/{salesInvoice}/send', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'markSent'])->name('sales-invoices.send');
         Route::get('sales-invoices/{salesInvoice}/pdf', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'pdf'])->name('sales-invoices.pdf');
