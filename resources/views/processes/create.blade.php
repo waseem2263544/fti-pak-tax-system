@@ -373,11 +373,23 @@ $isStay = str_contains($template, 'stay');
             @endif
 
             @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
+            @php
+                $rcvNo = old('recovery_notice_no') ?: '_______________';
+                $rcvDateRaw = old('recovery_notice_date');
+                try { $rcvDate = $rcvDateRaw ? \Carbon\Carbon::parse($rcvDateRaw)->format('j F Y') : '_______________'; } catch (\Exception $e) { $rcvDate = $rcvDateRaw ?: '_______________'; }
+                $resp1 = old('respondent_1') ?: 'The Commissioner Inland Revenue';
+                $defaultStayBody = '<p>1. That the Applicant has filed an appeal before your Honour and yet the date of hearing has not been fixed.</p>'
+                    . '<p>2. That facts and grounds mentioned in the grounds of appeal may kindly be considered as an integral part of this application.</p>'
+                    . '<p>3. That Applicant has an excellent prima facie case in its favor and there is genuine hope of its success.</p>'
+                    . '<p>4. That the department is pressing hard for payment of the disputed amount. (Copy of recovery notice No. ' . e($rcvNo) . ' dated ' . e($rcvDate) . ' is enclosed).</p>'
+                    . '<p>5. That the balance of convenience is also in favor of the Applicant.</p>'
+                    . '<p>6. That the impugned order passed by the ' . e($resp1) . ' is totally illegal and against the facts of the case.</p>';
+            @endphp
             <div class="mb-3">
-                <label class="form-label">Stay Application — Submission Points <small class="text-muted">(optional)</small></label>
-                <div id="stayapp-editor" contenteditable="true" class="form-control" style="min-height: 120px; max-height: 360px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_application_body') !!}</div>
+                <label class="form-label">Stay Application — Submission Points</label>
+                <div id="stayapp-editor" contenteditable="true" class="form-control" style="min-height: 120px; max-height: 360px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_application_body', $defaultStayBody) !!}</div>
                 <input type="hidden" name="stay_application_body" id="stayapp-hidden">
-                <small class="text-muted">Leave blank to use the standard numbered submission points. Anything entered here replaces them in the Stay Application document.</small>
+                <small class="text-muted">Pre-filled with the standard points — edit as needed. Clear it entirely to fall back to the auto-generated text.</small>
             </div>
             @endif
 
