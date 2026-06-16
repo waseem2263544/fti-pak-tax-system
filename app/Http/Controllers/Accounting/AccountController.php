@@ -162,6 +162,12 @@ class AccountController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active', true);
 
+        // Changing the account type after it has postings would retroactively flip its
+        // debit/credit nature and corrupt historical balances — block it.
+        if ($validated['type'] !== $account->type && $account->journalLines()->exists()) {
+            return back()->withInput()->with('error', 'Cannot change the type of an account that already has transactions. Create a new account instead.');
+        }
+
         $account->update($validated);
 
         return redirect()->route('accounting.accounts.index')
