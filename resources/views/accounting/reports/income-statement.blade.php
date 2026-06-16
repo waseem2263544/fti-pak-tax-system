@@ -62,6 +62,9 @@
                 <div class="col-md-2">
                     <button type="button" onclick="window.print()" class="btn btn-outline-primary w-100"><i class="bi bi-printer me-1"></i> Print</button>
                 </div>
+                <div class="col-md-2">
+                    <a href="{{ request()->fullUrlWithQuery(['export' => 'csv']) }}" class="btn btn-outline-primary w-100"><i class="bi bi-filetype-csv me-1"></i> CSV</a>
+                </div>
             </div>
         </form>
     </div>

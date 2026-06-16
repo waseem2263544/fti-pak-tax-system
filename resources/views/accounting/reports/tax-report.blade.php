@@ -19,6 +19,7 @@
             <div class="col-md-4 d-flex gap-2">
                 <button class="btn btn-accent"><i class="bi bi-search me-1"></i>Generate</button>
                 <button type="button" onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer"></i></button>
+                <a href="{{ request()->fullUrlWithQuery(['export' => 'csv']) }}" class="btn btn-outline-primary"><i class="bi bi-filetype-csv"></i></a>
             </div>
         </form>
     </div>

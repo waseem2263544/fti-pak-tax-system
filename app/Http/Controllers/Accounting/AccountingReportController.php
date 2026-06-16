@@ -169,6 +169,12 @@ class AccountingReportController extends Controller
         $totalDebit = $accounts->sum('balance_debit');
         $totalCredit = $accounts->sum('balance_credit');
 
+        if ($request->get('export') === 'csv') {
+            $rows = $accounts->map(fn($a) => [$a->code, $a->name, $this->num($a->balance_debit), $this->num($a->balance_credit)])->values()->toArray();
+            $rows[] = ['', 'TOTAL', $this->num($totalDebit), $this->num($totalCredit)];
+            return $this->streamCsv("trial-balance-{$asOfDate}.csv", ['Code', 'Account', 'Debit', 'Credit'], $rows);
+        }
+
         return view('accounting.reports.trial-balance', compact('accounts', 'totalDebit', 'totalCredit', 'asOfDate'));
     }
 
@@ -230,6 +236,19 @@ class AccountingReportController extends Controller
         $totalRevenue = $revenueAccounts->sum('computed_balance');
         $totalExpenses = $expenseAccounts->sum('computed_balance');
         $netIncome = $totalRevenue - $totalExpenses;
+
+        if ($request->get('export') === 'csv') {
+            $rows = [['REVENUE', '']];
+            foreach ($revenueAccounts as $a) $rows[] = [$a->code . ' ' . $a->name, $this->num($a->computed_balance)];
+            $rows[] = ['Total Revenue', $this->num($totalRevenue)];
+            $rows[] = ['', ''];
+            $rows[] = ['EXPENSES', ''];
+            foreach ($expenseAccounts as $a) $rows[] = [$a->code . ' ' . $a->name, $this->num($a->computed_balance)];
+            $rows[] = ['Total Expenses', $this->num($totalExpenses)];
+            $rows[] = ['', ''];
+            $rows[] = ['NET ' . ($netIncome >= 0 ? 'PROFIT' : 'LOSS'), $this->num($netIncome)];
+            return $this->streamCsv("income-statement-{$fromDate}-to-{$toDate}.csv", ['Account', 'Amount'], $rows);
+        }
 
         return view('accounting.reports.income-statement', compact(
             'revenueAccounts', 'expenseAccounts',
@@ -589,6 +608,26 @@ class AccountingReportController extends Controller
     }
 
     /**
+     * Stream an array of rows as a CSV download.
+     */
+    private function streamCsv(string $filename, array $header, array $rows)
+    {
+        return response()->streamDownload(function () use ($header, $rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, $header);
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    private function num($v): string
+    {
+        return number_format((float) $v, 2, '.', '');
+    }
+
+    /**
      * Customer Statement of Account — a client's invoices (debits) and receipts
      * (credits) over a period with opening/running/closing balance.
      */
@@ -640,6 +679,15 @@ class AccountingReportController extends Controller
             $closingBalance = $running;
         }
 
+        if ($client && $request->get('export') === 'csv') {
+            $csv = [['Opening Balance', '', '', '', $this->num($openingBalance)]];
+            foreach ($rows as $r) {
+                $csv[] = [$r['date']->format('Y-m-d'), $r['type'], $r['ref'], $this->num($r['debit']), $this->num($r['credit']), $this->num($r['balance'])];
+            }
+            $csv[] = ['', '', 'Closing Balance', $this->num($totalDebit), $this->num($totalCredit), $this->num($closingBalance)];
+            return $this->streamCsv('statement-' . \Illuminate\Support\Str::slug($client->name) . ".csv", ['Date', 'Type', 'Reference', 'Debit', 'Credit', 'Balance'], $csv);
+        }
+
         return view('accounting.reports.customer-statement', compact(
             'clients', 'client', 'rows', 'openingBalance', 'closingBalance', 'totalDebit', 'totalCredit', 'fromDate', 'toDate'
         ));
@@ -669,6 +717,19 @@ class AccountingReportController extends Controller
         $taxablePurchases = (float) $purchases->sum(fn($i) => (float) $i->items->sum('amount'));
         $inputTax = (float) $purchases->sum(fn($i) => (float) $i->items->sum('tax_amount'));
         $netTax = $outputTax - $inputTax;
+
+        if ($request->get('export') === 'csv') {
+            $rows = [['OUTPUT TAX (SALES)', '', '', '', '']];
+            foreach ($sales as $inv) $rows[] = [optional($inv->date)->format('Y-m-d'), $inv->invoice_number, $inv->client->name ?? '', $this->num($inv->items->sum('amount')), $this->num($inv->items->sum('tax_amount'))];
+            $rows[] = ['', '', 'Total Output Tax', $this->num($taxableSales), $this->num($outputTax)];
+            $rows[] = ['', '', '', '', ''];
+            $rows[] = ['INPUT TAX (PURCHASES)', '', '', '', ''];
+            foreach ($purchases as $b) $rows[] = [optional($b->date)->format('Y-m-d'), $b->bill_number, $b->contact->name ?? '', $this->num($b->items->sum('amount')), $this->num($b->items->sum('tax_amount'))];
+            $rows[] = ['', '', 'Total Input Tax', $this->num($taxablePurchases), $this->num($inputTax)];
+            $rows[] = ['', '', '', '', ''];
+            $rows[] = ['', '', ($netTax >= 0 ? 'NET TAX PAYABLE' : 'NET TAX REFUNDABLE'), '', $this->num(abs($netTax))];
+            return $this->streamCsv("sales-tax-report-{$fromDate}-to-{$toDate}.csv", ['Date', 'Document', 'Party', 'Taxable', 'Tax'], $rows);
+        }
 
         return view('accounting.reports.tax-report', compact(
             'sales', 'purchases', 'taxableSales', 'outputTax', 'taxablePurchases', 'inputTax', 'netTax', 'fromDate', 'toDate'

@@ -42,7 +42,8 @@
             </div>
             <div class="col-md-2 d-flex gap-2">
                 <button class="btn btn-accent flex-fill"><i class="bi bi-search"></i></button>
-                @if($client)<button type="button" onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer"></i></button>@endif
+                @if($client)<button type="button" onclick="window.print()" class="btn btn-outline-primary"><i class="bi bi-printer"></i></button>
+                <a href="{{ request()->fullUrlWithQuery(['export' => 'csv']) }}" class="btn btn-outline-primary"><i class="bi bi-filetype-csv"></i></a>@endif
             </div>
         </form>
     </div>
