@@ -147,6 +147,10 @@ Route::middleware(['auth'])->group(function () {
         Route::put('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'update'])->name('settings.update');
         Route::get('audit-log', [\App\Http\Controllers\Accounting\AccSettingController::class, 'auditLog'])->name('audit-log');
 
+        Route::get('reconciliation', [\App\Http\Controllers\Accounting\AccBankReconciliationController::class, 'index'])->name('reconciliation.index');
+        Route::get('reconciliation/{account}', [\App\Http\Controllers\Accounting\AccBankReconciliationController::class, 'show'])->name('reconciliation.show');
+        Route::post('reconciliation/{account}', [\App\Http\Controllers\Accounting\AccBankReconciliationController::class, 'save'])->name('reconciliation.save');
+
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('trial-balance', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'trialBalance'])->name('trial-balance');
             Route::get('balance-sheet', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'balanceSheet'])->name('balance-sheet');

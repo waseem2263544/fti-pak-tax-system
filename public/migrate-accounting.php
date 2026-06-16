@@ -267,6 +267,13 @@ foreach ($tables as $sql) {
     echo "Created: {$m[1]}\n";
 }
 
+// ── Bank reconciliation columns on journal entry lines (idempotent) ──
+$hasCleared = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'acc_journal_entry_lines' AND column_name = 'cleared'")->fetchColumn();
+if (!$hasCleared) {
+    $pdo->exec("ALTER TABLE acc_journal_entry_lines ADD COLUMN `cleared` TINYINT(1) NOT NULL DEFAULT 0, ADD COLUMN `cleared_at` TIMESTAMP NULL");
+    echo "Added reconciliation columns to acc_journal_entry_lines.\n";
+}
+
 // ── DEFAULT FISCAL YEAR ──
 echo "\nSeeding fiscal year...\n";
 $now = date('Y-m-d H:i:s');

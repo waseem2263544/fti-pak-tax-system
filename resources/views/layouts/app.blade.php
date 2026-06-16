@@ -459,6 +459,9 @@
                     <a href="{{ route('accounting.journal-entries.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.journal-entries')) active @endif">
                         <i class="bi bi-journal-bookmark"></i> Journal Entries
                     </a>
+                    <a href="{{ route('accounting.reconciliation.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.reconciliation')) active @endif">
+                        <i class="bi bi-bank"></i> Bank Reconciliation
+                    </a>
                     <a href="{{ route('accounting.contacts.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.contacts')) active @endif">
                         <i class="bi bi-building"></i> Vendors
                     </a>
