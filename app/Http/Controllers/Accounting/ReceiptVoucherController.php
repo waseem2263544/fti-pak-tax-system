@@ -80,6 +80,7 @@ class ReceiptVoucherController extends Controller
             'party_name'         => 'nullable|string|max:255',
             'payment_account_id' => 'required|exists:acc_accounts,id',
             'amount'             => 'required|numeric|min:0.01',
+            'tax_withheld'       => 'nullable|numeric|min:0',
             'payment_method'     => 'nullable|string|in:cash,cheque,bank_transfer,online',
             'cheque_number'      => 'nullable|string|max:50',
             'reference'          => 'nullable|string|max:255',
@@ -100,6 +101,14 @@ class ReceiptVoucherController extends Controller
         DB::beginTransaction();
 
         try {
+            // Withholding tax deducted by the client: post DR WHT-receivable / CR Accounts Receivable
+            // as a self-balancing pair, so the invoice is settled for the GROSS (cash + WHT).
+            $wht = round((float) ($validated['tax_withheld'] ?? 0), 2);
+            $whtAccountId = $wht > 0 ? AccAccount::resolveId('wht_receivable') : null;
+            $whtArAccountId = $wht > 0 ? AccAccount::resolveId('accounts_receivable') : null;
+            $whtApplied = ($wht > 0 && $whtAccountId && $whtArAccountId) ? $wht : 0.0;
+            $grossSettled = round($validated['amount'] + $whtApplied, 2);
+
             $voucher = AccVoucher::create([
                 'voucher_number'    => AccVoucher::nextReceiptNumber(),
                 'type'              => 'receipt',
@@ -108,6 +117,7 @@ class ReceiptVoucherController extends Controller
                 'party_name'        => $validated['party_name'],
                 'payment_account_id'=> $validated['payment_account_id'],
                 'amount'            => $validated['amount'],
+                'tax_withheld'      => $whtApplied,
                 'payment_method'    => $validated['payment_method'],
                 'cheque_number'     => $validated['cheque_number'],
                 'reference'         => $validated['reference'],
@@ -141,7 +151,7 @@ class ReceiptVoucherController extends Controller
                 'narration'     => 'Receipt Voucher: ' . $voucher->voucher_number . ($voucher->party_name ? ' - ' . $voucher->party_name : ''),
                 'source_type'   => 'receipt_voucher',
                 'source_id'     => $voucher->id,
-                'total_amount'  => $validated['amount'],
+                'total_amount'  => $grossSettled,
                 'is_posted'     => false,
                 'created_by'    => auth()->id(),
             ]);
@@ -166,6 +176,12 @@ class ReceiptVoucherController extends Controller
                 ];
             }
 
+            // Withholding tax pair (DR WHT receivable, CR Accounts Receivable) — self-balancing
+            if ($whtApplied > 0) {
+                $jeLines[] = ['account_id' => $whtAccountId, 'debit' => $whtApplied, 'credit' => 0, 'description' => 'Income tax withheld - ' . $voucher->voucher_number];
+                $jeLines[] = ['account_id' => $whtArAccountId, 'debit' => 0, 'credit' => $whtApplied, 'description' => 'WHT settles receivable - ' . $voucher->voucher_number];
+            }
+
             $je->lines()->createMany($jeLines);
             $je->post();
 
@@ -175,7 +191,7 @@ class ReceiptVoucherController extends Controller
             if ($validated['invoice_id']) {
                 $salesInvoice = AccSalesInvoice::find($validated['invoice_id']);
                 if ($salesInvoice) {
-                    $salesInvoice->amount_paid += $validated['amount'];
+                    $salesInvoice->amount_paid += $grossSettled;
                     $salesInvoice->balance_due = $salesInvoice->total - $salesInvoice->amount_paid;
 
                     if ($salesInvoice->balance_due <= 0) {
@@ -245,6 +261,7 @@ class ReceiptVoucherController extends Controller
             'party_name'         => 'nullable|string|max:255',
             'payment_account_id' => 'required|exists:acc_accounts,id',
             'amount'             => 'required|numeric|min:0.01',
+            'tax_withheld'       => 'nullable|numeric|min:0',
             'payment_method'     => 'nullable|string|in:cash,cheque,bank_transfer,online',
             'cheque_number'      => 'nullable|string|max:50',
             'reference'          => 'nullable|string|max:255',

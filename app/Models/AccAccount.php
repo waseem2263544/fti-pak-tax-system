@@ -66,6 +66,7 @@ class AccAccount extends Model
             'sales_tax'           => ['default_sales_tax_account', '2300'],
             'purchase_tax'        => ['default_purchase_tax_account', '1220'],
             'sales_discount'      => ['default_sales_discount_account', '4200'],
+            'wht_receivable'      => ['default_wht_receivable_account', '1210'],
         ];
 
         if (!isset($map[$role])) {

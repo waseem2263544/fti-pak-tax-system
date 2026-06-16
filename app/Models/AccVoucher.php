@@ -9,7 +9,7 @@ class AccVoucher extends Model
     use \App\Models\Concerns\LogsAccountingActivity;
 
     protected $table = 'acc_vouchers';
-    protected $fillable = ['voucher_number', 'type', 'date', 'client_id', 'contact_id', 'party_name', 'payment_account_id', 'amount', 'payment_method', 'cheque_number', 'reference', 'narration', 'status', 'invoice_id', 'invoice_type', 'journal_entry_id', 'created_by'];
+    protected $fillable = ['voucher_number', 'type', 'date', 'client_id', 'contact_id', 'party_name', 'payment_account_id', 'amount', 'tax_withheld', 'payment_method', 'cheque_number', 'reference', 'narration', 'status', 'invoice_id', 'invoice_type', 'journal_entry_id', 'created_by'];
     protected $casts = ['date' => 'date'];
 
     public function client() { return $this->belongsTo(Client::class); }

@@ -38,9 +38,14 @@
                             @error('payment_date') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Amount <span class="text-danger">*</span></label>
+                            <label class="form-label">Amount Received <span class="text-danger">*</span></label>
                             <input type="number" class="form-control @error('amount') is-invalid @enderror" name="amount" value="{{ old('amount') }}" step="0.01" min="0.01" placeholder="0.00" required>
                             @error('amount') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Income Tax Withheld (WHT)</label>
+                            <input type="number" class="form-control" name="tax_withheld" value="{{ old('tax_withheld', 0) }}" step="0.01" min="0" placeholder="0.00">
+                            <small class="text-muted">Tax the client deducted. Posts to WHT-receivable; the invoice is settled for cash + WHT.</small>
                         </div>
                     </div>
 

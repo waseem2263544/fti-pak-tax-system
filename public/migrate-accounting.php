@@ -293,6 +293,13 @@ if (!$hasCleared) {
     echo "Added reconciliation columns to acc_journal_entry_lines.\n";
 }
 
+// ── Withholding tax column on vouchers (idempotent) ──
+$hasWht = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'acc_vouchers' AND column_name = 'tax_withheld'")->fetchColumn();
+if (!$hasWht) {
+    $pdo->exec("ALTER TABLE acc_vouchers ADD COLUMN `tax_withheld` DECIMAL(15,2) NOT NULL DEFAULT 0.00 AFTER `amount`");
+    echo "Added tax_withheld column to acc_vouchers.\n";
+}
+
 // ── DEFAULT FISCAL YEAR ──
 echo "\nSeeding fiscal year...\n";
 $now = date('Y-m-d H:i:s');
@@ -423,6 +430,7 @@ $settings = [
     ['default_sales_tax_account', $codeToId['2300'] ?? ''],
     ['default_purchase_tax_account', $codeToId['1220'] ?? ''],
     ['default_sales_discount_account', $codeToId['4200'] ?? ''],
+    ['default_wht_receivable_account', $codeToId['1210'] ?? ''],
     ['company_name', 'FairTax International'],
     ['company_address', 'Peshawar, Pakistan'],
     ['company_ntn', ''],
