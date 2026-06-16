@@ -132,8 +132,10 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('purchase-invoices', \App\Http\Controllers\Accounting\PurchaseInvoiceController::class)->parameters(['purchase-invoices' => 'purchaseInvoice']);
 
         Route::resource('payment-vouchers', \App\Http\Controllers\Accounting\PaymentVoucherController::class)->except(['edit', 'update'])->parameters(['payment-vouchers' => 'paymentVoucher']);
+        Route::get('payment-vouchers/{paymentVoucher}/pdf', [\App\Http\Controllers\Accounting\PaymentVoucherController::class, 'pdf'])->name('payment-vouchers.pdf');
 
         Route::resource('receipt-vouchers', \App\Http\Controllers\Accounting\ReceiptVoucherController::class)->except(['edit', 'update'])->parameters(['receipt-vouchers' => 'receiptVoucher']);
+        Route::get('receipt-vouchers/{receiptVoucher}/pdf', [\App\Http\Controllers\Accounting\ReceiptVoucherController::class, 'pdf'])->name('receipt-vouchers.pdf');
 
         Route::resource('contacts', \App\Http\Controllers\Accounting\AccContactController::class)->parameters(['contacts' => 'contact']);
 

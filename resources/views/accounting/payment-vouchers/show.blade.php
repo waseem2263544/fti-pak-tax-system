@@ -21,6 +21,7 @@
         <i class="bi bi-chevron-left"></i> Back to Payment Vouchers
     </a>
     <div class="d-flex gap-2">
+        <a href="{{ route('accounting.payment-vouchers.pdf', $paymentVoucher) }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
         <button onclick="window.print()" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer me-1"></i> Print</button>
     </div>
 </div>

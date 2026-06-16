@@ -408,4 +408,21 @@ class ReceiptVoucherController extends Controller
             return back()->with('error', 'Failed to delete receipt voucher: ' . $e->getMessage());
         }
     }
+
+    public function pdf(Request $request, AccVoucher $receiptVoucher)
+    {
+        @set_time_limit(120);
+        $receiptVoucher->load('client', 'contact', 'paymentAccount', 'items.account');
+        $voucher = $receiptVoucher;
+        $settings = DB::table('acc_settings')->pluck('value', 'key')->toArray();
+        $html = view('accounting.vouchers.pdf', compact('voucher', 'settings'))->render();
+
+        $tempDir = storage_path('app/mpdf-temp');
+        if (!is_dir($tempDir)) @mkdir($tempDir, 0775, true);
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => 'A4', 'margin_left' => 14, 'margin_right' => 14, 'margin_top' => 14, 'margin_bottom' => 16, 'tempDir' => $tempDir]);
+        $mpdf->SetTitle('Receipt ' . $voucher->voucher_number);
+        $mpdf->WriteHTML($html);
+        $dest = $request->boolean('download') ? \Mpdf\Output\Destination::DOWNLOAD : \Mpdf\Output\Destination::INLINE;
+        $mpdf->Output('Receipt-' . $voucher->voucher_number . '.pdf', $dest);
+    }
 }
