@@ -17,6 +17,8 @@ $year = date('Y');
 $isStTribunalStay = in_array(($process->template ?? ''), ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
 $bankAccountsAttached = !empty($meta['bank_accounts_attached']) && $meta['bank_accounts_attached'] !== '0';
 $bankPhrase = $bankAccountsAttached ? ', bank accounts may be de-attached' : '';
+$stayBody = trim($meta['stay_application_body'] ?? '');
+$hasCustomStayBody = $isStTribunalStay && $stayBody !== '' && trim(strip_tags($stayBody)) !== '';
 
 if ($isStTribunalStay) {
     $fmtDate = function($d) {
@@ -48,6 +50,9 @@ CNIC/NTN No. {{ $ntn }}</p>
 
 <p>The Applicant humbly submits as under:</p>
 
+@if($hasCustomStayBody)
+<div class="rich-content" style="text-align: justify; line-height: 1.6;">{!! $stayBody !!}</div>
+@else
 <p class="indent">1. That the Applicant has filed an appeal before your Honour and yet the date of hearing has not been fixed.</p>
 
 <p class="indent">2. That facts and grounds mentioned in the grounds of appeal may kindly be considered as an integral part of this application.</p>
@@ -59,6 +64,7 @@ CNIC/NTN No. {{ $ntn }}</p>
 <p class="indent">5. That the balance of convenience is also in favor of the Applicant.</p>
 
 <p class="indent">6. That the impugned order passed by the {{ $respondent1 }} is totally illegal and against the facts of the case.</p>
+@endif
 
 @if($isStTribunalStay)
 <p style="margin-top: 18pt;">It is therefore humbly prayed that on acceptance of this application, impugned order may be further suspended till final decision of main appeal{{ $bankPhrase }} and proceedings initiated against our client may be stopped till final decision of main appeal.</p>

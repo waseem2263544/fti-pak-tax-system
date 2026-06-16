@@ -372,6 +372,15 @@ $isStay = str_contains($template, 'stay');
             </div>
             @endif
 
+            @if(in_array($template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true))
+            <div class="mb-3">
+                <label class="form-label">Stay Application — Submission Points <small class="text-muted">(optional)</small></label>
+                <div id="stayapp-editor" contenteditable="true" class="form-control" style="min-height: 120px; max-height: 360px; overflow-y: auto; white-space: pre-wrap; line-height: 1.7;">{!! old('stay_application_body') !!}</div>
+                <input type="hidden" name="stay_application_body" id="stayapp-hidden">
+                <small class="text-muted">Leave blank to use the standard numbered submission points. Anything entered here replaces them in the Stay Application document.</small>
+            </div>
+            @endif
+
             <!-- Grounds of Appeal (rich text paste) -->
             <div class="mb-3">
                 <label class="form-label">Grounds of Appeal</label>
@@ -426,7 +435,7 @@ $isStay = str_contains($template, 'stay');
         [{'indent': '-1'}, {'indent': '+1'}],
         ['clean']
     ];
-    ['stay', 'grounds', 'prayer'].forEach(function(name) {
+    ['stayapp', 'stay', 'grounds', 'prayer'].forEach(function(name) {
         var ed = document.getElementById(name + '-editor');
         var hi = document.getElementById(name + '-hidden');
         if (!ed || !hi) return;
