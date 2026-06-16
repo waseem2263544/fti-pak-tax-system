@@ -60,7 +60,7 @@ class PaymentVoucherController extends Controller
                 $q->where('sub_type', 'Bank')
                   ->orWhere('sub_type', 'Cash');
             })->orderBy('code')->get();
-        $apAccount = AccAccount::find(AccAccount::setting('accounts_payable_id'));
+        $apAccount = AccAccount::find(AccAccount::resolveId('accounts_payable'));
         $unpaidBills = AccPurchaseInvoice::where('balance_due', '>', 0)->with('contact')->latest('date')->get();
         $nextNumber = AccVoucher::nextPaymentNumber();
 

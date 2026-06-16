@@ -60,7 +60,7 @@ class ReceiptVoucherController extends Controller
                 $q->where('sub_type', 'Bank')
                   ->orWhere('sub_type', 'Cash');
             })->orderBy('code')->get();
-        $arAccount = AccAccount::find(AccAccount::setting('accounts_receivable_id'));
+        $arAccount = AccAccount::find(AccAccount::resolveId('accounts_receivable'));
         $unpaidInvoices = AccSalesInvoice::where('balance_due', '>', 0)->with('client')->latest('date')->get();
         $nextNumber = AccVoucher::nextReceiptNumber();
 

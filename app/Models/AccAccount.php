@@ -47,6 +47,37 @@ class AccAccount extends Model
         return DB::table('acc_settings')->where('key', $key)->value('value');
     }
 
+    /**
+     * Resolve a control/default account id for a logical role. Tries the configured
+     * setting first, then falls back to the well-known seeded account code, so posting
+     * never silently breaks when a setting was never configured.
+     */
+    public static function resolveId($role)
+    {
+        static $map = [
+            'accounts_receivable' => ['default_receivable_account', '1200'],
+            'accounts_payable'    => ['default_payable_account', '2100'],
+            'cash'                => ['default_cash_account', '1110'],
+            'bank'                => ['default_bank_account', '1120'],
+            'sales'               => ['default_sales_account', '4100'],
+            'purchase'            => ['default_purchase_account', '5000'],
+            'sales_tax'           => ['default_sales_tax_account', '2300'],
+            'purchase_tax'        => ['default_purchase_tax_account', '1220'],
+            'sales_discount'      => ['default_sales_discount_account', '4200'],
+        ];
+
+        if (!isset($map[$role])) {
+            return self::setting($role) ?: self::setting($role . '_id');
+        }
+
+        [$settingKey, $fallbackCode] = $map[$role];
+        $id = self::setting($settingKey);
+        if ($id && self::whereKey($id)->exists()) {
+            return $id;
+        }
+        return self::where('code', $fallbackCode)->value('id');
+    }
+
     public static function getNextCode($type)
     {
         $prefixes = ['asset' => '1', 'liability' => '2', 'equity' => '3', 'revenue' => '4', 'expense' => '5'];

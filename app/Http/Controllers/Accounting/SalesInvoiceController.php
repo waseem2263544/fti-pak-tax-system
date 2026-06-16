@@ -140,8 +140,8 @@ class SalesInvoiceController extends Controller
                 throw new \Exception('No fiscal year found for the invoice date.');
             }
 
-            $arAccountId = AccAccount::setting('accounts_receivable_id');
-            $taxAccountId = AccAccount::setting('sales_tax_id');
+            $arAccountId = AccAccount::resolveId('accounts_receivable');
+            $taxAccountId = AccAccount::resolveId('sales_tax');
 
             if (!$arAccountId) {
                 throw new \Exception('Accounts Receivable default account is not configured.');
@@ -193,7 +193,7 @@ class SalesInvoiceController extends Controller
 
             // DR: Discount if applicable
             if ($discountAmount > 0) {
-                $discountAccountId = AccAccount::setting('sales_discount_id');
+                $discountAccountId = AccAccount::resolveId('sales_discount');
                 if ($discountAccountId) {
                     $jeLines[] = [
                         'account_id'  => $discountAccountId,
@@ -334,8 +334,8 @@ class SalesInvoiceController extends Controller
                 throw new \Exception('No fiscal year found for the invoice date.');
             }
 
-            $arAccountId = AccAccount::setting('accounts_receivable_id');
-            $taxAccountId = AccAccount::setting('sales_tax_id');
+            $arAccountId = AccAccount::resolveId('accounts_receivable');
+            $taxAccountId = AccAccount::resolveId('sales_tax');
 
             $je = AccJournalEntry::create([
                 'entry_number'  => AccJournalEntry::nextNumber(),
@@ -379,7 +379,7 @@ class SalesInvoiceController extends Controller
             }
 
             if ($discountAmount > 0) {
-                $discountAccountId = AccAccount::setting('sales_discount_id');
+                $discountAccountId = AccAccount::resolveId('sales_discount');
                 if ($discountAccountId) {
                     $jeLines[] = [
                         'account_id'  => $discountAccountId,

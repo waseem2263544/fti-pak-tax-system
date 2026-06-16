@@ -138,8 +138,8 @@ class PurchaseInvoiceController extends Controller
                 throw new \Exception('No fiscal year found for the invoice date.');
             }
 
-            $apAccountId = AccAccount::setting('accounts_payable_id');
-            $inputTaxAccountId = AccAccount::setting('purchase_tax_id');
+            $apAccountId = AccAccount::resolveId('accounts_payable');
+            $inputTaxAccountId = AccAccount::resolveId('purchase_tax');
 
             if (!$apAccountId) {
                 throw new \Exception('Accounts Payable default account is not configured.');
@@ -313,8 +313,8 @@ class PurchaseInvoiceController extends Controller
                 throw new \Exception('No fiscal year found for the invoice date.');
             }
 
-            $apAccountId = AccAccount::setting('accounts_payable_id');
-            $inputTaxAccountId = AccAccount::setting('purchase_tax_id');
+            $apAccountId = AccAccount::resolveId('accounts_payable');
+            $inputTaxAccountId = AccAccount::resolveId('purchase_tax');
 
             $je = AccJournalEntry::create([
                 'entry_number'  => AccJournalEntry::nextNumber(),
