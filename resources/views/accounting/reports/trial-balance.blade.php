@@ -53,6 +53,12 @@
                 <div class="col-md-2">
                     <a href="{{ request()->fullUrlWithQuery(['export' => 'csv']) }}" class="btn btn-outline-primary w-100"><i class="bi bi-filetype-csv me-1"></i> CSV</a>
                 </div>
+                <div class="col-md-3 d-flex align-items-center">
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="show_all" value="1" id="show_all" {{ ($showAll ?? false) ? 'checked' : '' }} onchange="this.form.submit()">
+                        <label class="form-check-label" for="show_all" style="font-size: 0.85rem;">Show all accounts (incl. zero balance)</label>
+                    </div>
+                </div>
             </div>
         </form>
     </div>

@@ -161,10 +161,12 @@ class AccountingReportController extends Controller
             }
 
             return $account;
-        })->filter(function ($account) {
-            // Only show accounts with activity
-            return $account->balance_debit > 0 || $account->balance_credit > 0;
         });
+
+        $showAll = $request->boolean('show_all');
+        if (!$showAll) {
+            $accounts = $accounts->filter(fn($account) => $account->balance_debit > 0 || $account->balance_credit > 0);
+        }
 
         $totalDebit = $accounts->sum('balance_debit');
         $totalCredit = $accounts->sum('balance_credit');
@@ -175,7 +177,7 @@ class AccountingReportController extends Controller
             return $this->streamCsv("trial-balance-{$asOfDate}.csv", ['Code', 'Account', 'Debit', 'Credit'], $rows);
         }
 
-        return view('accounting.reports.trial-balance', compact('accounts', 'totalDebit', 'totalCredit', 'asOfDate'));
+        return view('accounting.reports.trial-balance', compact('accounts', 'totalDebit', 'totalCredit', 'asOfDate', 'showAll'));
     }
 
     /**
