@@ -22,6 +22,7 @@
         <i class="bi bi-chevron-left"></i> Back to Purchase Invoices
     </a>
     <div class="d-flex gap-2">
+        <a href="{{ route('accounting.purchase-invoices.pdf', $purchaseInvoice) }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
         <button onclick="window.print()" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer me-1"></i> Print</button>
         @if($purchaseInvoice->status === 'draft')
             <a href="{{ route('accounting.purchase-invoices.edit', $purchaseInvoice) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil me-1"></i> Edit</a>

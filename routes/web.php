@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('sales-invoices/{salesInvoice}/pdf', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'pdf'])->name('sales-invoices.pdf');
 
         Route::resource('purchase-invoices', \App\Http\Controllers\Accounting\PurchaseInvoiceController::class)->parameters(['purchase-invoices' => 'purchaseInvoice']);
+        Route::get('purchase-invoices/{purchaseInvoice}/pdf', [\App\Http\Controllers\Accounting\PurchaseInvoiceController::class, 'pdf'])->name('purchase-invoices.pdf');
 
         Route::resource('payment-vouchers', \App\Http\Controllers\Accounting\PaymentVoucherController::class)->except(['edit', 'update'])->parameters(['payment-vouchers' => 'paymentVoucher']);
         Route::get('payment-vouchers/{paymentVoucher}/pdf', [\App\Http\Controllers\Accounting\PaymentVoucherController::class, 'pdf'])->name('payment-vouchers.pdf');
