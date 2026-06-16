@@ -127,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::resource('sales-invoices', \App\Http\Controllers\Accounting\SalesInvoiceController::class)->parameters(['sales-invoices' => 'salesInvoice']);
         Route::post('sales-invoices/{salesInvoice}/send', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'markSent'])->name('sales-invoices.send');
+        Route::get('sales-invoices/{salesInvoice}/pdf', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'pdf'])->name('sales-invoices.pdf');
 
         Route::resource('purchase-invoices', \App\Http\Controllers\Accounting\PurchaseInvoiceController::class)->parameters(['purchase-invoices' => 'purchaseInvoice']);
 

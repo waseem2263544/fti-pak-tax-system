@@ -22,6 +22,8 @@
         <i class="bi bi-chevron-left"></i> Back to Sales Invoices
     </a>
     <div class="d-flex gap-2">
+        <a href="{{ route('accounting.sales-invoices.pdf', $invoice) }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
+        <a href="{{ route('accounting.sales-invoices.pdf', $invoice) }}?download=1" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i> Download</a>
         <button onclick="window.print()" class="btn btn-outline-primary btn-sm"><i class="bi bi-printer me-1"></i> Print</button>
         @if($invoice->status === 'draft')
             <form action="{{ route('accounting.sales-invoices.send', $invoice) }}" method="POST" class="d-inline">

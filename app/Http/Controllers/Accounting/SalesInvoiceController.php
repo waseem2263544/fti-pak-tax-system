@@ -455,4 +455,31 @@ class SalesInvoiceController extends Controller
             return back()->with('error', 'Failed to delete invoice: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Render the invoice as a professional PDF (inline preview, or ?download=1 to download).
+     */
+    public function pdf(Request $request, AccSalesInvoice $salesInvoice)
+    {
+        @set_time_limit(120);
+        $salesInvoice->load('client', 'items');
+        $settings = DB::table('acc_settings')->pluck('value', 'key')->toArray();
+
+        $html = view('accounting.sales-invoices.pdf', compact('salesInvoice', 'settings'))->render();
+
+        $tempDir = storage_path('app/mpdf-temp');
+        if (!is_dir($tempDir)) @mkdir($tempDir, 0775, true);
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8', 'format' => 'A4',
+            'margin_left' => 14, 'margin_right' => 14, 'margin_top' => 14, 'margin_bottom' => 16,
+            'tempDir' => $tempDir,
+        ]);
+        $mpdf->SetTitle('Invoice ' . $salesInvoice->invoice_number);
+        $mpdf->WriteHTML($html);
+
+        $filename = 'Invoice-' . $salesInvoice->invoice_number . '.pdf';
+        $dest = $request->boolean('download') ? \Mpdf\Output\Destination::DOWNLOAD : \Mpdf\Output\Destination::INLINE;
+        $mpdf->Output($filename, $dest);
+    }
 }
