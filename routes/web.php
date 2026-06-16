@@ -139,6 +139,9 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('fiscal-years', \App\Http\Controllers\Accounting\AccFiscalYearController::class)->except(['show'])->parameters(['fiscal-years' => 'fiscalYear']);
         Route::post('fiscal-years/{fiscalYear}/close', [\App\Http\Controllers\Accounting\AccFiscalYearController::class, 'close'])->name('fiscal-years.close');
 
+        Route::get('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'index'])->name('settings.index');
+        Route::put('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'update'])->name('settings.update');
+
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('trial-balance', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'trialBalance'])->name('trial-balance');
             Route::get('balance-sheet', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'balanceSheet'])->name('balance-sheet');

@@ -462,6 +462,12 @@
                     <a href="{{ route('accounting.contacts.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.contacts')) active @endif">
                         <i class="bi bi-building"></i> Vendors
                     </a>
+                    <a href="{{ route('accounting.fiscal-years.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.fiscal-years')) active @endif">
+                        <i class="bi bi-calendar-range"></i> Fiscal Years
+                    </a>
+                    <a href="{{ route('accounting.settings.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.settings')) active @endif">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
                 </div>
 
                 <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.reports')) open @endif" onclick="toggleSection('reports')">
