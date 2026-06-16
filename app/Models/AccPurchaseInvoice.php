@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccPurchaseInvoice extends Model
 {
+    use \App\Models\Concerns\LogsAccountingActivity;
+
     protected $table = 'acc_purchase_invoices';
     protected $fillable = ['bill_number', 'contact_id', 'vendor_name', 'vendor_invoice_no', 'date', 'due_date', 'subtotal', 'tax_amount', 'total', 'amount_paid', 'balance_due', 'status', 'notes', 'journal_entry_id', 'created_by'];
     protected $casts = ['date' => 'date', 'due_date' => 'date'];

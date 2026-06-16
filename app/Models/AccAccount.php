@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class AccAccount extends Model
 {
+    use \App\Models\Concerns\LogsAccountingActivity;
+
     protected $table = 'acc_accounts';
     protected $fillable = ['code', 'name', 'type', 'sub_type', 'parent_id', 'description', 'is_system', 'is_active', 'opening_balance', 'opening_balance_type'];
     protected $casts = ['is_system' => 'boolean', 'is_active' => 'boolean'];

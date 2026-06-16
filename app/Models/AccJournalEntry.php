@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccJournalEntry extends Model
 {
+    use \App\Models\Concerns\LogsAccountingActivity;
+
     protected $table = 'acc_journal_entries';
     protected $fillable = ['entry_number', 'date', 'fiscal_year_id', 'reference', 'narration', 'source_type', 'source_id', 'total_amount', 'is_posted', 'is_reversed', 'reversed_by', 'created_by', 'posted_at'];
     protected $casts = ['date' => 'date', 'posted_at' => 'datetime', 'is_posted' => 'boolean', 'is_reversed' => 'boolean'];

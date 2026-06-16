@@ -145,6 +145,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'update'])->name('settings.update');
+        Route::get('audit-log', [\App\Http\Controllers\Accounting\AccSettingController::class, 'auditLog'])->name('audit-log');
 
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('trial-balance', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'trialBalance'])->name('trial-balance');

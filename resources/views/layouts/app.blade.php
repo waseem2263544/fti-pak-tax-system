@@ -468,6 +468,9 @@
                     <a href="{{ route('accounting.settings.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.settings')) active @endif">
                         <i class="bi bi-gear"></i> Settings
                     </a>
+                    <a href="{{ route('accounting.audit-log') }}" class="@if(Route::currentRouteName() == 'accounting.audit-log') active @endif">
+                        <i class="bi bi-clock-history"></i> Audit Log
+                    </a>
                 </div>
 
                 <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'accounting.reports')) open @endif" onclick="toggleSection('reports')">

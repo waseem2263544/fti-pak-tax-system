@@ -245,6 +245,20 @@ $tables = [
   UNIQUE KEY `uk_key` (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
+"CREATE TABLE IF NOT EXISTS `acc_audit_logs` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `user_id` BIGINT UNSIGNED NULL,
+  `user_name` VARCHAR(150) NULL,
+  `action` VARCHAR(20) NOT NULL,
+  `model_type` VARCHAR(100) NOT NULL,
+  `model_id` BIGINT UNSIGNED NULL,
+  `label` VARCHAR(190) NULL,
+  `changes` TEXT NULL,
+  `created_at` TIMESTAMP NULL,
+  INDEX `idx_model` (`model_type`, `model_id`),
+  INDEX `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
 ];
 
 foreach ($tables as $sql) {

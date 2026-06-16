@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccVoucher extends Model
 {
+    use \App\Models\Concerns\LogsAccountingActivity;
+
     protected $table = 'acc_vouchers';
     protected $fillable = ['voucher_number', 'type', 'date', 'client_id', 'contact_id', 'party_name', 'payment_account_id', 'amount', 'payment_method', 'cheque_number', 'reference', 'narration', 'status', 'invoice_id', 'invoice_type', 'journal_entry_id', 'created_by'];
     protected $casts = ['date' => 'date'];

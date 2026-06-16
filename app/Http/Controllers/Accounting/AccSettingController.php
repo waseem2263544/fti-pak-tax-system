@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Accounting;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccAccount;
+use App\Models\AccAuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -41,5 +42,21 @@ class AccSettingController extends Controller
             }
         }
         return back()->with('success', 'Accounting settings saved.');
+    }
+
+    public function auditLog(Request $request)
+    {
+        $models = [
+            'AccJournalEntry' => 'Journal Entry', 'AccSalesInvoice' => 'Sales Invoice',
+            'AccPurchaseInvoice' => 'Purchase Bill', 'AccVoucher' => 'Voucher', 'AccAccount' => 'Account',
+        ];
+        $logs = AccAuditLog::query()
+            ->when($request->input('action'), fn($q, $a) => $q->where('action', $a))
+            ->when($request->input('model'), fn($q, $m) => $q->where('model_type', $m))
+            ->orderByDesc('id')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('accounting.settings.audit-log', compact('logs', 'models'));
     }
 }
