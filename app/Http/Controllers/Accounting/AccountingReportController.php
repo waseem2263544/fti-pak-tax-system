@@ -608,6 +608,55 @@ class AccountingReportController extends Controller
     }
 
     /**
+     * Accounting health check — verifies the books are internally consistent.
+     */
+    public function diagnostics()
+    {
+        // 1. Global posted debits vs credits (must be equal)
+        $totals = DB::table('acc_journal_entry_lines')
+            ->join('acc_journal_entries', 'acc_journal_entry_lines.journal_entry_id', '=', 'acc_journal_entries.id')
+            ->where('acc_journal_entries.is_posted', true)
+            ->selectRaw('COALESCE(SUM(debit),0) d, COALESCE(SUM(credit),0) c')->first();
+        $globalDebit = (float) ($totals->d ?? 0);
+        $globalCredit = (float) ($totals->c ?? 0);
+        $globalBalanced = round($globalDebit - $globalCredit, 2) === 0.0;
+
+        // 2. Individually unbalanced posted journal entries
+        $unbalancedIds = DB::table('acc_journal_entry_lines')
+            ->join('acc_journal_entries', 'acc_journal_entry_lines.journal_entry_id', '=', 'acc_journal_entries.id')
+            ->where('acc_journal_entries.is_posted', true)
+            ->groupBy('journal_entry_id')
+            ->havingRaw('ROUND(SUM(debit),2) <> ROUND(SUM(credit),2)')
+            ->pluck('journal_entry_id');
+        $unbalancedEntries = AccJournalEntry::whereIn('id', $unbalancedIds)->get(['id', 'entry_number', 'date']);
+
+        // 3. Control account configuration
+        $roles = [
+            'accounts_receivable' => 'Accounts Receivable', 'accounts_payable' => 'Accounts Payable',
+            'cash' => 'Cash', 'bank' => 'Bank', 'sales' => 'Default Sales', 'purchase' => 'Default Purchase',
+            'sales_tax' => 'Output Sales Tax', 'purchase_tax' => 'Input Sales Tax', 'sales_discount' => 'Sales Discounts',
+        ];
+        $controlAccounts = [];
+        foreach ($roles as $role => $label) {
+            $id = AccAccount::resolveId($role);
+            $acct = $id ? AccAccount::find($id) : null;
+            $controlAccounts[] = ['label' => $label, 'account' => $acct ? ($acct->code . ' · ' . $acct->name) : null];
+        }
+
+        // 4. Invoices missing a posted journal entry
+        $invoicesNoJe = AccSalesInvoice::whereNull('journal_entry_id')->where('status', '!=', 'draft')->count();
+        $billsNoJe = AccPurchaseInvoice::whereNull('journal_entry_id')->where('status', '!=', 'draft')->count();
+
+        // 5. Active fiscal year present?
+        $activeFy = AccFiscalYear::active();
+
+        return view('accounting.reports.diagnostics', compact(
+            'globalDebit', 'globalCredit', 'globalBalanced', 'unbalancedEntries',
+            'controlAccounts', 'invoicesNoJe', 'billsNoJe', 'activeFy'
+        ));
+    }
+
+    /**
      * Stream an array of rows as a CSV download.
      */
     private function streamCsv(string $filename, array $header, array $rows)
