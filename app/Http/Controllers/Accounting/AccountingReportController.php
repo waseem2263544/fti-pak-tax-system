@@ -644,4 +644,34 @@ class AccountingReportController extends Controller
             'clients', 'client', 'rows', 'openingBalance', 'closingBalance', 'totalDebit', 'totalCredit', 'fromDate', 'toDate'
         ));
     }
+
+    /**
+     * Sales Tax Report — output tax (on sales) vs input tax (on purchases) and net
+     * tax payable/refundable for a period. Supports sales-tax return preparation.
+     */
+    public function taxReport(Request $request)
+    {
+        $fy = AccFiscalYear::active();
+        $fromDate = $request->input('from_date', $fy ? $fy->start_date->toDateString() : now()->startOfMonth()->toDateString());
+        $toDate = $request->input('to_date', $fy ? $fy->end_date->toDateString() : now()->toDateString());
+
+        $sales = AccSalesInvoice::with('client', 'items')
+            ->whereBetween('date', [$fromDate, $toDate])
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('date')->get();
+        $purchases = AccPurchaseInvoice::with('contact', 'items')
+            ->whereBetween('date', [$fromDate, $toDate])
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('date')->get();
+
+        $taxableSales = (float) $sales->sum(fn($i) => (float) $i->items->sum('amount'));
+        $outputTax = (float) $sales->sum(fn($i) => (float) $i->items->sum('tax_amount'));
+        $taxablePurchases = (float) $purchases->sum(fn($i) => (float) $i->items->sum('amount'));
+        $inputTax = (float) $purchases->sum(fn($i) => (float) $i->items->sum('tax_amount'));
+        $netTax = $outputTax - $inputTax;
+
+        return view('accounting.reports.tax-report', compact(
+            'sales', 'purchases', 'taxableSales', 'outputTax', 'taxablePurchases', 'inputTax', 'netTax', 'fromDate', 'toDate'
+        ));
+    }
 }

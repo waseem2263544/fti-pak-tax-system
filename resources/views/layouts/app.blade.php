@@ -499,6 +499,9 @@
                     <a href="{{ route('accounting.reports.cash-flow') }}" class="@if(Route::currentRouteName() == 'accounting.reports.cash-flow') active @endif">
                         <i class="bi bi-cash"></i> Cash Flow
                     </a>
+                    <a href="{{ route('accounting.reports.tax-report') }}" class="@if(Route::currentRouteName() == 'accounting.reports.tax-report') active @endif">
+                        <i class="bi bi-percent"></i> Sales Tax Report
+                    </a>
                 </div>
 
                 <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" onclick="toggleSection('operations')">
