@@ -209,8 +209,8 @@ $isStay = str_contains($template, 'stay');
                 </div>
                 @if($template === 'st-tribunal-stay-extension')
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Previous Stay Order(s) <small class="text-muted">(PDF / image)</small></label>
-                    <input type="file" name="stay_order_file" class="form-control" accept=".pdf,image/*">
+                    <label class="form-label">Previous Stay Order(s) <small class="text-muted">(PDF / image — select multiple)</small></label>
+                    <input type="file" name="stay_order_files[]" class="form-control" accept=".pdf,image/*" multiple>
                 </div>
                 @endif
             </div>

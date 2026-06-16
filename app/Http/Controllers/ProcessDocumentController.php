@@ -157,19 +157,25 @@ class ProcessDocumentController extends Controller
         // Section sequence per template. 'doc' = generated Blade; 'file' = uploaded attachment.
         // Both render passes iterate this single source of truth.
         if ($isStExtension) {
-            // Same as st-tribunal-stay, plus the previous Stay Order after the recovery notice.
-            $sequence = [
+            // Same as st-tribunal-stay, plus one section per previous Stay Order after the recovery notice.
+            $stayOrderItems = [];
+            foreach (($meta['stay_order_files'] ?? []) as $i => $so) {
+                $rel = is_array($so) ? ($so['path'] ?? '') : $so;
+                if (empty($rel)) continue;
+                $stayOrderItems[] = ['key' => 'stay_order_' . $i, 'type' => 'file', 'path' => $rel, 'pages' => is_array($so) ? ($so['pages'] ?? 1) : 1];
+            }
+            $sequence = array_merge([
                 ['key' => 'appeal_memo',       'type' => 'doc',  'view' => 'processes.documents.appeal-memo'],
                 ['key' => 'stay_app',          'type' => 'doc',  'view' => 'processes.documents.stay-application'],
                 ['key' => 'grounds',           'type' => 'doc',  'view' => 'processes.documents.grounds-of-appeal'],
                 ['key' => 'order_in_appeal',   'type' => 'file', 'field' => 'order_in_appeal_file'],
                 ['key' => 'order_in_original', 'type' => 'file', 'field' => 'order_in_original_file'],
                 ['key' => 'recovery_notice',   'type' => 'file', 'field' => 'recovery_notice_file'],
-                ['key' => 'stay_order',        'type' => 'file', 'field' => 'stay_order_file'],
+            ], $stayOrderItems, [
                 ['key' => 'intimation',        'type' => 'doc',  'view' => 'processes.documents.intimation', 'letterhead' => true],
                 ['key' => 'poa',               'type' => 'doc',  'view' => 'processes.documents.power-of-attorney'],
                 ['key' => 'affidavit',         'type' => 'doc',  'view' => 'processes.documents.affidavit'],
-            ];
+            ]);
         } elseif ($isItTribunalAppeal) {
             $sequence = [
                 ['key' => 'appeal_memo',       'type' => 'doc',  'view' => 'processes.documents.appeal-memo'],
@@ -262,10 +268,10 @@ class ProcessDocumentController extends Controller
                     continue;
                 }
 
-                // type === 'file' (uploaded attachment)
-                $field = $item['field'];
-                if (empty($meta[$field])) { $starts[$key] = null; continue; }
-                $abs = public_path($meta[$field]);
+                // type === 'file' (uploaded attachment) -- explicit 'path' or a metadata 'field'
+                $rel = isset($item['path']) ? $item['path'] : ($meta[$item['field']] ?? null);
+                if (empty($rel)) { $starts[$key] = null; continue; }
+                $abs = public_path($rel);
                 if (!file_exists($abs)) { $starts[$key] = null; continue; }
 
                 $ext = strtolower(pathinfo($abs, PATHINFO_EXTENSION));
@@ -339,14 +345,19 @@ class ProcessDocumentController extends Controller
                 $sectionPages[$key] = $pages;
                 $cursor += $pages;
             } else {
-                $field = $item['field'];
-                $pages = max(1, (int) ($meta[$field . '_pages'] ?? 1));
+                if (isset($item['path'])) {
+                    $rel = $item['path'];
+                    $pages = max(1, (int) ($item['pages'] ?? 1));
+                } else {
+                    $rel = $meta[$item['field']] ?? null;
+                    $pages = max(1, (int) ($meta[$item['field'] . '_pages'] ?? 1));
+                }
                 $sectionPages[$key] = $pages;
-                if (!empty($meta[$field])) {
+                if (!empty($rel)) {
                     $starts[$key] = $cursor;     // 1-based page where this attachment begins
                     $cursor += $pages;
                 } else {
-                    $starts[$key] = null;        // not uploaded -> Index hides the row
+                    $starts[$key] = null;        // not provided -> Index hides the row
                 }
             }
         }

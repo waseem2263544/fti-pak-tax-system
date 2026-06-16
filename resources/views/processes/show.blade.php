@@ -115,7 +115,7 @@
     if ($process->template === 'it-tribunal-appeal') {
         $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Original Order', 'fee_challan_file' => 'Fee Challan'];
     } elseif ($process->template === 'st-tribunal-stay-extension') {
-        $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice', 'stay_order_file' => 'Previous Stay Order(s)'];
+        $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
     } else {
         $attachedFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
     }
@@ -155,6 +155,16 @@
                 </div>
             </div>
             @endforeach
+            @if($process->template === 'st-tribunal-stay-extension')
+                @foreach(($meta['stay_order_files'] ?? []) as $i => $so)
+                <div class="col-md-4">
+                    <div class="card" style="padding: 14px; border: 1.5px solid #e8eaed;">
+                        <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem; margin-bottom: 6px;">Previous Stay Order {{ $i + 1 }}</div>
+                        <a href="{{ asset(is_array($so) ? ($so['path'] ?? '') : $so) }}" target="_blank" style="font-size: 0.78rem; color: #2A8AB8;"><i class="bi bi-file-earmark me-1"></i>View / Download</a>
+                    </div>
+                </div>
+                @endforeach
+            @endif
         </div>
     </div>
 </div>

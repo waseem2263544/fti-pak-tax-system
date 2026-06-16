@@ -113,7 +113,8 @@ class ProcessController extends Controller
 
         $process = Process::create($validated);
         $this->handleStTribunalStayUploads($request, $process);
-        $this->copyFilesFromSource($request, $process);
+        $this->copyFilesFromSource($request, $process->fresh());      // carry forward base + stay-order files
+        $this->handleStayOrderUploads($request, $process->fresh());   // append newly-uploaded stay orders
         $this->createTaskForAssignment($process);
         return redirect()->route('processes.show', $process)->with('success', 'Process created successfully');
     }
@@ -125,7 +126,7 @@ class ProcessController extends Controller
      */
     private function handleStTribunalStayUploads(Request $request, Process $process)
     {
-        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file', 'fee_challan_file', 'stay_order_file'];
+        $fields = ['order_in_appeal_file', 'order_in_original_file', 'recovery_notice_file', 'fee_challan_file'];
         $metadata = $process->metadata ?? [];
         $changed = false;
         foreach ($fields as $field) {
@@ -190,7 +191,58 @@ class ProcessController extends Controller
             }
         }
 
+        // Carry forward the source's stay-order files (the list of previous stay orders)
+        if (empty($metadata['stay_order_files']) && !empty($sourceMeta['stay_order_files'])) {
+            $dir = public_path('uploads/processes/' . $process->id);
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            $carried = [];
+            foreach ($sourceMeta['stay_order_files'] as $i => $so) {
+                $rel = is_array($so) ? ($so['path'] ?? '') : $so;
+                $srcAbs = public_path($rel);
+                if (!is_file($srcAbs)) continue;
+                $ext = pathinfo($srcAbs, PATHINFO_EXTENSION) ?: 'pdf';
+                $filename = 'stay_order-' . time() . '-c' . $i . '.' . $ext;
+                if (@copy($srcAbs, $dir . '/' . $filename)) {
+                    $carried[] = [
+                        'path' => 'uploads/processes/' . $process->id . '/' . $filename,
+                        'pages' => is_array($so) ? ($so['pages'] ?? 1) : 1,
+                    ];
+                }
+            }
+            if ($carried) { $metadata['stay_order_files'] = $carried; $changed = true; }
+        }
+
         if ($changed) $process->update(['metadata' => $metadata]);
+    }
+
+    /**
+     * Save one or more uploaded "Previous Stay Order" files (stay_order_files[]) and APPEND them to
+     * the process metadata as a list of ['path' => ..., 'pages' => ...]. Appending lets carried-forward
+     * orders and newly uploaded ones coexist.
+     */
+    private function handleStayOrderUploads(Request $request, Process $process)
+    {
+        if (!$request->hasFile('stay_order_files')) return;
+
+        $metadata = $process->metadata ?? [];
+        $list = $metadata['stay_order_files'] ?? [];
+
+        $dir = public_path('uploads/processes/' . $process->id);
+        if (!is_dir($dir)) @mkdir($dir, 0755, true);
+
+        foreach ($request->file('stay_order_files') as $i => $file) {
+            if (!$file || !$file->isValid()) continue;
+            $ext = $file->getClientOriginalExtension() ?: 'bin';
+            $filename = 'stay_order-' . time() . '-' . $i . '.' . $ext;
+            $file->move($dir, $filename);
+            $list[] = [
+                'path' => 'uploads/processes/' . $process->id . '/' . $filename,
+                'pages' => $this->countAttachmentPages($dir . '/' . $filename),
+            ];
+        }
+
+        $metadata['stay_order_files'] = array_values($list);
+        $process->update(['metadata' => $metadata]);
     }
 
     /**
@@ -288,6 +340,7 @@ class ProcessController extends Controller
         $oldAssignedTo = $process->assigned_to;
         $process->update($validated);
         $this->handleStTribunalStayUploads($request, $process->fresh());
+        $this->handleStayOrderUploads($request, $process->fresh());
 
         $newAssignedTo = $validated['assigned_to'] ?? $process->assigned_to;
         if ($newAssignedTo && $newAssignedTo != $oldAssignedTo) {

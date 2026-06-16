@@ -156,7 +156,6 @@ $templateNames = [
             <!-- Document Attachments (PDF or images) -->
             @php
                 $stayFiles = ['order_in_appeal_file' => 'Order in Appeal', 'order_in_original_file' => 'Order in Original', 'recovery_notice_file' => 'Recovery Notice'];
-                if ($template === 'st-tribunal-stay-extension') $stayFiles['stay_order_file'] = 'Previous Stay Order(s)';
             @endphp
             <div class="row">
                 @foreach($stayFiles as $field => $label)
@@ -168,6 +167,24 @@ $templateNames = [
                     @endif
                 </div>
                 @endforeach
+            </div>
+            @endif
+
+            @if($template === 'st-tribunal-stay-extension')
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Previous Stay Order(s) <small class="text-muted">(PDF / image — select multiple to add)</small></label>
+                    @php $stayOrders = $meta['stay_order_files'] ?? []; @endphp
+                    @if(!empty($stayOrders))
+                    <div style="margin: 4px 0 8px;">
+                        @foreach($stayOrders as $i => $so)
+                        <small class="d-block"><a href="{{ asset(is_array($so) ? ($so['path'] ?? '') : $so) }}" target="_blank"><i class="bi bi-paperclip me-1"></i>Stay Order {{ $i + 1 }}</a> &middot; {{ is_array($so) ? ($so['pages'] ?? 1) : 1 }} page{{ (is_array($so) ? ($so['pages'] ?? 1) : 1) == 1 ? '' : 's' }}</small>
+                        @endforeach
+                    </div>
+                    @endif
+                    <input type="file" name="stay_order_files[]" class="form-control" accept=".pdf,image/*" multiple>
+                    <small class="text-muted">Uploading here adds to the list above (does not replace existing stay orders).</small>
+                </div>
             </div>
             @endif
 
