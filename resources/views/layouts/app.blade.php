@@ -487,6 +487,9 @@
                     <a href="{{ route('accounting.reports.general-ledger') }}" class="@if(Route::currentRouteName() == 'accounting.reports.general-ledger') active @endif">
                         <i class="bi bi-journal-text"></i> General Ledger
                     </a>
+                    <a href="{{ route('accounting.reports.customer-statement') }}" class="@if(Route::currentRouteName() == 'accounting.reports.customer-statement') active @endif">
+                        <i class="bi bi-person-rolodex"></i> Customer Statement
+                    </a>
                     <a href="{{ route('accounting.reports.receivable-aging') }}" class="@if(Route::currentRouteName() == 'accounting.reports.receivable-aging') active @endif">
                         <i class="bi bi-clock-history"></i> Receivable Aging
                     </a>

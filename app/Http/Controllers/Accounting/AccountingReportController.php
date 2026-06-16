@@ -587,4 +587,61 @@ class AccountingReportController extends Controller
 
         return $credit - $debit;
     }
+
+    /**
+     * Customer Statement of Account — a client's invoices (debits) and receipts
+     * (credits) over a period with opening/running/closing balance.
+     */
+    public function customerStatement(Request $request)
+    {
+        $clients = Client::orderBy('name')->get();
+        $clientId = $request->input('client_id');
+        $toDate = $request->input('to_date', now()->toDateString());
+        $fromDate = $request->input('from_date');
+
+        $client = null;
+        $rows = [];
+        $openingBalance = 0.0;
+        $closingBalance = 0.0;
+        $totalDebit = 0.0;
+        $totalCredit = 0.0;
+
+        if ($clientId && ($client = Client::find($clientId))) {
+            if ($fromDate) {
+                $priorInv = (float) AccSalesInvoice::where('client_id', $clientId)->whereDate('date', '<', $fromDate)->sum('total');
+                $priorRec = (float) AccVoucher::where('type', 'receipt')->where('client_id', $clientId)
+                    ->where('status', '!=', 'cancelled')->whereDate('date', '<', $fromDate)->sum('amount');
+                $openingBalance = $priorInv - $priorRec;
+            }
+
+            $events = [];
+            $invQ = AccSalesInvoice::where('client_id', $clientId)->whereDate('date', '<=', $toDate);
+            if ($fromDate) $invQ->whereDate('date', '>=', $fromDate);
+            foreach ($invQ->orderBy('date')->get() as $inv) {
+                $events[] = ['date' => $inv->date, 'type' => 'Invoice', 'ref' => $inv->invoice_number, 'debit' => (float) $inv->total, 'credit' => 0.0];
+            }
+            $recQ = AccVoucher::where('type', 'receipt')->where('client_id', $clientId)
+                ->where('status', '!=', 'cancelled')->whereDate('date', '<=', $toDate);
+            if ($fromDate) $recQ->whereDate('date', '>=', $fromDate);
+            foreach ($recQ->orderBy('date')->get() as $rec) {
+                $events[] = ['date' => $rec->date, 'type' => 'Receipt', 'ref' => $rec->voucher_number, 'debit' => 0.0, 'credit' => (float) $rec->amount];
+            }
+
+            usort($events, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
+
+            $running = $openingBalance;
+            foreach ($events as $e) {
+                $running += $e['debit'] - $e['credit'];
+                $e['balance'] = $running;
+                $totalDebit += $e['debit'];
+                $totalCredit += $e['credit'];
+                $rows[] = $e;
+            }
+            $closingBalance = $running;
+        }
+
+        return view('accounting.reports.customer-statement', compact(
+            'clients', 'client', 'rows', 'openingBalance', 'closingBalance', 'totalDebit', 'totalCredit', 'fromDate', 'toDate'
+        ));
+    }
 }

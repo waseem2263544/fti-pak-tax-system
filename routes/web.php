@@ -149,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('income-statement', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'incomeStatement'])->name('income-statement');
             Route::get('general-ledger', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'generalLedger'])->name('general-ledger');
             Route::get('account-ledger/{account}', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'accountLedger'])->name('account-ledger');
+            Route::get('customer-statement', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'customerStatement'])->name('customer-statement');
             Route::get('receivable-aging', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'receivableAging'])->name('receivable-aging');
             Route::get('payable-aging', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'payableAging'])->name('payable-aging');
             Route::get('cash-flow', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'cashFlow'])->name('cash-flow');
