@@ -41,25 +41,57 @@ class AccountingReportController extends Controller
         // Outstanding payables
         $apTotal = AccPurchaseInvoice::where('balance_due', '>', 0)->sum('balance_due');
 
-        // Monthly revenue for the current year
-        $monthlyRevenue = AccJournalEntryLine::whereHas('account', fn($q) => $q->where('type', 'revenue'))
+        // Monthly revenue & expense for the current fiscal year (keyed by calendar month number)
+        $monthlySeries = function (string $type, string $col) use ($currentFY) {
+            return AccJournalEntryLine::whereHas('account', fn($q) => $q->where('type', $type))
+                ->whereHas('journalEntry', function ($q) use ($currentFY) {
+                    $q->where('is_posted', true);
+                    if ($currentFY) {
+                        $q->whereBetween('date', [$currentFY->start_date, $currentFY->end_date]);
+                    }
+                })
+                ->join('acc_journal_entries', 'acc_journal_entry_lines.journal_entry_id', '=', 'acc_journal_entries.id')
+                ->selectRaw("MONTH(acc_journal_entries.date) as month, $col as total")
+                ->groupByRaw('MONTH(acc_journal_entries.date)')
+                ->pluck('total', 'month')
+                ->toArray();
+        };
+        $monthlyRevenue = $monthlySeries('revenue', 'SUM(acc_journal_entry_lines.credit) - SUM(acc_journal_entry_lines.debit)');
+        $monthlyExpense = $monthlySeries('expense', 'SUM(acc_journal_entry_lines.debit) - SUM(acc_journal_entry_lines.credit)');
+
+        // Build an ordered 12-month chart series across the fiscal year
+        $chartLabels = $chartRevenue = $chartExpense = [];
+        if ($currentFY) {
+            $cursor = Carbon::parse($currentFY->start_date)->startOfMonth();
+            for ($i = 0; $i < 12; $i++) {
+                $m = (int) $cursor->format('n');
+                $chartLabels[] = $cursor->format('M Y');
+                $chartRevenue[] = round((float) ($monthlyRevenue[$m] ?? 0), 2);
+                $chartExpense[] = round((float) ($monthlyExpense[$m] ?? 0), 2);
+                $cursor->addMonth();
+            }
+        }
+
+        // Expense breakdown by account (top 8) for the current fiscal year
+        $expenseBreakdown = AccJournalEntryLine::whereHas('account', fn($q) => $q->where('type', 'expense'))
             ->whereHas('journalEntry', function ($q) use ($currentFY) {
                 $q->where('is_posted', true);
                 if ($currentFY) {
                     $q->whereBetween('date', [$currentFY->start_date, $currentFY->end_date]);
                 }
             })
-            ->join('acc_journal_entries', 'acc_journal_entry_lines.journal_entry_id', '=', 'acc_journal_entries.id')
-            ->selectRaw('MONTH(acc_journal_entries.date) as month, SUM(acc_journal_entry_lines.credit) - SUM(acc_journal_entry_lines.debit) as total')
-            ->groupByRaw('MONTH(acc_journal_entries.date)')
-            ->orderByRaw('MONTH(acc_journal_entries.date)')
-            ->pluck('total', 'month')
-            ->toArray();
+            ->join('acc_accounts', 'acc_journal_entry_lines.account_id', '=', 'acc_accounts.id')
+            ->selectRaw('acc_accounts.name as name, SUM(acc_journal_entry_lines.debit) - SUM(acc_journal_entry_lines.credit) as total')
+            ->groupBy('acc_accounts.id', 'acc_accounts.name')
+            ->havingRaw('SUM(acc_journal_entry_lines.debit) - SUM(acc_journal_entry_lines.credit) > 0')
+            ->orderByDesc('total')
+            ->limit(8)
+            ->get();
 
         // Recent transactions
-        $recentEntries = AccJournalEntry::with('creator')
-            ->where('is_posted', true)
+        $recentEntries = AccJournalEntry::with('creator', 'lines')
             ->latest('date')
+            ->latest('id')
             ->limit(10)
             ->get();
 
@@ -78,20 +110,18 @@ class AccountingReportController extends Controller
             'ap_total'                => $apTotal,
         ];
 
-        // Bank/Cash balances
+        // Bank/Cash balances (sub_type is seeded lowercase 'bank')
         $bankAccounts = AccAccount::active()
-            ->where(function ($q) {
-                $q->where('sub_type', 'Bank')
-                  ->orWhere('sub_type', 'Cash');
-            })
+            ->whereRaw('LOWER(sub_type) IN (?, ?)', ['bank', 'cash'])
             ->orderBy('code')
             ->get()
             ->map(function ($account) {
                 $account->computed_balance = $account->balance;
                 return $account;
             });
+        $stats['cash_total'] = $bankAccounts->sum('computed_balance');
 
-        return view('accounting.dashboard', compact('stats', 'monthlyRevenue', 'recentEntries', 'bankAccounts', 'currentFY'));
+        return view('accounting.dashboard', compact('stats', 'monthlyRevenue', 'recentEntries', 'bankAccounts', 'currentFY', 'chartLabels', 'chartRevenue', 'chartExpense', 'expenseBreakdown'));
     }
 
     /**
