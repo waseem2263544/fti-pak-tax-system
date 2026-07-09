@@ -38,7 +38,13 @@ class IncomeTaxReturnController extends Controller
         }
         $filedPct = $total ? round($counts['filed']['count'] / $total * 100) : 0;
 
-        // Optional filter
+        // "Assigned to me" count (for the toggle badge) computed on the full set
+        $mineCount = $clients->where('tracker_assigned', auth()->id())->count();
+
+        // Optional filters
+        if ($request->boolean('mine')) {
+            $clients = $clients->where('tracker_assigned', auth()->id())->values();
+        }
         if ($request->filled('status') && isset($statuses[$request->status])) {
             $clients = $clients->where('tracker_status', $request->status)->values();
         }
@@ -47,7 +53,7 @@ class IncomeTaxReturnController extends Controller
             $clients = $clients->filter(fn($c) => str_contains(mb_strtolower($c->name), $needle))->values();
         }
 
-        return view('income-tax-returns.index', compact('clients', 'statuses', 'counts', 'total', 'filedPct', 'users'));
+        return view('income-tax-returns.index', compact('clients', 'statuses', 'counts', 'total', 'filedPct', 'users', 'mineCount'));
     }
 
     /** Upsert the status / remarks for a client. Returns JSON for inline saving. */

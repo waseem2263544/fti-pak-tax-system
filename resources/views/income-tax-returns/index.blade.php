@@ -46,7 +46,7 @@
 <!-- Dashboard cards -->
 <div class="row g-3 mb-4">
     <div class="col">
-        <a href="{{ route('income-tax-returns.index') }}" class="card stat-card text-decoration-none {{ !request('status') ? 'border-2' : '' }}" style="{{ !request('status') ? 'border:2px solid var(--accent);' : '' }}">
+        <a href="{{ route('income-tax-returns.index', array_filter(['mine' => request()->boolean('mine') ? 1 : null])) }}" class="card stat-card text-decoration-none {{ !request('status') ? 'border-2' : '' }}" style="{{ !request('status') ? 'border:2px solid var(--accent);' : '' }}">
             <div class="stat-mini">
                 <div class="num" id="count-total">{{ $total }}</div>
                 <div class="lbl">Total Clients</div>
@@ -55,7 +55,7 @@
     </div>
     @foreach($statuses as $key => $label)
     <div class="col">
-        <a href="{{ route('income-tax-returns.index', ['status' => $key]) }}" class="card stat-card text-decoration-none" style="{{ request('status') === $key ? 'border:2px solid '.$colors[$key][2].';' : '' }}">
+        <a href="{{ route('income-tax-returns.index', array_filter(['status' => $key, 'mine' => request()->boolean('mine') ? 1 : null])) }}" class="card stat-card text-decoration-none" style="{{ request('status') === $key ? 'border:2px solid '.$colors[$key][2].';' : '' }}">
             <div class="stat-mini">
                 <div class="d-flex align-items-baseline gap-2">
                     <span class="num" id="count-{{ $key }}">{{ $counts[$key]['count'] }}</span>
@@ -69,14 +69,19 @@
 </div>
 
 <!-- Search -->
+@php $mineOn = request()->boolean('mine'); @endphp
 <div class="card mb-3">
-    <div class="card-body" style="padding:14px 18px;">
+    <div class="card-body d-flex gap-2 align-items-center flex-wrap" style="padding:14px 18px;">
+        <a href="{{ route('income-tax-returns.index', array_filter(['status' => request('status'), 'q' => request('q'), 'mine' => $mineOn ? null : 1])) }}" class="btn btn-sm {{ $mineOn ? 'btn-primary' : 'btn-outline-primary' }}">
+            <i class="bi bi-person-check me-1"></i>Assigned to me @if($mineCount)<span class="badge bg-light text-dark ms-1">{{ $mineCount }}</span>@endif
+        </a>
         <form method="GET" class="d-flex gap-2 align-items-center">
             @if(request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" style="max-width:320px;" placeholder="Search client…">
+            @if($mineOn)<input type="hidden" name="mine" value="1">@endif
+            <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" style="max-width:280px;" placeholder="Search client…">
             <button class="btn btn-sm btn-accent"><i class="bi bi-search"></i></button>
-            @if(request('q') || request('status'))<a href="{{ route('income-tax-returns.index') }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
         </form>
+        @if(request('q') || request('status') || $mineOn)<a href="{{ route('income-tax-returns.index') }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
     </div>
 </div>
 
@@ -143,7 +148,7 @@
     const CSRF = '{{ csrf_token() }}';
     const URL_TPL = '{{ url('income-tax-returns') }}';
     const STATUS_KEYS = @json(array_keys($statuses));
-    const FILTERED = {{ (request('status') || request('q')) ? 'true' : 'false' }};
+    const FILTERED = {{ (request('status') || request('q') || request('mine')) ? 'true' : 'false' }};
 
     function post(clientId, payload, onOk) {
         fetch(URL_TPL + '/' + clientId, {
@@ -173,7 +178,7 @@
     // Assignee change
     document.querySelectorAll('.itr-assign').forEach(function (sel) {
         sel.addEventListener('change', function () {
-            post(sel.dataset.client, { assigned_to: sel.value });
+            post(sel.dataset.client, { assigned_to: sel.value }, function () { if (FILTERED) location.reload(); });
         });
     });
 
