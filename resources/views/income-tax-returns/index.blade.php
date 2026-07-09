@@ -94,6 +94,7 @@
                     <th style="width:40px;">#</th>
                     <th>Client</th>
                     <th style="width:160px;">Contact</th>
+                    <th style="width:150px;">Folder</th>
                     <th style="width:190px;">Status</th>
                     <th style="width:170px;">Assigned To</th>
                     <th>Remarks</th>
@@ -109,6 +110,12 @@
                     </td>
                     <td>
                         <input type="text" class="itr-contact form-control form-control-sm" data-client="{{ $client->id }}" value="{{ $client->tracker_contact }}" placeholder="Number…" style="max-width:150px;">
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-1">
+                            <input type="text" class="itr-folder form-control form-control-sm" data-client="{{ $client->id }}" value="{{ $client->tracker_folder }}" placeholder="SharePoint URL…" style="max-width:120px;">
+                            <a href="{{ $client->tracker_folder ?: '#' }}" target="_blank" rel="noopener" class="itr-folder-open btn btn-sm btn-outline-primary" data-client="{{ $client->id }}" title="Open folder" style="{{ $client->tracker_folder ? '' : 'pointer-events:none;opacity:.4;' }}"><i class="bi bi-folder2-open"></i></a>
+                        </div>
                     </td>
                     <td>
                         <select class="itr-select st-{{ $client->tracker_status }}" data-client="{{ $client->id }}">
@@ -134,7 +141,7 @@
                     <td style="font-size:0.8rem; color:#6b7280;" data-updated="{{ $client->id }}">{{ $client->tracker_updated ? $client->tracker_updated->format('d M Y H:i') : '—' }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="text-center py-5" style="color:#9ca3af;">
+                <tr><td colspan="8" class="text-center py-5" style="color:#9ca3af;">
                     <i class="bi bi-inbox" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i>
                     No clients have Income Tax Return as an active service.
                 </td></tr>
@@ -210,6 +217,27 @@
             original = inp.value;
             post(inp.dataset.client, { contact_number: inp.value });
         });
+    });
+
+    // Folder link save on blur (only if changed) + keep the Open button in sync
+    document.querySelectorAll('.itr-folder').forEach(function (inp) {
+        var original = inp.value;
+        var openBtn = document.querySelector('.itr-folder-open[data-client="' + inp.dataset.client + '"]');
+        function normalize(v) { v = (v || '').trim(); if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v; return v; }
+        function syncOpen() {
+            if (!openBtn) return;
+            var v = normalize(inp.value);
+            if (v) { openBtn.href = v; openBtn.style.pointerEvents = ''; openBtn.style.opacity = ''; }
+            else { openBtn.href = '#'; openBtn.style.pointerEvents = 'none'; openBtn.style.opacity = '.4'; }
+        }
+        inp.addEventListener('input', syncOpen);
+        inp.addEventListener('blur', function () {
+            if (inp.value === original) return;
+            original = inp.value;
+            syncOpen();
+            post(inp.dataset.client, { folder_link: inp.value });
+        });
+        syncOpen();
     });
 
     // Remarks save on blur (only if changed)

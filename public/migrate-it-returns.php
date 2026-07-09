@@ -11,6 +11,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `it_return_trackers` (
   `status` VARCHAR(30) NOT NULL DEFAULT 'not_yet_contacted',
   `assigned_to` BIGINT UNSIGNED NULL,
   `contact_number` VARCHAR(50) NULL,
+  `folder_link` VARCHAR(500) NULL,
   `remarks` TEXT NULL,
   `updated_by` BIGINT UNSIGNED NULL,
   `created_at` TIMESTAMP NULL,
@@ -32,6 +33,12 @@ $hasContact = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE
 if (!$hasContact) {
     $pdo->exec("ALTER TABLE `it_return_trackers` ADD COLUMN `contact_number` VARCHAR(50) NULL AFTER `assigned_to`");
     echo "Added contact_number column.\n";
+}
+
+$hasFolder = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'it_return_trackers' AND column_name = 'folder_link'")->fetchColumn();
+if (!$hasFolder) {
+    $pdo->exec("ALTER TABLE `it_return_trackers` ADD COLUMN `folder_link` VARCHAR(500) NULL AFTER `contact_number`");
+    echo "Added folder_link column.\n";
 }
 echo "\nDONE!\n";
 echo "</pre>";

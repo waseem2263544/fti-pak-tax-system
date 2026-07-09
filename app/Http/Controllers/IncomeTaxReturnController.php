@@ -27,6 +27,8 @@ class IncomeTaxReturnController extends Controller
                 $client->tracker_assigned = optional($client->itReturnTracker)->assigned_to;
                 $trackerContact = optional($client->itReturnTracker)->contact_number;
                 $client->tracker_contact = ($trackerContact !== null && $trackerContact !== '') ? $trackerContact : $client->contact_no;
+                $trackerFolder = optional($client->itReturnTracker)->folder_link;
+                $client->tracker_folder = ($trackerFolder !== null && $trackerFolder !== '') ? $trackerFolder : $client->folder_link;
                 $client->tracker_updated = optional($client->itReturnTracker)->updated_at;
                 return $client;
             });
@@ -65,6 +67,7 @@ class IncomeTaxReturnController extends Controller
             'status'         => 'nullable|in:' . implode(',', array_keys(ItReturnTracker::STATUSES)),
             'assigned_to'    => 'nullable|exists:users,id',
             'contact_number' => 'nullable|string|max:50',
+            'folder_link'    => 'nullable|string|max:500',
             'remarks'        => 'nullable|string|max:2000',
         ]);
 
@@ -80,6 +83,9 @@ class IncomeTaxReturnController extends Controller
         }
         if ($request->has('contact_number')) {
             $tracker->contact_number = $validated['contact_number'] ?: null;
+        }
+        if ($request->has('folder_link')) {
+            $tracker->folder_link = $validated['folder_link'] ?: null;
         }
         if ($request->has('remarks')) {
             $tracker->remarks = $validated['remarks'] ?? null;
