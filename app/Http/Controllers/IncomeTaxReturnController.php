@@ -54,6 +54,11 @@ class IncomeTaxReturnController extends Controller
         if (!$showSkipped && $request->boolean('mine')) {
             $clients = $clients->where('tracker_assigned', auth()->id())->values();
         }
+        // Exclude clients assigned to the selected user(s)
+        $exclude = array_filter(array_map('intval', (array) $request->input('exclude', [])));
+        if ($exclude) {
+            $clients = $clients->filter(fn($c) => !in_array((int) $c->tracker_assigned, $exclude, true))->values();
+        }
         if ($request->filled('status') && isset($statuses[$request->status])) {
             $clients = $clients->where('tracker_status', $request->status)->values();
         }

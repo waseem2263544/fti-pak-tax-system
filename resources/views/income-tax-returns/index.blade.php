@@ -46,7 +46,7 @@
 <!-- Dashboard cards -->
 <div class="row g-3 mb-4">
     <div class="col">
-        <a href="{{ route('income-tax-returns.index', array_filter(['mine' => request()->boolean('mine') ? 1 : null])) }}" class="card stat-card text-decoration-none {{ !request('status') ? 'border-2' : '' }}" style="{{ !request('status') ? 'border:2px solid var(--accent);' : '' }}">
+        <a href="{{ route('income-tax-returns.index', array_filter(['exclude' => request('exclude'), 'mine' => request()->boolean('mine') ? 1 : null])) }}" class="card stat-card text-decoration-none {{ !request('status') ? 'border-2' : '' }}" style="{{ !request('status') ? 'border:2px solid var(--accent);' : '' }}">
             <div class="stat-mini">
                 <div class="num" id="count-total">{{ $total }}</div>
                 <div class="lbl">Total Clients</div>
@@ -55,7 +55,7 @@
     </div>
     @foreach($statuses as $key => $label)
     <div class="col">
-        <a href="{{ route('income-tax-returns.index', array_filter(['status' => $key, 'mine' => request()->boolean('mine') ? 1 : null])) }}" class="card stat-card text-decoration-none" style="{{ request('status') === $key ? 'border:2px solid '.$colors[$key][2].';' : '' }}">
+        <a href="{{ route('income-tax-returns.index', array_filter(['status' => $key, 'exclude' => request('exclude'), 'mine' => request()->boolean('mine') ? 1 : null])) }}" class="card stat-card text-decoration-none" style="{{ request('status') === $key ? 'border:2px solid '.$colors[$key][2].';' : '' }}">
             <div class="stat-mini">
                 <div class="d-flex align-items-baseline gap-2">
                     <span class="num" id="count-{{ $key }}">{{ $counts[$key]['count'] }}</span>
@@ -73,21 +73,27 @@
 <div class="card mb-3">
     <div class="card-body d-flex gap-2 align-items-center flex-wrap" style="padding:14px 18px;">
         @unless($showSkipped)
-        <a href="{{ route('income-tax-returns.index', array_filter(['status' => request('status'), 'q' => request('q'), 'mine' => $mineOn ? null : 1])) }}" class="btn btn-sm {{ $mineOn ? 'btn-primary' : 'btn-outline-primary' }}">
+        <a href="{{ route('income-tax-returns.index', array_filter(['status' => request('status'), 'q' => request('q'), 'exclude' => request('exclude'), 'mine' => $mineOn ? null : 1])) }}" class="btn btn-sm {{ $mineOn ? 'btn-primary' : 'btn-outline-primary' }}">
             <i class="bi bi-person-check me-1"></i>Assigned to me @if($mineCount)<span class="badge bg-light text-dark ms-1">{{ $mineCount }}</span>@endif
         </a>
         @endunless
         <a href="{{ $showSkipped ? route('income-tax-returns.index') : route('income-tax-returns.index', ['skipped' => 1]) }}" class="btn btn-sm {{ $showSkipped ? 'btn-secondary' : 'btn-outline-secondary' }}">
             <i class="bi bi-eye-slash me-1"></i>{{ $showSkipped ? 'Back to active' : 'Skipped' }} @if($skippedCount && !$showSkipped)<span class="badge bg-light text-dark ms-1">{{ $skippedCount }}</span>@endif
         </a>
-        <form method="GET" class="d-flex gap-2 align-items-center">
+        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap" id="itrFilterForm">
             @if(request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
             @if($mineOn && !$showSkipped)<input type="hidden" name="mine" value="1">@endif
             @if($showSkipped)<input type="hidden" name="skipped" value="1">@endif
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" style="max-width:280px;" placeholder="Search client…">
+            @php $excludeSel = array_map('intval', (array) request('exclude', [])); @endphp
+            <select name="exclude[]" multiple class="tom-exclude" placeholder="Exclude assignee…" style="min-width:220px;">
+                @foreach($users as $u)
+                <option value="{{ $u->id }}" {{ in_array($u->id, $excludeSel, true) ? 'selected' : '' }}>{{ $u->name }}</option>
+                @endforeach
+            </select>
+            <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" style="max-width:220px;" placeholder="Search client…">
             <button class="btn btn-sm btn-accent"><i class="bi bi-search"></i></button>
         </form>
-        @if(request('q') || request('status') || $mineOn)<a href="{{ route('income-tax-returns.index', $showSkipped ? ['skipped' => 1] : []) }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
+        @if(request('q') || request('status') || $mineOn || !empty($excludeSel))<a href="{{ route('income-tax-returns.index', $showSkipped ? ['skipped' => 1] : []) }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
     </div>
 </div>
 @if($showSkipped)
@@ -183,7 +189,15 @@
     const CSRF = '{{ csrf_token() }}';
     const URL_TPL = '{{ url('income-tax-returns') }}';
     const STATUS_KEYS = @json(array_keys($statuses));
-    const FILTERED = {{ (request('status') || request('q') || request('mine')) ? 'true' : 'false' }};
+    const FILTERED = {{ (request('status') || request('q') || request('mine') || request('skipped') || request('exclude')) ? 'true' : 'false' }};
+
+    // Exclude-assignee multi-select (auto-submits the filter form on change)
+    if (window.TomSelect) {
+        document.querySelectorAll('.tom-exclude').forEach(function (el) {
+            var ts = new TomSelect(el, { plugins: ['remove_button'], placeholder: 'Exclude assignee…' });
+            ts.on('change', function () { document.getElementById('itrFilterForm').submit(); });
+        });
+    }
 
     function flashRow(clientId, ok) {
         var row = document.querySelector('tr[data-client="' + clientId + '"]');
