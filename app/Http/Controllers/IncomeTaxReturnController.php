@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ItReturnTracker;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class IncomeTaxReturnController extends Controller
@@ -13,14 +14,17 @@ class IncomeTaxReturnController extends Controller
     {
         $statuses = ItReturnTracker::STATUSES;
 
+        $users = User::orderBy('name')->get(['id', 'name']);
+
         $clients = Client::query()
             ->whereHas('activeServices', fn($q) => $q->where('services.name', 'income_tax_return'))
-            ->with('itReturnTracker')
+            ->with('itReturnTracker.assignee')
             ->orderBy('name')
             ->get()
             ->map(function ($client) {
                 $client->tracker_status = $client->itReturnTracker->status ?? ItReturnTracker::DEFAULT_STATUS;
                 $client->tracker_remarks = $client->itReturnTracker->remarks ?? '';
+                $client->tracker_assigned = optional($client->itReturnTracker)->assigned_to;
                 $client->tracker_updated = optional($client->itReturnTracker)->updated_at;
                 return $client;
             });
@@ -43,15 +47,16 @@ class IncomeTaxReturnController extends Controller
             $clients = $clients->filter(fn($c) => str_contains(mb_strtolower($c->name), $needle))->values();
         }
 
-        return view('income-tax-returns.index', compact('clients', 'statuses', 'counts', 'total', 'filedPct'));
+        return view('income-tax-returns.index', compact('clients', 'statuses', 'counts', 'total', 'filedPct', 'users'));
     }
 
     /** Upsert the status / remarks for a client. Returns JSON for inline saving. */
     public function update(Request $request, Client $client)
     {
         $validated = $request->validate([
-            'status'  => 'nullable|in:' . implode(',', array_keys(ItReturnTracker::STATUSES)),
-            'remarks' => 'nullable|string|max:2000',
+            'status'      => 'nullable|in:' . implode(',', array_keys(ItReturnTracker::STATUSES)),
+            'assigned_to' => 'nullable|exists:users,id',
+            'remarks'     => 'nullable|string|max:2000',
         ]);
 
         $tracker = ItReturnTracker::firstOrNew(['client_id' => $client->id]);
@@ -60,6 +65,9 @@ class IncomeTaxReturnController extends Controller
         }
         if (array_key_exists('status', $validated) && $validated['status']) {
             $tracker->status = $validated['status'];
+        }
+        if ($request->has('assigned_to')) {
+            $tracker->assigned_to = $validated['assigned_to'] ?: null;
         }
         if ($request->has('remarks')) {
             $tracker->remarks = $validated['remarks'] ?? null;

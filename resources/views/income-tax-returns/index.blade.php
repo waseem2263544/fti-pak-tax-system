@@ -10,6 +10,7 @@
         'working'             => ['#92400e', '#fef3c7', '#f59e0b'],
         'sent_for_review'     => ['#6d28d9', '#ede9fe', '#8b5cf6'],
         'filed'               => ['#065f46', '#d1fae5', '#10b981'],
+        'not_required'        => ['#475569', '#e2e8f0', '#64748b'],
     ];
 @endphp
 
@@ -88,6 +89,7 @@
                     <th style="width:40px;">#</th>
                     <th>Client</th>
                     <th style="width:190px;">Status</th>
+                    <th style="width:170px;">Assigned To</th>
                     <th>Remarks</th>
                     <th style="width:150px;">Last Updated</th>
                 </tr>
@@ -108,6 +110,14 @@
                         </select>
                     </td>
                     <td>
+                        <select class="itr-assign form-select form-select-sm" data-client="{{ $client->id }}">
+                            <option value="">— Unassigned —</option>
+                            @foreach($users as $u)
+                            <option value="{{ $u->id }}" {{ (string) $client->tracker_assigned === (string) $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td>
                         <div class="d-flex align-items-center gap-2">
                             <input type="text" class="itr-remarks" data-client="{{ $client->id }}" value="{{ $client->tracker_remarks }}" placeholder="Add remarks…">
                             <i class="bi bi-check-circle-fill saved-tick" data-client="{{ $client->id }}"></i>
@@ -116,7 +126,7 @@
                     <td style="font-size:0.8rem; color:#6b7280;" data-updated="{{ $client->id }}">{{ $client->tracker_updated ? $client->tracker_updated->format('d M Y H:i') : '—' }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="text-center py-5" style="color:#9ca3af;">
+                <tr><td colspan="6" class="text-center py-5" style="color:#9ca3af;">
                     <i class="bi bi-inbox" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i>
                     No clients have Income Tax Return as an active service.
                 </td></tr>
@@ -157,6 +167,13 @@
             post(sel.dataset.client, { status: sel.value }, function () {
                 if (FILTERED) { location.reload(); } else { recalcDashboard(); }
             });
+        });
+    });
+
+    // Assignee change
+    document.querySelectorAll('.itr-assign').forEach(function (sel) {
+        sel.addEventListener('change', function () {
+            post(sel.dataset.client, { assigned_to: sel.value });
         });
     });
 
