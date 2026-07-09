@@ -150,18 +150,35 @@
     const STATUS_KEYS = @json(array_keys($statuses));
     const FILTERED = {{ (request('status') || request('q') || request('mine')) ? 'true' : 'false' }};
 
+    function flashRow(clientId, ok) {
+        var row = document.querySelector('tr[data-client="' + clientId + '"]');
+        if (!row) return;
+        row.style.transition = 'background-color .2s';
+        row.style.backgroundColor = ok ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.14)';
+        setTimeout(function () { row.style.backgroundColor = ''; }, ok ? 700 : 2500);
+    }
+
     function post(clientId, payload, onOk) {
         fetch(URL_TPL + '/' + clientId, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
             body: JSON.stringify(payload)
-        }).then(r => r.json()).then(function (d) {
+        }).then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        }).then(function (d) {
             if (d && d.ok) {
                 var cell = document.querySelector('[data-updated="' + clientId + '"]');
                 if (cell && d.updated_at) cell.textContent = d.updated_at;
+                flashRow(clientId, true);
                 if (onOk) onOk(d);
+            } else {
+                flashRow(clientId, false);
             }
-        }).catch(function () {});
+        }).catch(function () {
+            flashRow(clientId, false);
+            console.error('Save failed for client ' + clientId + '. If only "Assigned To" fails, re-run /migrate-it-returns.php (assigned_to column).');
+        });
     }
 
     // Status change
