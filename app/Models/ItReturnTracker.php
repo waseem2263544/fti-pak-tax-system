@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class ItReturnTracker extends Model
 {
     protected $table = 'it_return_trackers';
-    protected $fillable = ['client_id', 'status', 'assigned_to', 'contact_number', 'folder_link', 'remarks', 'updated_by'];
+    protected $fillable = ['client_id', 'status', 'assigned_to', 'contact_number', 'folder_link', 'skipped', 'remarks', 'updated_by'];
+    protected $casts = ['skipped' => 'boolean'];
 
     /** Status value => human label (order = workflow order). */
     public const STATUSES = [

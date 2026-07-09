@@ -12,6 +12,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `it_return_trackers` (
   `assigned_to` BIGINT UNSIGNED NULL,
   `contact_number` VARCHAR(50) NULL,
   `folder_link` VARCHAR(500) NULL,
+  `skipped` TINYINT(1) NOT NULL DEFAULT 0,
   `remarks` TEXT NULL,
   `updated_by` BIGINT UNSIGNED NULL,
   `created_at` TIMESTAMP NULL,
@@ -39,6 +40,12 @@ $hasFolder = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE 
 if (!$hasFolder) {
     $pdo->exec("ALTER TABLE `it_return_trackers` ADD COLUMN `folder_link` VARCHAR(500) NULL AFTER `contact_number`");
     echo "Added folder_link column.\n";
+}
+
+$hasSkipped = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'it_return_trackers' AND column_name = 'skipped'")->fetchColumn();
+if (!$hasSkipped) {
+    $pdo->exec("ALTER TABLE `it_return_trackers` ADD COLUMN `skipped` TINYINT(1) NOT NULL DEFAULT 0 AFTER `folder_link`");
+    echo "Added skipped column.\n";
 }
 echo "\nDONE!\n";
 echo "</pre>";

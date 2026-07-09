@@ -15,8 +15,9 @@ class IncomeTaxReturnController extends Controller
         $statuses = ItReturnTracker::STATUSES;
 
         $users = User::orderBy('name')->get(['id', 'name']);
+        $showSkipped = $request->boolean('skipped');
 
-        $clients = Client::query()
+        $all = Client::query()
             ->whereHas('activeServices', fn($q) => $q->where('services.name', 'income_tax_return'))
             ->with('itReturnTracker.assignee')
             ->orderBy('name')
@@ -28,24 +29,29 @@ class IncomeTaxReturnController extends Controller
                 // Tracker contact/folder are INDEPENDENT of the client record (may differ per return).
                 $client->tracker_contact = optional($client->itReturnTracker)->contact_number;
                 $client->tracker_folder = optional($client->itReturnTracker)->folder_link;
+                $client->tracker_skipped = (bool) optional($client->itReturnTracker)->skipped;
                 $client->tracker_updated = optional($client->itReturnTracker)->updated_at;
                 return $client;
             });
 
-        // Dashboard counts + percentages
-        $total = $clients->count();
+        $active = $all->where('tracker_skipped', false);
+        $skippedCount = $all->where('tracker_skipped', true)->count();
+
+        // Dashboard counts + percentages (over the active, non-skipped set)
+        $total = $active->count();
         $counts = [];
         foreach (array_keys($statuses) as $key) {
-            $n = $clients->where('tracker_status', $key)->count();
+            $n = $active->where('tracker_status', $key)->count();
             $counts[$key] = ['count' => $n, 'pct' => $total ? round($n / $total * 100) : 0];
         }
         $filedPct = $total ? round($counts['filed']['count'] / $total * 100) : 0;
+        $mineCount = $active->where('tracker_assigned', auth()->id())->count();
 
-        // "Assigned to me" count (for the toggle badge) computed on the full set
-        $mineCount = $clients->where('tracker_assigned', auth()->id())->count();
+        // Base list: skipped view shows hidden clients; otherwise the active set
+        $clients = ($showSkipped ? $all->where('tracker_skipped', true) : $active)->values();
 
         // Optional filters
-        if ($request->boolean('mine')) {
+        if (!$showSkipped && $request->boolean('mine')) {
             $clients = $clients->where('tracker_assigned', auth()->id())->values();
         }
         if ($request->filled('status') && isset($statuses[$request->status])) {
@@ -56,7 +62,7 @@ class IncomeTaxReturnController extends Controller
             $clients = $clients->filter(fn($c) => str_contains(mb_strtolower($c->name), $needle))->values();
         }
 
-        return view('income-tax-returns.index', compact('clients', 'statuses', 'counts', 'total', 'filedPct', 'users', 'mineCount'));
+        return view('income-tax-returns.index', compact('clients', 'statuses', 'counts', 'total', 'filedPct', 'users', 'mineCount', 'showSkipped', 'skippedCount'));
     }
 
     /** Upsert the status / remarks for a client. Returns JSON for inline saving. */
@@ -67,6 +73,7 @@ class IncomeTaxReturnController extends Controller
             'assigned_to'    => 'nullable|exists:users,id',
             'contact_number' => 'nullable|string|max:50',
             'folder_link'    => 'nullable|string|max:500',
+            'skipped'        => 'nullable|boolean',
             'remarks'        => 'nullable|string|max:2000',
         ]);
 
@@ -85,6 +92,9 @@ class IncomeTaxReturnController extends Controller
         }
         if ($request->has('folder_link')) {
             $tracker->folder_link = $validated['folder_link'] ?: null;
+        }
+        if ($request->has('skipped')) {
+            $tracker->skipped = $request->boolean('skipped');
         }
         if ($request->has('remarks')) {
             $tracker->remarks = $validated['remarks'] ?? null;

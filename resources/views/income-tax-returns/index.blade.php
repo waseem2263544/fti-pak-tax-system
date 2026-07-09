@@ -72,18 +72,27 @@
 @php $mineOn = request()->boolean('mine'); @endphp
 <div class="card mb-3">
     <div class="card-body d-flex gap-2 align-items-center flex-wrap" style="padding:14px 18px;">
+        @unless($showSkipped)
         <a href="{{ route('income-tax-returns.index', array_filter(['status' => request('status'), 'q' => request('q'), 'mine' => $mineOn ? null : 1])) }}" class="btn btn-sm {{ $mineOn ? 'btn-primary' : 'btn-outline-primary' }}">
             <i class="bi bi-person-check me-1"></i>Assigned to me @if($mineCount)<span class="badge bg-light text-dark ms-1">{{ $mineCount }}</span>@endif
         </a>
+        @endunless
+        <a href="{{ $showSkipped ? route('income-tax-returns.index') : route('income-tax-returns.index', ['skipped' => 1]) }}" class="btn btn-sm {{ $showSkipped ? 'btn-secondary' : 'btn-outline-secondary' }}">
+            <i class="bi bi-eye-slash me-1"></i>{{ $showSkipped ? 'Back to active' : 'Skipped' }} @if($skippedCount && !$showSkipped)<span class="badge bg-light text-dark ms-1">{{ $skippedCount }}</span>@endif
+        </a>
         <form method="GET" class="d-flex gap-2 align-items-center">
             @if(request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
-            @if($mineOn)<input type="hidden" name="mine" value="1">@endif
+            @if($mineOn && !$showSkipped)<input type="hidden" name="mine" value="1">@endif
+            @if($showSkipped)<input type="hidden" name="skipped" value="1">@endif
             <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" style="max-width:280px;" placeholder="Search client…">
             <button class="btn btn-sm btn-accent"><i class="bi bi-search"></i></button>
         </form>
-        @if(request('q') || request('status') || $mineOn)<a href="{{ route('income-tax-returns.index') }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
+        @if(request('q') || request('status') || $mineOn)<a href="{{ route('income-tax-returns.index', $showSkipped ? ['skipped' => 1] : []) }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
     </div>
 </div>
+@if($showSkipped)
+<div class="alert alert-secondary py-2" style="font-size:0.85rem;"><i class="bi bi-eye-slash me-1"></i>Showing <strong>skipped</strong> clients — these are hidden from the main list. Use the restore button to bring one back.</div>
+@endif
 
 <!-- Table -->
 <div class="card">
@@ -99,6 +108,7 @@
                     <th style="width:170px;">Assigned To</th>
                     <th>Remarks</th>
                     <th style="width:150px;">Last Updated</th>
+                    <th style="width:44px;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -147,9 +157,16 @@
                         </div>
                     </td>
                     <td style="font-size:0.8rem; color:#6b7280;" data-updated="{{ $client->id }}">{{ $client->tracker_updated ? $client->tracker_updated->format('d M Y H:i') : '—' }}</td>
+                    <td class="text-end">
+                        @if($showSkipped)
+                        <button type="button" class="itr-skip btn btn-sm btn-link text-muted p-0" data-client="{{ $client->id }}" data-skip="0" title="Restore to active list"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        @else
+                        <button type="button" class="itr-skip btn btn-sm btn-link text-muted p-0" data-client="{{ $client->id }}" data-skip="1" title="Skip / hide this client"><i class="bi bi-eye-slash"></i></button>
+                        @endif
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-5" style="color:#9ca3af;">
+                <tr><td colspan="9" class="text-center py-5" style="color:#9ca3af;">
                     <i class="bi bi-inbox" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i>
                     No clients have Income Tax Return as an active service.
                 </td></tr>
@@ -230,6 +247,13 @@
     });
     document.querySelectorAll('.folder-add, .folder-edit').forEach(function (b) {
         b.addEventListener('click', function () { promptSave(b, 'folder_link', 'SharePoint folder link'); });
+    });
+
+    // Skip / restore a client
+    document.querySelectorAll('.itr-skip').forEach(function (b) {
+        b.addEventListener('click', function () {
+            post(b.dataset.client, { skipped: b.dataset.skip }, function () { location.reload(); });
+        });
     });
 
     // Remarks save on blur (only if changed)
