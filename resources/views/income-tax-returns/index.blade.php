@@ -93,6 +93,7 @@
                 <tr>
                     <th style="width:40px;">#</th>
                     <th>Client</th>
+                    <th style="width:160px;">Contact</th>
                     <th style="width:190px;">Status</th>
                     <th style="width:170px;">Assigned To</th>
                     <th>Remarks</th>
@@ -105,7 +106,9 @@
                     <td style="color:#9ca3af;">{{ $i + 1 }}</td>
                     <td>
                         <a href="{{ route('clients.show', $client) }}" style="font-weight:600; color:var(--primary); text-decoration:none;">{{ $client->name }}</a>
-                        @if($client->contact_no)<div style="font-size:0.75rem; color:#9ca3af;">{{ $client->contact_no }}</div>@endif
+                    </td>
+                    <td>
+                        <input type="text" class="itr-contact form-control form-control-sm" data-client="{{ $client->id }}" value="{{ $client->tracker_contact }}" placeholder="Number…" style="max-width:150px;">
                     </td>
                     <td>
                         <select class="itr-select st-{{ $client->tracker_status }}" data-client="{{ $client->id }}">
@@ -131,7 +134,7 @@
                     <td style="font-size:0.8rem; color:#6b7280;" data-updated="{{ $client->id }}">{{ $client->tracker_updated ? $client->tracker_updated->format('d M Y H:i') : '—' }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center py-5" style="color:#9ca3af;">
+                <tr><td colspan="7" class="text-center py-5" style="color:#9ca3af;">
                     <i class="bi bi-inbox" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i>
                     No clients have Income Tax Return as an active service.
                 </td></tr>
@@ -196,6 +199,16 @@
     document.querySelectorAll('.itr-assign').forEach(function (sel) {
         sel.addEventListener('change', function () {
             post(sel.dataset.client, { assigned_to: sel.value }, function () { if (FILTERED) location.reload(); });
+        });
+    });
+
+    // Contact number save on blur (only if changed)
+    document.querySelectorAll('.itr-contact').forEach(function (inp) {
+        var original = inp.value;
+        inp.addEventListener('blur', function () {
+            if (inp.value === original) return;
+            original = inp.value;
+            post(inp.dataset.client, { contact_number: inp.value });
         });
     });
 

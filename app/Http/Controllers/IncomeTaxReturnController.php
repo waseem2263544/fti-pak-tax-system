@@ -25,6 +25,8 @@ class IncomeTaxReturnController extends Controller
                 $client->tracker_status = $client->itReturnTracker->status ?? ItReturnTracker::DEFAULT_STATUS;
                 $client->tracker_remarks = $client->itReturnTracker->remarks ?? '';
                 $client->tracker_assigned = optional($client->itReturnTracker)->assigned_to;
+                $trackerContact = optional($client->itReturnTracker)->contact_number;
+                $client->tracker_contact = ($trackerContact !== null && $trackerContact !== '') ? $trackerContact : $client->contact_no;
                 $client->tracker_updated = optional($client->itReturnTracker)->updated_at;
                 return $client;
             });
@@ -60,9 +62,10 @@ class IncomeTaxReturnController extends Controller
     public function update(Request $request, Client $client)
     {
         $validated = $request->validate([
-            'status'      => 'nullable|in:' . implode(',', array_keys(ItReturnTracker::STATUSES)),
-            'assigned_to' => 'nullable|exists:users,id',
-            'remarks'     => 'nullable|string|max:2000',
+            'status'         => 'nullable|in:' . implode(',', array_keys(ItReturnTracker::STATUSES)),
+            'assigned_to'    => 'nullable|exists:users,id',
+            'contact_number' => 'nullable|string|max:50',
+            'remarks'        => 'nullable|string|max:2000',
         ]);
 
         $tracker = ItReturnTracker::firstOrNew(['client_id' => $client->id]);
@@ -74,6 +77,9 @@ class IncomeTaxReturnController extends Controller
         }
         if ($request->has('assigned_to')) {
             $tracker->assigned_to = $validated['assigned_to'] ?: null;
+        }
+        if ($request->has('contact_number')) {
+            $tracker->contact_number = $validated['contact_number'] ?: null;
         }
         if ($request->has('remarks')) {
             $tracker->remarks = $validated['remarks'] ?? null;

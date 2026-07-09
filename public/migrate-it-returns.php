@@ -10,6 +10,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS `it_return_trackers` (
   `client_id` BIGINT UNSIGNED NOT NULL,
   `status` VARCHAR(30) NOT NULL DEFAULT 'not_yet_contacted',
   `assigned_to` BIGINT UNSIGNED NULL,
+  `contact_number` VARCHAR(50) NULL,
   `remarks` TEXT NULL,
   `updated_by` BIGINT UNSIGNED NULL,
   `created_at` TIMESTAMP NULL,
@@ -25,6 +26,12 @@ $hasAssigned = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHER
 if (!$hasAssigned) {
     $pdo->exec("ALTER TABLE `it_return_trackers` ADD COLUMN `assigned_to` BIGINT UNSIGNED NULL AFTER `status`");
     echo "Added assigned_to column.\n";
+}
+
+$hasContact = $pdo->query("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'it_return_trackers' AND column_name = 'contact_number'")->fetchColumn();
+if (!$hasContact) {
+    $pdo->exec("ALTER TABLE `it_return_trackers` ADD COLUMN `contact_number` VARCHAR(50) NULL AFTER `assigned_to`");
+    echo "Added contact_number column.\n";
 }
 echo "\nDONE!\n";
 echo "</pre>";
