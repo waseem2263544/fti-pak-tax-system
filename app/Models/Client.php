@@ -58,6 +58,14 @@ class Client extends Model
     }
 
     /**
+     * Income Tax Return filing tracker row (status + remarks) for this client.
+     */
+    public function itReturnTracker()
+    {
+        return $this->hasOne(ItReturnTracker::class);
+    }
+
+    /**
      * Get all tasks related to this client.
      */
     public function tasks()

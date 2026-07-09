@@ -56,6 +56,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('processes/{process}/combined', [\App\Http\Controllers\ProcessDocumentController::class, 'combined'])->name('processes.document.combined');
     Route::get('processes/{process}/combined.pdf', [\App\Http\Controllers\ProcessDocumentController::class, 'combinedPdf'])->name('processes.document.combined-pdf');
 
+    // Income Tax Return filing tracker
+    Route::get('income-tax-returns', [\App\Http\Controllers\IncomeTaxReturnController::class, 'index'])->name('income-tax-returns.index');
+    Route::post('income-tax-returns/{client}', [\App\Http\Controllers\IncomeTaxReturnController::class, 'update'])->name('income-tax-returns.update');
+
     // Pending Proceedings
     Route::resource('proceedings', ProceedingController::class)->parameters(['proceedings' => 'proceeding']);
 

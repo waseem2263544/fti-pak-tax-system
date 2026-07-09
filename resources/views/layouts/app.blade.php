@@ -516,13 +516,16 @@
                     </a>
                 </div>
 
-                <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" onclick="toggleSection('operations')">
+                <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index' || str_starts_with(Route::currentRouteName() ?? '', 'income-tax-returns')) open @endif" onclick="toggleSection('operations')">
                     <span><i class="bi bi-gear me-1"></i> Operations</span>
                     <i class="bi bi-chevron-right chevron"></i>
                 </div>
-                <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" id="section-operations">
+                <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index' || str_starts_with(Route::currentRouteName() ?? '', 'income-tax-returns')) open @endif" id="section-operations">
                     <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
                         <i class="bi bi-arrow-repeat"></i> Processes
+                    </a>
+                    <a href="{{ route('income-tax-returns.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'income-tax-returns')) active @endif">
+                        <i class="bi bi-file-earmark-text"></i> Income Tax Returns
                     </a>
                     <a href="{{ route('mini-apps.index') }}" class="@if(Route::currentRouteName() == 'mini-apps.index') active @endif">
                         <i class="bi bi-puzzle-fill"></i> Mini Apps
