@@ -27,6 +27,13 @@
     .stat-mini .num { font-size: 1.5rem; font-weight: 700; color: var(--primary); line-height: 1; }
     .stat-mini .pct { font-size: 0.85rem; font-weight: 600; }
     .stat-mini .lbl { font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+    /* toolbar polish */
+    .itr-toolbar .input-group-text { border-right: 0; padding-right: 4px; }
+    .itr-toolbar .input-group .form-control { border-left: 0; padding-left: 4px; box-shadow: none; }
+    .itr-toolbar .input-group:focus-within { border-radius: 6px; box-shadow: 0 0 0 .2rem rgba(48,58,80,.08); }
+    #itrFilterForm .ts-wrapper { margin: 0; }
+    #itrFilterForm .ts-control { min-height: 31px; padding: 2px 8px; border-radius: 6px; font-size: 0.85rem; border-color: #dee2e6; box-shadow: none; }
+    #itrFilterForm .ts-control .item { background: #eef0f3; color: var(--primary); border-radius: 12px; font-size: 0.78rem; padding: 1px 8px; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -69,31 +76,49 @@
 </div>
 
 <!-- Search -->
-@php $mineOn = request()->boolean('mine'); @endphp
-<div class="card mb-3">
-    <div class="card-body d-flex gap-2 align-items-center flex-wrap" style="padding:14px 18px;">
+@php
+    $mineOn = request()->boolean('mine');
+    $excludeSel = array_map('intval', (array) request('exclude', []));
+    $anyFilter = request('q') || request('status') || $mineOn || !empty($excludeSel);
+@endphp
+<div class="card mb-3 itr-toolbar">
+    <div class="card-body d-flex align-items-center gap-2 flex-wrap" style="padding:12px 16px;">
+        {{-- Quick-filter chips --}}
         @unless($showSkipped)
-        <a href="{{ route('income-tax-returns.index', array_filter(['status' => request('status'), 'q' => request('q'), 'exclude' => request('exclude'), 'mine' => $mineOn ? null : 1])) }}" class="btn btn-sm {{ $mineOn ? 'btn-primary' : 'btn-outline-primary' }}">
-            <i class="bi bi-person-check me-1"></i>Assigned to me @if($mineCount)<span class="badge bg-light text-dark ms-1">{{ $mineCount }}</span>@endif
+        <a href="{{ route('income-tax-returns.index', array_filter(['status' => request('status'), 'q' => request('q'), 'exclude' => request('exclude'), 'mine' => $mineOn ? null : 1])) }}"
+           class="btn btn-sm rounded-pill {{ $mineOn ? 'btn-primary' : 'btn-outline-secondary' }}">
+            <i class="bi bi-person-check me-1"></i>Assigned to me @if($mineCount)<span class="badge rounded-pill {{ $mineOn ? 'bg-white text-primary' : 'bg-light text-dark' }} ms-1">{{ $mineCount }}</span>@endif
         </a>
         @endunless
-        <a href="{{ $showSkipped ? route('income-tax-returns.index') : route('income-tax-returns.index', ['skipped' => 1]) }}" class="btn btn-sm {{ $showSkipped ? 'btn-secondary' : 'btn-outline-secondary' }}">
-            <i class="bi bi-eye-slash me-1"></i>{{ $showSkipped ? 'Back to active' : 'Skipped' }} @if($skippedCount && !$showSkipped)<span class="badge bg-light text-dark ms-1">{{ $skippedCount }}</span>@endif
+        <a href="{{ $showSkipped ? route('income-tax-returns.index') : route('income-tax-returns.index', ['skipped' => 1]) }}"
+           class="btn btn-sm rounded-pill {{ $showSkipped ? 'btn-secondary' : 'btn-outline-secondary' }}">
+            <i class="bi bi-eye-slash me-1"></i>{{ $showSkipped ? 'Back to active' : 'Skipped' }} @if($skippedCount && !$showSkipped)<span class="badge rounded-pill bg-light text-dark ms-1">{{ $skippedCount }}</span>@endif
         </a>
-        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap" id="itrFilterForm">
+
+        {{-- Search + exclude, right-aligned --}}
+        <form method="GET" id="itrFilterForm" class="d-flex align-items-center gap-2 flex-wrap ms-auto">
             @if(request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
             @if($mineOn && !$showSkipped)<input type="hidden" name="mine" value="1">@endif
             @if($showSkipped)<input type="hidden" name="skipped" value="1">@endif
-            @php $excludeSel = array_map('intval', (array) request('exclude', [])); @endphp
-            <select name="exclude[]" multiple class="tom-exclude" placeholder="Exclude assignee…" style="min-width:220px;">
-                @foreach($users as $u)
-                <option value="{{ $u->id }}" {{ in_array($u->id, $excludeSel, true) ? 'selected' : '' }}>{{ $u->name }}</option>
-                @endforeach
-            </select>
-            <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" style="max-width:220px;" placeholder="Search client…">
-            <button class="btn btn-sm btn-accent"><i class="bi bi-search"></i></button>
+
+            <div class="d-flex align-items-center gap-1" title="Hide clients assigned to these people">
+                <i class="bi bi-funnel text-muted"></i>
+                <select name="exclude[]" multiple class="tom-exclude" placeholder="Exclude assignee…" style="min-width:210px;">
+                    @foreach($users as $u)
+                    <option value="{{ $u->id }}" {{ in_array($u->id, $excludeSel, true) ? 'selected' : '' }}>{{ $u->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="input-group input-group-sm" style="width:230px;">
+                <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search client…">
+            </div>
+
+            @if($anyFilter)
+            <a href="{{ route('income-tax-returns.index', $showSkipped ? ['skipped' => 1] : []) }}" class="btn btn-sm btn-link text-muted text-decoration-none px-1"><i class="bi bi-x-lg me-1"></i>Clear</a>
+            @endif
         </form>
-        @if(request('q') || request('status') || $mineOn || !empty($excludeSel))<a href="{{ route('income-tax-returns.index', $showSkipped ? ['skipped' => 1] : []) }}" class="btn btn-sm btn-outline-primary">Clear</a>@endif
     </div>
 </div>
 @if($showSkipped)
