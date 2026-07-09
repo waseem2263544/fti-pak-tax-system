@@ -109,13 +109,21 @@
                         <a href="{{ route('clients.show', $client) }}" style="font-weight:600; color:var(--primary); text-decoration:none;">{{ $client->name }}</a>
                     </td>
                     <td>
-                        <input type="text" class="itr-contact form-control form-control-sm" data-client="{{ $client->id }}" value="{{ $client->tracker_contact }}" placeholder="Number…" style="max-width:150px;">
+                        @if($client->tracker_contact)
+                        <a href="tel:{{ $client->tracker_contact }}" class="text-decoration-none" style="color:var(--primary); font-weight:500;"><i class="bi bi-telephone me-1"></i>{{ $client->tracker_contact }}</a>
+                        <button type="button" class="contact-edit btn btn-sm btn-link p-0 ms-1 text-muted" data-client="{{ $client->id }}" data-value="{{ $client->tracker_contact }}" title="Change number"><i class="bi bi-pencil"></i></button>
+                        @else
+                        <button type="button" class="contact-add btn btn-sm btn-outline-secondary" data-client="{{ $client->id }}" data-value="" data-suggest="{{ $client->contact_no }}"><i class="bi bi-plus-lg me-1"></i>Add number</button>
+                        @endif
                     </td>
                     <td>
-                        <div class="d-flex align-items-center gap-1">
-                            <input type="text" class="itr-folder form-control form-control-sm" data-client="{{ $client->id }}" value="{{ $client->tracker_folder }}" placeholder="SharePoint URL…" style="max-width:120px;">
-                            <a href="{{ $client->tracker_folder ?: '#' }}" target="_blank" rel="noopener" class="itr-folder-open btn btn-sm btn-outline-primary" data-client="{{ $client->id }}" title="Open folder" style="{{ $client->tracker_folder ? '' : 'pointer-events:none;opacity:.4;' }}"><i class="bi bi-folder2-open"></i></a>
-                        </div>
+                        @php $tf = $client->tracker_folder; $tfUrl = $tf ? (preg_match('~^https?://~i', $tf) ? $tf : 'https://' . $tf) : ''; @endphp
+                        @if($tf)
+                        <a href="{{ $tfUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Open SharePoint folder"><i class="bi bi-folder2-open"></i></a>
+                        <button type="button" class="folder-edit btn btn-sm btn-link p-0 ms-1 text-muted" data-client="{{ $client->id }}" data-link="{{ $tf }}" title="Change link"><i class="bi bi-pencil"></i></button>
+                        @else
+                        <button type="button" class="folder-add btn btn-sm btn-outline-secondary" data-client="{{ $client->id }}" data-link="" data-suggest="{{ $client->folder_link }}"><i class="bi bi-plus-lg me-1"></i>Add link</button>
+                        @endif
                     </td>
                     <td>
                         <select class="itr-select st-{{ $client->tracker_status }}" data-client="{{ $client->id }}">
@@ -209,35 +217,19 @@
         });
     });
 
-    // Contact number save on blur (only if changed)
-    document.querySelectorAll('.itr-contact').forEach(function (inp) {
-        var original = inp.value;
-        inp.addEventListener('blur', function () {
-            if (inp.value === original) return;
-            original = inp.value;
-            post(inp.dataset.client, { contact_number: inp.value });
-        });
+    // Contact number + Folder link: edit via prompt (no inline input fields)
+    function promptSave(btn, field, label) {
+        var current = btn.dataset.value || btn.dataset.link || '';
+        var val = prompt(label + ':', current || btn.dataset.suggest || '');
+        if (val === null) return;               // cancelled
+        var payload = {}; payload[field] = val.trim();
+        post(btn.dataset.client, payload, function () { location.reload(); });
+    }
+    document.querySelectorAll('.contact-add, .contact-edit').forEach(function (b) {
+        b.addEventListener('click', function () { promptSave(b, 'contact_number', 'Contact number'); });
     });
-
-    // Folder link save on blur (only if changed) + keep the Open button in sync
-    document.querySelectorAll('.itr-folder').forEach(function (inp) {
-        var original = inp.value;
-        var openBtn = document.querySelector('.itr-folder-open[data-client="' + inp.dataset.client + '"]');
-        function normalize(v) { v = (v || '').trim(); if (v && !/^https?:\/\//i.test(v)) v = 'https://' + v; return v; }
-        function syncOpen() {
-            if (!openBtn) return;
-            var v = normalize(inp.value);
-            if (v) { openBtn.href = v; openBtn.style.pointerEvents = ''; openBtn.style.opacity = ''; }
-            else { openBtn.href = '#'; openBtn.style.pointerEvents = 'none'; openBtn.style.opacity = '.4'; }
-        }
-        inp.addEventListener('input', syncOpen);
-        inp.addEventListener('blur', function () {
-            if (inp.value === original) return;
-            original = inp.value;
-            syncOpen();
-            post(inp.dataset.client, { folder_link: inp.value });
-        });
-        syncOpen();
+    document.querySelectorAll('.folder-add, .folder-edit').forEach(function (b) {
+        b.addEventListener('click', function () { promptSave(b, 'folder_link', 'SharePoint folder link'); });
     });
 
     // Remarks save on blur (only if changed)

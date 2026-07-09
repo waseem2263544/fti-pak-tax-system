@@ -25,10 +25,9 @@ class IncomeTaxReturnController extends Controller
                 $client->tracker_status = $client->itReturnTracker->status ?? ItReturnTracker::DEFAULT_STATUS;
                 $client->tracker_remarks = $client->itReturnTracker->remarks ?? '';
                 $client->tracker_assigned = optional($client->itReturnTracker)->assigned_to;
-                $trackerContact = optional($client->itReturnTracker)->contact_number;
-                $client->tracker_contact = ($trackerContact !== null && $trackerContact !== '') ? $trackerContact : $client->contact_no;
-                $trackerFolder = optional($client->itReturnTracker)->folder_link;
-                $client->tracker_folder = ($trackerFolder !== null && $trackerFolder !== '') ? $trackerFolder : $client->folder_link;
+                // Tracker contact/folder are INDEPENDENT of the client record (may differ per return).
+                $client->tracker_contact = optional($client->itReturnTracker)->contact_number;
+                $client->tracker_folder = optional($client->itReturnTracker)->folder_link;
                 $client->tracker_updated = optional($client->itReturnTracker)->updated_at;
                 return $client;
             });
