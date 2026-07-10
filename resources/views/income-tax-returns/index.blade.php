@@ -111,7 +111,7 @@
             </div>
 
             <div class="input-group input-group-sm" style="width:230px;">
-                <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                <button type="submit" class="input-group-text bg-white text-muted" style="cursor:pointer;"><i class="bi bi-search"></i></button>
                 <input type="text" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search client…">
             </div>
 
