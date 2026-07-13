@@ -77,6 +77,10 @@ class ClientController extends Controller
             'services' => 'nullable|array',
         ]);
 
+        // email/contact_no are NOT NULL in the DB but optional on the form — keep them as empty strings, not null
+        $validated['email'] = $validated['email'] ?? '';
+        $validated['contact_no'] = $validated['contact_no'] ?? '';
+
         $client = Client::create($validated);
 
         // Attach shareholders
@@ -156,6 +160,10 @@ class ClientController extends Controller
             'share_percentages' => 'nullable|array',
             'services' => 'nullable|array',
         ]);
+
+        // email/contact_no are NOT NULL in the DB but optional on the form — keep them as empty strings, not null
+        $validated['email'] = $validated['email'] ?? '';
+        $validated['contact_no'] = $validated['contact_no'] ?? '';
 
         $client->update($validated);
 
