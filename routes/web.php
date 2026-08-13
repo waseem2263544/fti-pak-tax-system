@@ -173,6 +173,69 @@ Route::middleware(['auth'])->group(function () {
             Route::get('cash-flow', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'cashFlow'])->name('cash-flow');
         });
     });
+
+    // ── WITHHOLDING TAX (WHT) MODULE ──
+    Route::prefix('wht')->name('wht.')->group(function () {
+        // Agent picker — the entry point when no company is selected.
+        Route::get('companies', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'index'])->name('companies.index');
+        Route::get('companies/create', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'create'])->name('companies.create');
+        Route::post('companies', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'store'])->name('companies.store');
+        Route::get('companies/{company}/select', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'select'])->name('companies.select');
+        Route::get('companies/{company}/edit', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'edit'])->name('companies.edit');
+        Route::put('companies/{company}', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'update'])->name('companies.update');
+        Route::put('companies/{company}/access', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'updateAccess'])->name('companies.access');
+        Route::delete('companies/{company}', [\App\Http\Controllers\Wht\WhtCompanyController::class, 'destroy'])->name('companies.destroy');
+
+        Route::get('/', [\App\Http\Controllers\Wht\WhtReportController::class, 'dashboard'])->name('dashboard');
+
+        // Parties
+        Route::get('parties', [\App\Http\Controllers\Wht\WhtPartyController::class, 'index'])->name('parties.index');
+        Route::post('parties', [\App\Http\Controllers\Wht\WhtPartyController::class, 'store'])->name('parties.store');
+        Route::post('parties/import', [\App\Http\Controllers\Wht\WhtPartyController::class, 'import'])->name('parties.import');
+        Route::put('parties/{party}', [\App\Http\Controllers\Wht\WhtPartyController::class, 'update'])->name('parties.update');
+        Route::delete('parties/{party}', [\App\Http\Controllers\Wht\WhtPartyController::class, 'destroy'])->name('parties.destroy');
+
+        // Purchases
+        Route::post('purchases/preview', [\App\Http\Controllers\Wht\WhtPurchaseController::class, 'preview'])->name('purchases.preview');
+        Route::resource('purchases', \App\Http\Controllers\Wht\WhtPurchaseController::class)->except(['show']);
+
+        // Salaries
+        Route::post('salaries/preview', [\App\Http\Controllers\Wht\WhtSalaryController::class, 'preview'])->name('salaries.preview');
+        Route::resource('salaries', \App\Http\Controllers\Wht\WhtSalaryController::class)->except(['show'])->parameters(['salaries' => 'salary']);
+
+        // Challans
+        Route::get('challans', [\App\Http\Controllers\Wht\WhtChallanController::class, 'index'])->name('challans.index');
+        Route::post('challans', [\App\Http\Controllers\Wht\WhtChallanController::class, 'upload'])->name('challans.upload');
+        Route::get('challans/{challan}/{type}', [\App\Http\Controllers\Wht\WhtChallanController::class, 'download'])->name('challans.download');
+        Route::delete('challans/{challan}/{type}', [\App\Http\Controllers\Wht\WhtChallanController::class, 'deleteFile'])->name('challans.delete-file');
+
+        // Reports
+        Route::get('reports', [\App\Http\Controllers\Wht\WhtReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/export', [\App\Http\Controllers\Wht\WhtReportController::class, 'export'])->name('reports.export');
+        Route::get('reports/statement', [\App\Http\Controllers\Wht\WhtReportController::class, 'statement'])->name('reports.statement');
+        Route::get('reports/certificate/{type}/{id}', [\App\Http\Controllers\Wht\WhtReportController::class, 'certificate'])->name('reports.certificate');
+        Route::get('reports/annual-certificate/{partyId}', [\App\Http\Controllers\Wht\WhtReportController::class, 'annualCertificate'])->name('reports.annual-certificate');
+
+        // Global settings — statutory data, shared by every withholding agent.
+        Route::get('rates', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'index'])->name('rates.index');
+        Route::get('rates/create', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'create'])->name('rates.create');
+        Route::post('rates', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'store'])->name('rates.store');
+        Route::get('rates/{rate}/edit', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'edit'])->name('rates.edit');
+        Route::put('rates/{rate}', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'update'])->name('rates.update');
+        Route::post('rates/{rate}/supersede', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'supersede'])->name('rates.supersede');
+        Route::delete('rates/{rate}', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'destroy'])->name('rates.destroy');
+
+        Route::get('sections', [\App\Http\Controllers\Wht\WhtSectionController::class, 'index'])->name('sections.index');
+        Route::post('sections', [\App\Http\Controllers\Wht\WhtSectionController::class, 'store'])->name('sections.store');
+        Route::put('sections/{section}', [\App\Http\Controllers\Wht\WhtSectionController::class, 'update'])->name('sections.update');
+        Route::delete('sections/{section}', [\App\Http\Controllers\Wht\WhtSectionController::class, 'destroy'])->name('sections.destroy');
+
+        Route::get('slabs', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'index'])->name('slabs.index');
+        Route::post('slabs', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'store'])->name('slabs.store');
+        Route::post('slabs/copy-year', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'copyYear'])->name('slabs.copy-year');
+        Route::put('slabs/{slab}', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'update'])->name('slabs.update');
+        Route::delete('slabs/{slab}', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'destroy'])->name('slabs.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

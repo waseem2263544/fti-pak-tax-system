@@ -519,6 +519,48 @@
                     </a>
                 </div>
 
+                <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'wht.')) open @endif" onclick="toggleSection('wht')">
+                    <span><i class="bi bi-percent me-1"></i> Withholding Tax</span>
+                    <i class="bi bi-chevron-right chevron"></i>
+                </div>
+                <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'wht.')) open @endif" id="section-wht">
+                    <a href="{{ route('wht.dashboard') }}" class="@if(Route::currentRouteName() == 'wht.dashboard') active @endif">
+                        <i class="bi bi-speedometer2"></i> WHT Dashboard
+                    </a>
+                    <a href="{{ route('wht.purchases.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.purchases')) active @endif">
+                        <i class="bi bi-file-earmark-text"></i> Payments
+                    </a>
+                    <a href="{{ route('wht.salaries.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.salaries')) active @endif">
+                        <i class="bi bi-cash-stack"></i> Salaries
+                    </a>
+                    <a href="{{ route('wht.parties.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.parties')) active @endif">
+                        <i class="bi bi-people"></i> Vendors & Employees
+                    </a>
+                    <a href="{{ route('wht.challans.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.challans')) active @endif">
+                        <i class="bi bi-receipt"></i> Challans (PSID/CPR)
+                    </a>
+                    <a href="{{ route('wht.reports.statement') }}" class="@if(Route::currentRouteName() == 'wht.reports.statement') active @endif">
+                        <i class="bi bi-journal-text"></i> Monthly Statement
+                    </a>
+                    <a href="{{ route('wht.reports.index') }}" class="@if(Route::currentRouteName() == 'wht.reports.index') active @endif">
+                        <i class="bi bi-bar-chart"></i> WHT Reports
+                    </a>
+                    <a href="{{ route('wht.companies.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.companies')) active @endif">
+                        <i class="bi bi-building"></i> Withholding Agents
+                    </a>
+                    @if(Auth::user()->hasRole('admin'))
+                    <a href="{{ route('wht.rates.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.rates')) active @endif">
+                        <i class="bi bi-percent"></i> Tax Rates
+                    </a>
+                    <a href="{{ route('wht.slabs.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.slabs')) active @endif">
+                        <i class="bi bi-diagram-3"></i> Salary Slabs
+                    </a>
+                    <a href="{{ route('wht.sections.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.sections')) active @endif">
+                        <i class="bi bi-list-ol"></i> FBR Sections
+                    </a>
+                    @endif
+                </div>
+
                 <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" onclick="toggleSection('operations')">
                     <span><i class="bi bi-gear me-1"></i> Operations</span>
                     <i class="bi bi-chevron-right chevron"></i>
