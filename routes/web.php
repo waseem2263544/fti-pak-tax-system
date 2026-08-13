@@ -217,6 +217,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('reports/annual-certificate/{partyId}', [\App\Http\Controllers\Wht\WhtReportController::class, 'annualCertificate'])->name('reports.annual-certificate');
 
         // Global settings — statutory data, shared by every withholding agent.
+        // The base App\Http\Controllers\Controller does not extend Laravel's, so
+        // $this->middleware() is unavailable in these controllers; the admin gate
+        // is applied here instead.
+        Route::middleware('wht.admin')->group(function () {
         Route::get('rates', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'index'])->name('rates.index');
         Route::get('rates/create', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'create'])->name('rates.create');
         Route::post('rates', [\App\Http\Controllers\Wht\WhtTaxRateController::class, 'store'])->name('rates.store');
@@ -235,6 +239,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('slabs/copy-year', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'copyYear'])->name('slabs.copy-year');
         Route::put('slabs/{slab}', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'update'])->name('slabs.update');
         Route::delete('slabs/{slab}', [\App\Http\Controllers\Wht\WhtSalarySlabController::class, 'destroy'])->name('slabs.destroy');
+        });
     });
 });
 

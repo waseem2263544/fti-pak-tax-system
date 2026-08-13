@@ -13,14 +13,7 @@ use Illuminate\Http\Request;
  */
 class WhtSalarySlabController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            abort_unless(auth()->user()?->hasRole('admin'), 403, 'Only administrators can manage salary slabs.');
-
-            return $next($request);
-        });
-    }
+    // Admin-only; enforced on the route group in routes/web.php.
 
     public function index(Request $request)
     {
