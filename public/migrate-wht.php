@@ -110,7 +110,7 @@ $tables = [
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP NULL,
   `updated_at` TIMESTAMP NULL,
-  UNIQUE KEY `uk_wht_section_code` (`code`),
+  INDEX `idx_wht_section_code` (`code`),
   INDEX `idx_wht_section` (`section`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
@@ -308,14 +308,21 @@ $sections = [
     ['149', 'Salary', 'Employee Share Scheme', '14903', 'salary'],
 ];
 
+// Only seed a starter list into an empty table. These are generic labels using
+// codes that real FBR data assigns to *other* sections, so seeding them on top
+// of imported data would shadow the genuine rows.
 echo "\nSeeding sections...\n";
-$ins = $pdo->prepare("INSERT IGNORE INTO wht_sections
-    (section, payment_nature, payment_section, code, applies_to, is_active, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, 1, ?, ?)");
-foreach ($sections as $s) {
-    $ins->execute([$s[0], $s[1], $s[2], $s[3], $s[4], $now, $now]);
+if ($pdo->query("SELECT COUNT(*) FROM wht_sections")->fetchColumn() > 0) {
+    echo "wht_sections already populated — starter list skipped.\n";
+} else {
+    $ins = $pdo->prepare("INSERT INTO wht_sections
+        (section, payment_nature, payment_section, code, applies_to, is_active, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, 1, ?, ?)");
+    foreach ($sections as $s) {
+        $ins->execute([$s[0], $s[1], $s[2], $s[3], $s[4], $now, $now]);
+    }
+    echo count($sections) . " sections seeded.\n";
 }
-echo count($sections) . " sections seeded.\n";
 
 // ── SEED: DEFAULT SETTINGS ──
 $settings = [
