@@ -37,41 +37,27 @@ if (!$wanted) { exit("Nothing to copy.\n</pre>"); }
 
 // ── Find the directory ──
 echo "── Searching ──\n";
-// This account nests sites as /home/<user>/domains/<domain>/public_html, so
-// start above the domains directory and allow enough depth to reach
-// <domain>/public_html/uploads/challans.
-$roots = array_unique(array_filter([
-    dirname(__DIR__, 3),   // /home/<user>/domains
-    dirname(__DIR__, 4),   // /home/<user>
-    dirname(__DIR__, 2),
-], 'is_dir'));
+// A recursive walk trips over open_basedir on unrelated domains, so probe the
+// handful of shapes this account actually uses instead.
+$home = dirname(__DIR__, 4);            // /home/<user>
+$domains = dirname(__DIR__, 3);         // /home/<user>/domains
+
+$candidates = array_merge(
+    glob("$domains/*/public_html/uploads/challans") ?: [],
+    glob("$domains/*/public_html/*/uploads/challans") ?: [],
+    glob("$home/public_html/uploads/challans") ?: [],
+    glob("$home/public_html/*/uploads/challans") ?: [],
+    glob("$domains/*/uploads/challans") ?: []
+);
 
 $sample = array_key_first($wanted);
 $found = null;
 
-foreach ($roots as $root) {
-    echo "  scanning $root\n";
-
-    try {
-        $it = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::SELF_FIRST,
-            RecursiveIteratorIterator::CATCH_GET_CHILD   // skip unreadable dirs
-        );
-        $it->setMaxDepth(6);
-
-        foreach ($it as $path => $info) {
-            if (!$info->isDir() || basename($path) !== 'challans') continue;
-
-            if (is_readable("$path/$sample")) {
-                $found = $path;
-                break 2;
-            }
-            echo "    (challans dir without the referenced files: $path)\n";
-        }
-    } catch (Throwable $e) {
-        echo "    scan stopped: " . $e->getMessage() . "\n";
-    }
+echo "  candidate directories: " . count($candidates) . "\n";
+foreach ($candidates as $path) {
+    $ok = is_readable("$path/$sample");
+    echo "    " . ($ok ? '>>' : '  ') . " $path\n";
+    if ($ok && !$found) $found = $path;
 }
 
 if (!$found) {
