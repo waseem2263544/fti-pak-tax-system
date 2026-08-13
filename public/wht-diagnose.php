@@ -12,58 +12,44 @@ $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MO
 $src = new PDO("mysql:host=localhost;dbname=fairtax1_wht;charset=utf8mb4", 'fairtax1_wht', '47yTehPqSv63hSUVAnLn', $opts);
 $dst = new PDO("mysql:host=localhost;dbname={$env['DB_DATABASE']};charset=utf8mb4", $env['DB_USERNAME'], $env['DB_PASSWORD'], $opts);
 
-echo "OLD tax_payment_sections\n";
-echo "  total rows      : " . $src->query("SELECT COUNT(*) FROM tax_payment_sections")->fetchColumn() . "\n";
-echo "  distinct codes  : " . $src->query("SELECT COUNT(DISTINCT code) FROM tax_payment_sections")->fetchColumn() . "\n";
-echo "  distinct section: " . $src->query("SELECT COUNT(DISTINCT section) FROM tax_payment_sections")->fetchColumn() . "\n";
-echo "  per company     : ";
-foreach ($src->query("SELECT company_id, COUNT(*) c FROM tax_payment_sections GROUP BY company_id") as $r) {
-    echo "co{$r['company_id']}={$r['c']} ";
-}
-echo "\n\n  sample of codes NOT matching the standard 6406xxxx/149xx pattern:\n";
-$odd = $src->query("SELECT section, payment_nature, payment_section, code FROM tax_payment_sections
-                    WHERE code NOT LIKE '6406%' AND code NOT LIKE '149%' LIMIT 25");
-foreach ($odd as $r) {
-    printf("    %-12s %-28s %-34s %s\n", $r['section'], mb_substr($r['payment_nature'],0,26), mb_substr($r['payment_section'],0,32), $r['code']);
+echo "OLD portal — every section in the 153 / 233 / 149 families\n";
+echo str_repeat('-', 96) . "\n";
+$q = $src->query("SELECT company_id, section, payment_nature, payment_section, code
+                  FROM tax_payment_sections
+                  WHERE section LIKE '153%' OR section LIKE '233%' OR section LIKE '149%'
+                  ORDER BY section, code");
+foreach ($q as $r) {
+    printf("  co%-3s %-16s %-30s %-36s %s\n",
+        $r['company_id'], $r['section'], mb_substr($r['payment_nature'], 0, 28),
+        mb_substr($r['payment_section'], 0, 34), $r['code']);
 }
 
-echo "\n\nNEW wht_sections\n";
-echo "  total rows      : " . $dst->query("SELECT COUNT(*) FROM wht_sections")->fetchColumn() . "\n";
-echo "  distinct section: " . $dst->query("SELECT COUNT(DISTINCT section) FROM wht_sections")->fetchColumn() . "\n";
-echo "  by applies_to   : ";
-foreach ($dst->query("SELECT applies_to, COUNT(*) c FROM wht_sections GROUP BY applies_to") as $r) {
-    echo "{$r['applies_to']}={$r['c']} ";
+echo "\n\nOLD portal — the raw tax_rules rows\n";
+echo str_repeat('-', 96) . "\n";
+foreach ($src->query("SELECT * FROM tax_rules ORDER BY section") as $r) {
+    printf("  co%-3s %-16s goods=%-16s %-12s %-10s %s%%\n",
+        $r['company_id'], $r['section'], $r['goods_type'] ?: '-',
+        $r['category'], $r['filer_status'], $r['tax_rate']);
 }
 
-echo "\n\n  duplicate section labels (same section, many codes):\n";
-$dup = $dst->query("SELECT section, COUNT(*) c FROM wht_sections GROUP BY section HAVING c > 1 ORDER BY c DESC LIMIT 15");
-foreach ($dup as $r) {
-    printf("    %-14s %d codes\n", $r['section'], $r['c']);
+echo "\n\nOLD portal — section values actually used by transactions\n";
+echo str_repeat('-', 96) . "\n";
+$q = $src->query("SELECT section, COUNT(*) c, ROUND(SUM(tax_withheld)) tax
+                  FROM transactions_purchases GROUP BY section ORDER BY c DESC");
+foreach ($q as $r) {
+    printf("  %-18s %4d entries   tax %s\n", $r['section'] ?: '(blank)', $r['c'], number_format($r['tax']));
+}
+$q = $src->query("SELECT section, COUNT(*) c FROM transactions_salaries GROUP BY section ORDER BY c DESC");
+foreach ($q as $r) {
+    printf("  %-18s %4d salary entries\n", $r['section'] ?: '(blank)', $r['c']);
 }
 
-echo "\n\nIMPORTED TOTALS (new tables)\n";
-foreach (['wht_companies','wht_parties','wht_purchases','wht_salaries','wht_tax_rates','wht_salary_slabs','wht_challans'] as $t) {
-    printf("  %-20s %s\n", $t, $dst->query("SELECT COUNT(*) FROM `$t`")->fetchColumn());
-}
-
-echo "\nSANITY: totals old vs new\n";
-$o = $src->query("SELECT COUNT(*) n, ROUND(SUM(tax_withheld),2) t FROM transactions_purchases")->fetch();
-$n = $dst->query("SELECT COUNT(*) n, ROUND(SUM(tax_withheld),2) t FROM wht_purchases")->fetch();
-printf("  purchases  old: %s rows / %s tax   new: %s rows / %s tax  %s\n",
-    $o['n'], $o['t'], $n['n'], $n['t'], ($o['n']==$n['n'] && $o['t']==$n['t']) ? 'MATCH' : 'MISMATCH');
-$o = $src->query("SELECT COUNT(*) n, ROUND(SUM(tax_deducted),2) t FROM transactions_salaries")->fetch();
-$n = $dst->query("SELECT COUNT(*) n, ROUND(SUM(tax_deducted),2) t FROM wht_salaries")->fetch();
-printf("  salaries   old: %s rows / %s tax   new: %s rows / %s tax  %s\n",
-    $o['n'], $o['t'], $n['n'], $n['t'], ($o['n']==$n['n'] && $o['t']==$n['t']) ? 'MATCH' : 'MISMATCH');
-
-echo "\nTAX RATES imported\n";
-foreach ($dst->query("SELECT section, category, atl_status, rate FROM wht_tax_rates ORDER BY section") as $r) {
-    printf("  %-14s %-12s %-10s %s%%\n", $r['section'], $r['category'], $r['atl_status'], rtrim(rtrim($r['rate'],'0'),'.'));
-}
-
-echo "\nSALARY SLABS by year\n";
-foreach ($dst->query("SELECT tax_year, COUNT(*) c FROM wht_salary_slabs GROUP BY tax_year ORDER BY tax_year") as $r) {
-    printf("  TY%s: %d slabs\n", $r['tax_year'], $r['c']);
+echo "\n\nDo the three orphan rate sections exist anywhere in the old data?\n";
+echo str_repeat('-', 96) . "\n";
+foreach (['153(1)(a)/6', '153(1)(a)/9', '153(1)(a)/31'] as $s) {
+    $c = $src->prepare("SELECT COUNT(*) FROM tax_payment_sections WHERE section = ?");
+    $c->execute([$s]);
+    printf("  %-16s in old tax_payment_sections: %s\n", $s, $c->fetchColumn() ? 'YES' : 'NO — never existed');
 }
 
 echo "</pre>";
