@@ -12,6 +12,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "mpdf/mpdf": "^8.3",
+        "phpoffice/phpspreadsheet": "^5.8",
         "setasign/fpdi": "^2.6"
     },
     "require-dev": {

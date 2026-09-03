@@ -9,6 +9,8 @@ use App\Models\WhtSalary;
 use App\Models\WhtSection;
 use App\Models\WhtSetting;
 use App\Services\Wht\WhtCalculator;
+use App\Services\Wht\WhtStatementWorkbook;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -91,6 +93,69 @@ class WhtReportController extends Controller
         $month = $request->get('month', now()->format('Y-m'));
         $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
 
+        $grouped = $this->groupedStatement($company, $monthStart);
+
+        return view('wht.reports.statement', compact('company', 'grouped', 'month', 'monthStart'));
+    }
+
+    /**
+     * The same statement as an Excel workbook — a summary sheet whose totals are
+     * live formulas over one detail sheet per section.
+     */
+    public function statementExcel(Request $request)
+    {
+        @set_time_limit(180);
+
+        $company = $this->currentCompany();
+
+        $month = $request->get('month', now()->format('Y-m'));
+        $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+
+        // Writing .xlsx needs these; on shared hosting they are not a given, and
+        // the failure is otherwise an opaque 500.
+        $missing = array_values(array_filter(
+            ['zip', 'xmlwriter', 'xmlreader', 'simplexml', 'dom', 'mbstring', 'gd', 'iconv', 'fileinfo'],
+            fn($ext) => !extension_loaded($ext)
+        ));
+
+        if ($missing) {
+            return back()->with('error',
+                'Excel export needs these PHP extensions, which are not enabled on the server: '
+                . implode(', ', $missing) . '. Ask your host to enable them, or use the CSV export.');
+        }
+
+        $grouped = $this->groupedStatement($company, $monthStart);
+
+        if ($grouped->isEmpty()) {
+            return back()->with('error', 'Nothing recorded for ' . $monthStart->format('F Y') . '.');
+        }
+
+        $book = (new WhtStatementWorkbook())->build($company, $monthStart, $grouped);
+
+        $filename = sprintf(
+            'WHT-Statement-%s-%s.xlsx',
+            str($company->name)->slug(),
+            $monthStart->format('Y-m')
+        );
+
+        return response()->streamDownload(function () use ($book) {
+            $writer = new Xlsx($book);
+            $writer->setPreCalculateFormulas(false);
+            $writer->save('php://output');
+            $book->disconnectWorksheets();
+        }, $filename, [
+            'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0, no-store',
+        ]);
+    }
+
+    /**
+     * Statement rows for one tax period, grouped by section with the per-party
+     * detail underneath. Shared by the HTML view and the Excel export so the two
+     * can never drift apart.
+     */
+    private function groupedStatement($company, Carbon $monthStart)
+    {
         $purchaseRows = $company->purchases()
             ->with('party')
             ->whereDate('period_month', $monthStart)
@@ -101,8 +166,7 @@ class WhtReportController extends Controller
             ->whereDate('salary_month', $monthStart)
             ->get();
 
-        // Group by section, carrying the per-party detail underneath.
-        $sections = WhtSection::active()->get()->keyBy(fn($s) => $s->section . '|' . $s->code);
+        $sections = WhtSection::active()->get();
 
         $grouped = collect();
 
@@ -130,9 +194,7 @@ class WhtReportController extends Controller
             ]);
         }
 
-        $grouped = $grouped->sortBy('section')->values();
-
-        return view('wht.reports.statement', compact('company', 'grouped', 'month', 'monthStart'));
+        return $grouped->sortBy('section')->values();
     }
 
     /**

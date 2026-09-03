@@ -213,6 +213,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('reports', [\App\Http\Controllers\Wht\WhtReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export', [\App\Http\Controllers\Wht\WhtReportController::class, 'export'])->name('reports.export');
         Route::get('reports/statement', [\App\Http\Controllers\Wht\WhtReportController::class, 'statement'])->name('reports.statement');
+        Route::get('reports/statement/excel', [\App\Http\Controllers\Wht\WhtReportController::class, 'statementExcel'])->name('reports.statement-excel');
         Route::get('reports/certificate/{type}/{id}', [\App\Http\Controllers\Wht\WhtReportController::class, 'certificate'])->name('reports.certificate');
         Route::get('reports/annual-certificate/{partyId}', [\App\Http\Controllers\Wht\WhtReportController::class, 'annualCertificate'])->name('reports.annual-certificate');
 
