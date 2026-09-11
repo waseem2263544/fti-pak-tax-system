@@ -43,6 +43,25 @@ class WhtTransactionImporter
         'remarks'        => ['remarks', 'note', 'notes', 'description', 'particulars', 'narration'],
     ];
 
+    /** Salary sheets name things differently and carry different figures. */
+    private const SALARY_ALIASES = [
+        'payee_cnic_ntn' => ['cnic', 'ntn', 'cnicntn', 'ntncnic', 'nic', 'employeecnic', 'cnicno'],
+        'payee_name'     => ['name', 'employee', 'employeename', 'staffname', 'nameofemployee', 'payee'],
+        'payment_date'   => ['paymentdate', 'paidon', 'dateofpayment', 'disbursementdate', 'date'],
+        'period_month'   => ['salarymonth', 'month', 'period', 'salaryperiod', 'formonth', 'periodmonth'],
+        'section'        => ['section', 'paymentsection', 'code', 'paymentcode'],
+        'amount'         => ['grosssalary', 'totalsalary', 'salary', 'amount', 'netpay', 'netsalary', 'takehome', 'payable'],
+        'amount_basis'   => ['basis', 'amountbasis', 'grossnet', 'type', 'mode'],
+        'tax_withheld'   => ['tax', 'taxdeducted', 'incometax', 'wht', 'taxamount'],
+        'exempt_rate'    => ['exemptrate', 'medicalrate', 'exemptpercent', 'medicalpercent'],
+        'remarks'        => ['remarks', 'note', 'notes', 'description', 'particulars', 'designation'],
+    ];
+
+    private static function aliasesFor(string $kind): array
+    {
+        return $kind === 'salaries' ? self::SALARY_ALIASES : self::ALIASES;
+    }
+
     public function __construct(private WhtCalculator $calculator)
     {
     }
@@ -50,11 +69,11 @@ class WhtTransactionImporter
     /**
      * @return array{rows: Collection, headers: array, unmapped: array, summary: array}
      */
-    public function analyse(WhtCompany $company, string $path): array
+    public function analyse(WhtCompany $company, string $path, string $kind = 'purchases'): array
     {
         [$headerRow, $dataRows, $headerIndex] = $this->readSheet($path);
 
-        [$map, $unmapped] = $this->mapHeaders($headerRow);
+        [$map, $unmapped] = $this->mapHeaders($headerRow, $kind);
 
         // Match on CNIC/NTN first; fall back to a normalised name.
         $parties = $company->parties()->get();
@@ -64,9 +83,9 @@ class WhtTransactionImporter
 
         $sections = WhtSection::all();
 
-        $rows = collect($dataRows)->map(function ($raw, $i) use ($map, $byCnic, $byName, $sections, $headerIndex) {
+        $rows = collect($dataRows)->map(function ($raw, $i) use ($map, $byCnic, $byName, $sections, $headerIndex, $kind) {
             // +2: one for the header line itself, one because sheet rows are 1-based.
-            return $this->analyseRow($raw, $headerIndex + $i + 2, $map, $byCnic, $byName, $sections);
+            return $this->analyseRow($raw, $headerIndex + $i + 2, $map, $byCnic, $byName, $sections, $kind);
         })->filter()->values();
 
         return [
@@ -84,9 +103,9 @@ class WhtTransactionImporter
      *
      * @param  array<int,array<string,mixed>>  $rows  keyed by the canonical field names
      */
-    public function analyseRows(WhtCompany $company, array $rows): array
+    public function analyseRows(WhtCompany $company, array $rows, string $kind = 'purchases'): array
     {
-        $fields = array_keys(self::ALIASES);
+        $fields = array_keys(self::aliasesFor($kind));
         $map = array_flip($fields);
 
         $parties = $company->parties()->get();
@@ -96,14 +115,14 @@ class WhtTransactionImporter
 
         $sections = WhtSection::all();
 
-        $analysed = collect($rows)->map(function ($row, $i) use ($fields, $map, $byCnic, $byName, $sections) {
+        $analysed = collect($rows)->map(function ($row, $i) use ($fields, $map, $byCnic, $byName, $sections, $kind) {
             // Flatten to the indexed shape analyseRow expects.
             $indexed = [];
             foreach ($fields as $n => $field) {
                 $indexed[$n] = $row[$field] ?? '';
             }
 
-            return $this->analyseRow($indexed, $i + 1, $map, $byCnic, $byName, $sections);
+            return $this->analyseRow($indexed, $i + 1, $map, $byCnic, $byName, $sections, $kind);
         })->filter()->values();
 
         return [
@@ -114,8 +133,12 @@ class WhtTransactionImporter
         ];
     }
 
-    private function analyseRow(array $raw, int $lineNo, array $map, $byCnic, $byName, $sections): ?array
+    private function analyseRow(array $raw, int $lineNo, array $map, $byCnic, $byName, $sections, string $kind = 'purchases'): ?array
     {
+        if ($kind === 'salaries') {
+            return $this->analyseSalaryRow($raw, $lineNo, $map, $byCnic, $byName, $kind);
+        }
+
         $get = fn(string $field) => isset($map[$field]) ? trim((string) ($raw[$map[$field]] ?? '')) : '';
 
         $rawPayee = $get('payee_name') ?: $get('payee_cnic_ntn');
@@ -253,6 +276,139 @@ class WhtTransactionImporter
         ];
     }
 
+    /**
+     * Salary rows are a different shape: the tax comes from the year's slabs
+     * rather than a section rate, and the sheet's figure is the total salary or
+     * the take-home rather than a gross payment.
+     */
+    private function analyseSalaryRow(array $raw, int $lineNo, array $map, $byCnic, $byName, string $kind): ?array
+    {
+        $get = fn(string $field) => isset($map[$field]) ? trim((string) ($raw[$map[$field]] ?? '')) : '';
+
+        $rawPayee = $get('payee_name') ?: $get('payee_cnic_ntn');
+
+        if ($rawPayee === '' && $get('amount') === '') {
+            return null;
+        }
+
+        $problems = [];
+        $warnings = [];
+        $notes = [];
+
+        // ── employee ──
+        $cnic = $this->normaliseId($get('payee_cnic_ntn'));
+        $party = $cnic !== '' ? $byCnic->get($cnic) : null;
+
+        if (!$party && $get('payee_name') !== '') {
+            $party = $byName->get($this->normaliseName($get('payee_name')));
+
+            if ($party && $cnic !== '' && $this->normaliseId($party->cnic_ntn) !== $cnic) {
+                $warnings[] = 'Matched by name; the CNIC/NTN in the sheet differs from the one on file.';
+            }
+        }
+
+        if (!$party) {
+            $problems[] = 'Payee not found in this agent\'s parties — add them first.';
+        } elseif (!in_array($party->type, ['employee', 'both'], true)) {
+            $warnings[] = "{$party->name} is recorded as a {$party->type}, not an employee.";
+        }
+
+        // ── salary month drives the tax year, so it matters more than the pay date ──
+        $date = $this->parseDate($get('payment_date'));
+        $month = $this->parseMonth($get('period_month')) ?? $date?->copy()->startOfMonth();
+
+        if (!$month) {
+            $problems[] = 'Salary month missing or unreadable.';
+        }
+
+        // Paying a month's salary on its last day is the norm; fall back to that.
+        $date ??= $month?->copy()->endOfMonth();
+
+        if (!$get('payment_date') && $month) {
+            $notes[] = 'Payment date taken as the end of the salary month.';
+        }
+
+        // ── amount ──
+        $amount = $this->parseNumber($get('amount'));
+
+        if ($amount === null || $amount < 0) {
+            $problems[] = 'Salary amount missing or not a number.';
+        }
+
+        $basis = strtolower($get('amount_basis'));
+        $basis = str_contains($basis, 'net') ? 'net' : (str_contains($basis, 'gross') ? 'gross' : null);
+        $basis ??= $party?->default_calc_mode ?? 'gross';
+
+        $exemptRate = $this->parseNumber($get('exempt_rate'));
+
+        // ── compute from the slabs ──
+        $result = null;
+
+        if (!$problems && $party && $month && $amount !== null) {
+            $result = $this->calculator->salary([
+                'employee'     => $party,
+                'salary_month' => $month,
+                'amount'       => $amount,
+                'calc_mode'    => $basis,
+                'exempt_rate'  => $exemptRate,
+            ]);
+
+            // Zero tax on a real salary almost always means the year has no slabs.
+            if ($result['taxable_salary'] > 0 && $result['tax_deducted'] == 0.0) {
+                $warnings[] = sprintf(
+                    'No tax computed for tax year %d — check salary slabs exist for that year.',
+                    $result['tax_year']
+                );
+            }
+
+            $sheetTax = $this->parseNumber($get('tax_withheld'));
+
+            if ($sheetTax !== null && abs($sheetTax - $result['tax_deducted']) > 1.00) {
+                $warnings[] = sprintf(
+                    'Sheet says tax %s, slab calculation gives %s — difference %s.',
+                    number_format($sheetTax, 2),
+                    number_format($result['tax_deducted'], 2),
+                    number_format($sheetTax - $result['tax_deducted'], 2)
+                );
+            }
+        }
+
+        $status = $problems
+            ? self::STATUS_BLOCKED
+            : ($warnings ? self::STATUS_WARNING : self::STATUS_OK);
+
+        return [
+            'line'          => $lineNo,
+            'kind'          => 'salaries',
+            'status'        => $status,
+            'problems'      => $problems,
+            'warnings'      => $warnings,
+            'notes'         => $notes,
+            'raw_payee'     => $rawPayee,
+            'party_id'      => $party?->id,
+            'party_name'    => $party?->name,
+            'cnic_ntn'      => $party?->cnic_ntn ?: $get('payee_cnic_ntn'),
+            'atl_status'    => $party?->atl_status,
+            'section'       => $get('section') ?: ($party?->default_section ?: '149'),
+            'period_month'  => $month?->format('Y-m'),
+            'payment_date'  => $date?->toDateString(),
+            'calc_mode'     => $basis,
+            'input_amount'  => $amount,
+            'tax_year'      => $result['tax_year'] ?? null,
+            'taxable_salary' => $result['taxable_salary'] ?? null,
+            'exempt_amount' => $result['exempt_amount'] ?? null,
+            'exempt_rate'   => $result['exempt_rate'] ?? null,
+            // Kept under the shared names so the summariser and preview work for both.
+            'gross_amount'  => $result['total_salary'] ?? null,
+            'tax_rate'      => null,
+            'tax_rate_id'   => null,
+            'rate_source'   => 'slab',
+            'tax_withheld'  => $result['tax_deducted'] ?? null,
+            'net_payment'   => $result['final_net_payment'] ?? null,
+            'remarks'       => $get('remarks') ?: null,
+        ];
+    }
+
     // ── parsing helpers ──────────────────────────────────────────────────────
 
     /** @return array{0: array, 1: array, 2: int} header row, data rows, header's 0-based index */
@@ -282,8 +438,9 @@ class WhtTransactionImporter
     }
 
     /** @return array{0: array<string,int>, 1: array} field => column index, plus unmapped headers */
-    private function mapHeaders(array $header): array
+    private function mapHeaders(array $header, string $kind = 'purchases'): array
     {
+        $aliases = self::aliasesFor($kind);
         $map = [];
         $used = [];
 
@@ -294,12 +451,12 @@ class WhtTransactionImporter
                 continue;
             }
 
-            foreach (self::ALIASES as $field => $aliases) {
+            foreach ($aliases as $field => $names) {
                 if (isset($map[$field])) {
                     continue;
                 }
 
-                if (in_array($key, $aliases, true) || $key === $field) {
+                if (in_array($key, $names, true) || $key === $field) {
                     $map[$field] = $i;
                     $used[$i] = true;
                     break;

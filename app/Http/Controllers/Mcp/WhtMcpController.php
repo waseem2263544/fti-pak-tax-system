@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Mcp;
 
 use App\Http\Controllers\Controller;
 use App\Models\WhtCompany;
+use App\Models\WhtParty;
 use App\Models\WhtPurchase;
+use App\Models\WhtSalary;
 use App\Services\Wht\WhtPsidBatcher;
 use App\Services\Wht\WhtTransactionImporter;
 use Illuminate\Http\Request;
@@ -156,6 +158,43 @@ class WhtMcpController extends Controller
                 ],
             ],
             [
+                'name' => 'find_parties',
+                'description' => 'Search an agent\'s vendors and employees by name or CNIC/NTN. Use before creating a party, to check whether a differently-spelled one already exists.',
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'agent'  => ['type' => 'string', 'description' => 'Withholding agent id or part of its name.'],
+                        'search' => ['type' => 'string', 'description' => 'Part of a name, or a CNIC/NTN.'],
+                    ],
+                    'required' => ['agent'],
+                ],
+            ],
+            [
+                'name' => 'create_party',
+                'description' => implode(' ', [
+                    'Add a vendor or employee to an agent, so their payments can be imported.',
+                    'category and atl_status are REQUIRED and have no default because both change the tax rate:',
+                    'getting them wrong produces wrong tax.',
+                    'Do not infer them from a name. Take them from the client sheet if stated, otherwise ASK THE USER.',
+                    'Check find_parties first — the payee may already exist under a different spelling.',
+                ]),
+                'inputSchema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'agent'      => ['type' => 'string', 'description' => 'Withholding agent id or part of its name.'],
+                        'name'       => ['type' => 'string', 'description' => 'Party name as it should appear.'],
+                        'cnic_ntn'   => ['type' => 'string', 'description' => 'CNIC or NTN, digits only. Strongly recommended — it is how payments are matched.'],
+                        'type'       => ['type' => 'string', 'enum' => ['vendor', 'employee', 'both'], 'description' => 'Defaults to vendor.'],
+                        'category'   => ['type' => 'string', 'enum' => ['company', 'individual', 'aop'], 'description' => 'REQUIRED. Ask the user if the sheet does not say.'],
+                        'atl_status' => ['type' => 'string', 'enum' => ['filer', 'non-filer'], 'description' => 'REQUIRED. Whether they are on the Active Taxpayers List. Ask the user if the sheet does not say.'],
+                        'default_section' => ['type' => 'string', 'description' => 'Optional section to assume for this party when a sheet does not state one.'],
+                        'address'    => ['type' => 'string'],
+                        'city'       => ['type' => 'string'],
+                    ],
+                    'required' => ['agent', 'name', 'category', 'atl_status'],
+                ],
+            ],
+            [
                 'name' => 'preview_import',
                 'description' => implode(' ', [
                     'Analyse payment rows parsed from a client spreadsheet WITHOUT writing anything.',
@@ -167,7 +206,8 @@ class WhtMcpController extends Controller
                     'type' => 'object',
                     'properties' => [
                         'agent' => ['type' => 'string', 'description' => 'Withholding agent id or part of its name.'],
-                        'rows'  => ['type' => 'array', 'items' => $row, 'description' => 'One entry per payment.'],
+                        'kind'  => ['type' => 'string', 'enum' => ['purchases', 'salaries'], 'description' => "purchases for vendor, supplier and contractor payments (tax from the section rate matrix). salaries for employee pay (tax from the year's salary slabs). Defaults to purchases."],
+                        'rows'  => ['type' => 'array', 'items' => $row, 'description' => 'One entry per payment. For salaries, put the salary month in period_month and the total salary (or take-home, with amount_basis net) in amount.'],
                     ],
                     'required' => ['agent', 'rows'],
                 ],
@@ -194,6 +234,8 @@ class WhtMcpController extends Controller
 
         $payload = match ($name) {
             'list_agents'    => $this->listAgents(),
+            'find_parties'   => $this->findParties($args),
+            'create_party'   => $this->createParty($args),
             'deposit_status' => $this->depositStatus($args),
             'preview_import' => $this->previewImport($args),
             'commit_import'  => $this->commitImport($args),
@@ -247,9 +289,92 @@ class WhtMcpController extends Controller
         return ['period' => $month->format('Y-m'), 'batches' => $out];
     }
 
+    private function findParties(array $args): array
+    {
+        $agent = $this->agent($args['agent'] ?? '');
+        $search = trim((string) ($args['search'] ?? ''));
+
+        $q = $agent->parties();
+
+        if ($search !== '') {
+            $digits = preg_replace('/[^0-9]/', '', $search);
+            $q->where(function ($w) use ($search, $digits) {
+                $w->where('name', 'like', "%{$search}%");
+                if ($digits !== '') {
+                    $w->orWhere('cnic_ntn', 'like', "%{$digits}%");
+                }
+            });
+        }
+
+        return [
+            'agent'   => $agent->name,
+            'parties' => $q->orderBy('name')->limit(50)
+                ->get(['id', 'name', 'cnic_ntn', 'type', 'category', 'atl_status', 'is_active', 'default_section'])
+                ->toArray(),
+        ];
+    }
+
+    private function createParty(array $args): array
+    {
+        $agent = $this->agent($args['agent'] ?? '');
+
+        $name = trim((string) ($args['name'] ?? ''));
+        $category = strtolower(trim((string) ($args['category'] ?? '')));
+        $atl = strtolower(trim((string) ($args['atl_status'] ?? '')));
+
+        if ($name === '') {
+            throw new \RuntimeException('A party name is required.', -32602);
+        }
+
+        // No defaults on purpose: both of these change the tax rate.
+        if (!in_array($category, ['company', 'individual', 'aop'], true)) {
+            throw new \RuntimeException('category must be company, individual or aop. Ask the user — do not infer it, it changes the tax rate.', -32602);
+        }
+
+        if (!in_array($atl, ['filer', 'non-filer'], true)) {
+            throw new \RuntimeException('atl_status must be filer or non-filer. Ask the user — do not infer it, it changes the tax rate.', -32602);
+        }
+
+        $cnic = preg_replace('/[^0-9]/', '', (string) ($args['cnic_ntn'] ?? ''));
+
+        if ($cnic !== '') {
+            $existing = $agent->parties()->where('cnic_ntn', $cnic)->first();
+
+            if ($existing) {
+                return [
+                    'created' => false,
+                    'party'   => $existing->only(['id', 'name', 'cnic_ntn', 'type', 'category', 'atl_status']),
+                    'message' => "A party with that CNIC/NTN already exists as '{$existing->name}'. Using it rather than creating a duplicate.",
+                ];
+            }
+        }
+
+        $type = strtolower(trim((string) ($args['type'] ?? 'vendor')));
+        $type = in_array($type, ['vendor', 'employee', 'both'], true) ? $type : 'vendor';
+
+        $party = WhtParty::create([
+            'wht_company_id'  => $agent->id,
+            'name'            => $name,
+            'cnic_ntn'        => $cnic ?: null,
+            'type'            => $type,
+            'category'        => $category,
+            'atl_status'      => $atl,
+            'default_section' => trim((string) ($args['default_section'] ?? '')) ?: null,
+            'address'         => trim((string) ($args['address'] ?? '')) ?: null,
+            'city'            => trim((string) ($args['city'] ?? '')) ?: null,
+        ]);
+
+        return [
+            'created' => true,
+            'party'   => $party->only(['id', 'name', 'cnic_ntn', 'type', 'category', 'atl_status']),
+            'message' => "Created {$party->name} as a {$category} {$type}, {$atl}. Re-run preview_import to pick up their rows.",
+        ];
+    }
+
     private function previewImport(array $args): array
     {
         $agent = $this->agent($args['agent'] ?? '');
+        $kind = ($args['kind'] ?? 'purchases') === 'salaries' ? 'salaries' : 'purchases';
         $rows = $args['rows'] ?? [];
 
         if (!is_array($rows) || $rows === []) {
@@ -260,19 +385,21 @@ class WhtMcpController extends Controller
             throw new \RuntimeException('Too many rows in one call — split into batches of 2000 or fewer.', -32602);
         }
 
-        $analysis = $this->importer->analyseRows($agent, $rows);
+        $analysis = $this->importer->analyseRows($agent, $rows, $kind);
         $summary = $analysis['summary'];
 
         $token = Str::uuid()->toString();
 
         Cache::put("wht_mcp_import:{$token}", [
             'agent_id' => $agent->id,
+            'kind'     => $kind,
             'rows'     => $analysis['rows']->toArray(),
         ], now()->addMinutes(self::CACHE_MINUTES));
 
         return [
             'token'   => $token,
             'agent'   => $agent->name,
+            'kind'    => $kind,
             'summary' => [
                 'total'          => $summary['total'],
                 'will_import'    => $summary['ok'] + $summary['warning'],
@@ -291,6 +418,9 @@ class WhtMcpController extends Controller
                 'period_month' => $r['period_month'],
                 'gross_amount' => $r['gross_amount'],
                 'tax_rate'     => $r['tax_rate'],
+                'tax_year'     => $r['tax_year'] ?? null,
+                'taxable_salary' => $r['taxable_salary'] ?? null,
+                'exempt_amount'  => $r['exempt_amount'] ?? null,
                 'tax_withheld' => $r['tax_withheld'],
                 'problems'     => $r['problems'],
                 'warnings'     => $r['warnings'],
@@ -326,34 +456,58 @@ class WhtMcpController extends Controller
             return ['created' => 0, 'message' => 'Nothing to import with those options.'];
         }
 
+        $kind = $cached['kind'] ?? 'purchases';
         $created = 0;
 
-        DB::transaction(function () use ($importable, $agent, &$created) {
+        DB::transaction(function () use ($importable, $agent, $kind, &$created) {
             foreach ($importable as $r) {
-                WhtPurchase::create([
-                    'wht_company_id' => $agent->id,
-                    'party_id'       => $r['party_id'],
-                    'period_month'   => $r['period_month'] . '-01',
-                    'payment_date'   => $r['payment_date'],
-                    'section'        => $r['section'],
-                    'calc_mode'      => $r['calc_mode'],
-                    'gross_amount'   => $r['gross_amount'],
-                    'tax_rate'       => $r['tax_rate'],
-                    'tax_rate_id'    => $r['tax_rate_id'],
-                    'rate_source'    => $r['rate_source'] ?? 'matrix',
-                    'tax_withheld'   => $r['tax_withheld'],
-                    'net_payment'    => $r['net_payment'],
-                    'remarks'        => $r['remarks'],
-                ]);
+                if ($kind === 'salaries') {
+                    WhtSalary::create([
+                        'wht_company_id'    => $agent->id,
+                        'employee_id'       => $r['party_id'],
+                        'salary_month'      => $r['period_month'] . '-01',
+                        'payment_date'      => $r['payment_date'],
+                        'section'           => $r['section'],
+                        'calc_mode'         => $r['calc_mode'],
+                        'input_amount'      => $r['input_amount'],
+                        'taxable_salary'    => $r['taxable_salary'],
+                        'exempt_amount'     => $r['exempt_amount'],
+                        'exempt_rate'       => $r['exempt_rate'],
+                        'total_salary'      => $r['gross_amount'],
+                        'tax_deducted'      => $r['tax_withheld'],
+                        'final_net_payment' => $r['net_payment'],
+                        'tax_year'          => $r['tax_year'],
+                    ]);
+                } else {
+                    WhtPurchase::create([
+                        'wht_company_id' => $agent->id,
+                        'party_id'       => $r['party_id'],
+                        'period_month'   => $r['period_month'] . '-01',
+                        'payment_date'   => $r['payment_date'],
+                        'section'        => $r['section'],
+                        'calc_mode'      => $r['calc_mode'],
+                        'gross_amount'   => $r['gross_amount'],
+                        'tax_rate'       => $r['tax_rate'],
+                        'tax_rate_id'    => $r['tax_rate_id'],
+                        'rate_source'    => $r['rate_source'] ?? 'matrix',
+                        'tax_withheld'   => $r['tax_withheld'],
+                        'net_payment'    => $r['net_payment'],
+                        'remarks'        => $r['remarks'],
+                    ]);
+                }
                 $created++;
             }
         });
 
+        $where = $kind === 'salaries' ? 'WHT → Salaries' : 'WHT → Payments';
+
         return [
-            'created' => $created,
-            'agent'   => $agent->name,
+            'created'   => $created,
+            'agent'     => $agent->name,
+            'kind'      => $kind,
             'tax_total' => round($importable->sum('tax_withheld'), 2),
-            'message' => "Imported {$created} payments into {$agent->name}. Review them in the app under WHT → Payments.",
+            'message'   => "Imported {$created} " . ($kind === 'salaries' ? 'salary records' : 'payments')
+                           . " into {$agent->name}. Review them in the app under {$where}.",
         ];
     }
 

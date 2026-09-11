@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Wht;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Wht\Concerns\ResolvesWhtCompany;
 use App\Models\WhtPurchase;
+use App\Models\WhtSalary;
 use App\Services\Wht\WhtTransactionImporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -40,6 +41,7 @@ class WhtImportController extends Controller
             'company'  => $company,
             'analysis' => null,
             'token'    => null,
+            'kind'     => 'purchases',
         ]);
     }
 
@@ -50,9 +52,12 @@ class WhtImportController extends Controller
         $company = $this->currentCompany();
         $this->authorizeAbility('create', $company);
 
-        $request->validate([
+        $validated = $request->validate([
             'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:8192',
+            'kind' => 'nullable|in:purchases,salaries',
         ]);
+
+        $kind = $validated['kind'] ?? 'purchases';
 
         $missing = array_values(array_filter(
             ['zip', 'xmlreader', 'simplexml', 'dom', 'mbstring'],
@@ -64,7 +69,7 @@ class WhtImportController extends Controller
         }
 
         try {
-            $analysis = $this->importer->analyse($company, $request->file('file')->getRealPath());
+            $analysis = $this->importer->analyse($company, $request->file('file')->getRealPath(), $kind);
         } catch (\Throwable $e) {
             return back()->with('error', 'Could not read that file: ' . $e->getMessage());
         }
@@ -79,6 +84,7 @@ class WhtImportController extends Controller
 
         Cache::put($this->cacheKey($company->id, $token), [
             'rows'     => $analysis['rows']->toArray(),
+            'kind'     => $kind,
             'filename' => $request->file('file')->getClientOriginalName(),
         ], now()->addMinutes(self::CACHE_MINUTES));
 
@@ -86,6 +92,7 @@ class WhtImportController extends Controller
             'company'  => $company,
             'analysis' => $analysis,
             'token'    => $token,
+            'kind'     => $kind,
             'filename' => $request->file('file')->getClientOriginalName(),
         ]);
     }
@@ -123,11 +130,34 @@ class WhtImportController extends Controller
             return back()->with('error', 'Nothing left to import with those options.');
         }
 
+        $kind = $cached['kind'] ?? 'purchases';
         $created = 0;
 
         // All or nothing: a half-imported month is worse than none.
-        DB::transaction(function () use ($importable, $company, &$created) {
+        DB::transaction(function () use ($importable, $company, $kind, &$created) {
             foreach ($importable as $r) {
+                if ($kind === 'salaries') {
+                    WhtSalary::create([
+                        'wht_company_id'    => $company->id,
+                        'employee_id'       => $r['party_id'],
+                        'salary_month'      => $r['period_month'] . '-01',
+                        'payment_date'      => $r['payment_date'],
+                        'section'           => $r['section'],
+                        'calc_mode'         => $r['calc_mode'],
+                        'input_amount'      => $r['input_amount'],
+                        'taxable_salary'    => $r['taxable_salary'],
+                        'exempt_amount'     => $r['exempt_amount'],
+                        'exempt_rate'       => $r['exempt_rate'],
+                        'total_salary'      => $r['gross_amount'],
+                        'tax_deducted'      => $r['tax_withheld'],
+                        'final_net_payment' => $r['net_payment'],
+                        'tax_year'          => $r['tax_year'],
+                        'created_by'        => auth()->id(),
+                    ]);
+                    $created++;
+                    continue;
+                }
+
                 WhtPurchase::create([
                     'wht_company_id' => $company->id,
                     'party_id'       => $r['party_id'],
@@ -150,8 +180,8 @@ class WhtImportController extends Controller
 
         Cache::forget($this->cacheKey($company->id, $validated['token']));
 
-        return redirect()->route('wht.purchases.index')
-            ->with('success', "Imported {$created} payments from {$cached['filename']}.");
+        return redirect()->route($kind === 'salaries' ? 'wht.salaries.index' : 'wht.purchases.index')
+            ->with('success', "Imported {$created} " . ($kind === 'salaries' ? 'salary records' : 'payments') . " from {$cached['filename']}.");
     }
 
     /** The canonical sheet shape, for clients and for Claude to target. */

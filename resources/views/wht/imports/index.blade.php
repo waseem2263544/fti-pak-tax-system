@@ -22,7 +22,13 @@
 
         <form method="POST" action="{{ route('wht.imports.preview') }}" enctype="multipart/form-data">
             @csrf
-            <label class="form-label">Payment sheet</label>
+            <label class="form-label">What kind of sheet is this?</label>
+            <select name="kind" class="form-select mb-3">
+                <option value="purchases">Vendor / supplier payments — tax from the section rate matrix</option>
+                <option value="salaries">Employee salaries — tax from the year's salary slabs</option>
+            </select>
+
+            <label class="form-label">Sheet</label>
             <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
             <div class="form-text">Excel or CSV, up to 8 MB.</div>
 
@@ -102,6 +108,7 @@
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <strong>{{ $filename ?? 'Preview' }}</strong>
+        <span class="badge bg-light text-dark border">{{ ($kind ?? 'purchases') === 'salaries' ? 'Salaries' : 'Vendor payments' }}</span>
         <span class="text-muted" style="font-size: 0.82rem;">{{ $s['total'] }} rows read</span>
     </div>
     <div class="table-responsive" style="max-height: 560px;">
@@ -113,8 +120,8 @@
                     <th>Section</th>
                     <th>Period</th>
                     <th>Date</th>
-                    <th class="text-end">Gross</th>
-                    <th class="text-end">Rate</th>
+                    <th class="text-end">{{ ($kind ?? 'purchases') === 'salaries' ? 'Total Salary' : 'Gross' }}</th>
+                    <th class="text-end">{{ ($kind ?? 'purchases') === 'salaries' ? 'Tax Yr' : 'Rate' }}</th>
                     <th class="text-end">Tax</th>
                     <th>Notes</th>
                 </tr>
@@ -143,7 +150,13 @@
                     <td>{{ $r['period_month'] ?: '—' }}</td>
                     <td>{{ $r['payment_date'] ?: '—' }}</td>
                     <td class="text-end">{{ $r['gross_amount'] !== null ? number_format($r['gross_amount'], 0) : '—' }}</td>
-                    <td class="text-end">{{ $r['tax_rate'] !== null ? rtrim(rtrim(number_format($r['tax_rate'], 2), '0'), '.') . '%' : '—' }}</td>
+                    <td class="text-end">
+                        @if(($kind ?? 'purchases') === 'salaries')
+                            {{ $r['tax_year'] ?? '—' }}
+                        @else
+                            {{ $r['tax_rate'] !== null ? rtrim(rtrim(number_format($r['tax_rate'], 2), '0'), '.') . '%' : '—' }}
+                        @endif
+                    </td>
                     <td class="text-end fw-semibold">{{ $r['tax_withheld'] !== null ? number_format($r['tax_withheld'], 0) : '—' }}</td>
                     <td style="font-size: 0.76rem; max-width: 320px;">
                         @foreach($r['problems'] as $p)
