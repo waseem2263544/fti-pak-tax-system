@@ -67,12 +67,16 @@
             </thead>
             <tbody>
                 @forelse($rows as $r)
-                @php $assigned = filled($r['psid_no']); @endphp
-                <tr class="{{ $assigned ? 'table-light text-muted' : '' }}">
+                @php
+                    $assigned = filled($r['psid_no']);
+                    $noTax = (float) $r['tax_withheld'] <= 0;
+                @endphp
+                <tr class="{{ $assigned || $noTax ? 'table-light text-muted' : '' }}">
                     <td>
                         <input type="checkbox" class="form-check-input row-check" name="ids[]" value="{{ $r['id'] }}"
                                data-tax="{{ $r['tax_withheld'] }}" data-assigned="{{ $assigned ? 1 : 0 }}"
-                               {{ $assigned ? '' : 'checked' }}>
+                               data-zero="{{ $noTax ? 1 : 0 }}"
+                               {{ $assigned || $noTax ? '' : 'checked' }}>
                     </td>
                     <td>{{ $r['period'] }}</td>
                     <td>
@@ -87,7 +91,12 @@
                     <td>{{ $r['section'] ?: '—' }}</td>
                     <td>{{ $r['payment_date'] }}</td>
                     <td class="text-end">{{ number_format($r['gross_amount'], 0) }}</td>
-                    <td class="text-end fw-semibold">{{ number_format($r['tax_withheld'], 0) }}</td>
+                    <td class="text-end fw-semibold">
+                        {{ number_format($r['tax_withheld'], 0) }}
+                        @if($noTax)
+                            <div><span class="badge bg-secondary" style="font-size: 0.56rem;">no tax — not on a challan</span></div>
+                        @endif
+                    </td>
                     <td>
                         @if($r['psid_no'])
                             <span class="badge bg-info bg-opacity-10 text-info">{{ $r['psid_no'] }}</span>
@@ -184,7 +193,10 @@
         <p class="text-muted" style="font-size: 0.85rem;">
             These columns match FBR's <strong>ePayments Import Template</strong> exactly — ten columns, header on
             row 1, data from row 2, sheet named Sheet1. IRIS reads the grid literally, so do not add a title block
-            or a totals row. If FBR revises the template, paste its header row in here; changes apply immediately.
+            or a totals row. Amounts are rounded to whole rupees because IRIS rejects decimals — your recorded
+            figures keep their paisa, only the uploaded file is rounded. Set <code>round_amounts</code> to
+            <code>false</code> below if that ever changes. If FBR revises the template, paste its header row in
+            here; changes apply immediately.
         </p>
         <form method="POST" action="{{ route('wht.psid.layout') }}">
             @csrf
@@ -217,11 +229,13 @@
 
         // Selecting something already on a challan is the duplication risk, so say so.
         const already = sel.filter(c => c.dataset.assigned === '1').length;
+        const zero = sel.filter(c => c.dataset.zero === '1').length;
         const warn = document.getElementById('reassignWarn');
-        warn.classList.toggle('d-none', already === 0);
-        warn.textContent = already
-            ? already + ' already on a PSID — assigning again will reassign ' + (already === 1 ? 'it' : 'them')
-            : '';
+        const notes = [];
+        if (already) notes.push(already + ' already on a PSID — assigning again will reassign ' + (already === 1 ? 'it' : 'them'));
+        if (zero) notes.push(zero + ' with no tax — ' + (zero === 1 ? 'it' : 'they') + ' will be left out of the IRIS file');
+        warn.classList.toggle('d-none', notes.length === 0);
+        warn.textContent = notes.join(' · ');
 
         const all = document.getElementById('checkAll');
         all.checked = sel.length > 0 && sel.length === checks().length;
@@ -230,7 +244,9 @@
 
     window.selectBy = function (mode) {
         checks().forEach(c => {
-            c.checked = mode === 'all' || (mode === 'unassigned' && c.dataset.assigned === '0');
+            // Nothing withheld means nothing to deposit — IRIS rejects a zero line.
+            const selectable = c.dataset.assigned === '0' && c.dataset.zero === '0';
+            c.checked = mode === 'all' || (mode === 'unassigned' && selectable);
         });
         refresh();
     };

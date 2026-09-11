@@ -58,10 +58,12 @@ class WhtPsidController extends Controller
 
         $rows = $this->batcher->mapRows($items, $kind);
 
-        // How much of this period is still unaccounted for, regardless of filter.
+        // How much of this period still needs depositing. Entries with no tax
+        // withheld never go on a challan, so they are not "outstanding".
         $outstanding = $this->baseQuery($company, $kind)
             ->when($month !== '', fn($q) => $q->whereDate($this->periodColumn($kind), $this->monthStart($month)))
             ->where(fn($q) => $q->whereNull('psid_no')->orWhere('psid_no', ''))
+            ->where($this->taxColumn($kind), '>', 0)
             ->count();
 
         return view('wht.psid.index', [
@@ -98,6 +100,17 @@ class WhtPsidController extends Controller
         if ($rows->isEmpty()) {
             return back()->with('error', 'Select at least one entry first.');
         }
+
+        // IRIS rejects a challan line with no amount — "Valid Amount must be
+        // provided" — and there is nothing to deposit for them anyway. They
+        // still belong on the s.165 statement, which is a different file.
+        $withTax = $rows->filter(fn($r) => (float) ($r['tax_withheld'] ?? 0) > 0)->values();
+
+        if ($withTax->isEmpty()) {
+            return back()->with('error', 'None of the selected entries has any tax withheld, so there is nothing to deposit.');
+        }
+
+        $rows = $withTax;
 
         // The period is only used to name the file; the selection may span months.
         $period = Carbon::parse(($rows->first()['period'] ?? now()->format('Y-m')) . '-01');
@@ -242,6 +255,11 @@ class WhtPsidController extends Controller
     private function periodColumn(string $kind): string
     {
         return $kind === 'salaries' ? 'salary_month' : 'period_month';
+    }
+
+    private function taxColumn(string $kind): string
+    {
+        return $kind === 'salaries' ? 'tax_deducted' : 'tax_withheld';
     }
 
     private function monthStart(string $month): Carbon

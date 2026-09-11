@@ -35,6 +35,10 @@ class WhtPsidWorkbook
     public const DEFAULT_LAYOUT = [
         'sheet_name'         => 'Sheet1',
         'header_row'         => 1,
+        // IRIS rejects decimal amounts with "Valid Amount must be provided",
+        // and challans are paid in whole rupees, so amounts are rounded. The
+        // recorded figures keep their paisa — only the uploaded file is rounded.
+        'round_amounts'      => true,
         'include_title_block' => false,
         'include_totals_row' => false,
         'sheet_per_section'  => false,
@@ -150,7 +154,8 @@ class WhtPsidWorkbook
                     Coordinate::stringFromColumnIndex($c + 1) . $row,
                     $r[$col['field']] ?? null,
                     $col['format'] ?? 'text',
-                    $layout['date_format'] ?? 'd/m/Y'
+                    $layout['date_format'] ?? 'd/m/Y',
+                    (bool) ($layout['round_amounts'] ?? false)
                 );
             }
 
@@ -177,7 +182,7 @@ class WhtPsidWorkbook
         }
     }
 
-    private function writeCell($sheet, string $ref, $value, string $format, string $dateFormat): void
+    private function writeCell($sheet, string $ref, $value, string $format, string $dateFormat, bool $roundAmounts = false): void
     {
         if ($value === null || $value === '') {
             return;
@@ -196,7 +201,9 @@ class WhtPsidWorkbook
 
             case 'plain':
                 // Unformatted number — FBR's parser wants a bare value.
-                $sheet->setCellValue($ref, round((float) $value, 2));
+                $sheet->setCellValue($ref, $roundAmounts
+                    ? (int) round((float) $value)
+                    : round((float) $value, 2));
                 break;
 
             case 'money':
