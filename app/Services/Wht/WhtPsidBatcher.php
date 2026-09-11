@@ -28,6 +28,25 @@ class WhtPsidBatcher
             : $company->purchases()->whereDate('period_month', $monthStart);
     }
 
+    /**
+     * Punctuate a tax number the way IRIS expects.
+     *
+     * CNIC: 13 digits as xxxxx-xxxxxxx-x
+     * NTN:  8 digits as xxxxxxx-x
+     *
+     * Anything else is passed through as stored — better to send what we have
+     * and let IRIS name the row than to mangle an unusual number silently.
+     */
+    public static function formatTaxNumber(string $digits, string $raw = ''): string
+    {
+        return match (strlen($digits)) {
+            13 => substr($digits, 0, 5) . '-' . substr($digits, 5, 7) . '-' . substr($digits, 12, 1),
+            8  => substr($digits, 0, 7) . '-' . substr($digits, 7, 1),
+            0  => '',
+            default => $raw !== '' ? $raw : $digits,
+        };
+    }
+
     public function batch(WhtCompany $company, Carbon $monthStart, string $kind): array
     {
         $isSalary = $kind === 'salaries';
@@ -44,11 +63,13 @@ class WhtPsidBatcher
             $section = $t->section ?: ($isSalary ? '149' : '');
             $meta = $sections->firstWhere('section', $section);
 
-            // FBR's template splits the tax number into two columns. A CNIC is
-            // 13 digits; anything shorter is an NTN, which keeps its dash.
+            // FBR's template splits the tax number into two columns, and IRIS
+            // validates the punctuation: a CNIC must read xxxxx-xxxxxxx-x and an
+            // NTN xxxxxxx-x. Parties are stored as bare digits, so format here.
             $raw = (string) ($party?->cnic_ntn ?? '');
             $digits = preg_replace('/[^0-9]/', '', $raw);
             $isCnic = strlen($digits) === 13;
+            $formatted = self::formatTaxNumber($digits, $raw);
 
             return [
                 'section'        => $section,
@@ -56,8 +77,8 @@ class WhtPsidBatcher
                 'payment_nature' => $meta?->payment_nature ?? ($isSalary ? 'Salary' : ''),
                 'payee_name'     => $party?->name,
                 'payee_cnic_ntn' => $party?->cnic_ntn,
-                'taxpayer_ntn'   => $isCnic ? null : ($raw ?: null),
-                'taxpayer_cnic'  => $isCnic ? $digits : null,
+                'taxpayer_ntn'   => $isCnic ? null : ($formatted ?: null),
+                'taxpayer_cnic'  => $isCnic ? $formatted : null,
                 'taxpayer_status' => match ($party?->category) {
                     'company'    => 'COMPANY',
                     'aop'        => 'AOP',
