@@ -209,6 +209,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('challans/{challan}/{type}', [\App\Http\Controllers\Wht\WhtChallanController::class, 'download'])->name('challans.download');
         Route::delete('challans/{challan}/{type}', [\App\Http\Controllers\Wht\WhtChallanController::class, 'deleteFile'])->name('challans.delete-file');
 
+        // Import payments from a client spreadsheet
+        Route::get('imports', [\App\Http\Controllers\Wht\WhtImportController::class, 'index'])->name('imports.index');
+        Route::get('imports/template', [\App\Http\Controllers\Wht\WhtImportController::class, 'template'])->name('imports.template');
+        Route::post('imports/preview', [\App\Http\Controllers\Wht\WhtImportController::class, 'preview'])->name('imports.preview');
+        Route::post('imports/commit', [\App\Http\Controllers\Wht\WhtImportController::class, 'commit'])->name('imports.commit');
+
         // Prepare PSID — generate the IRIS upload file and stamp PSID/CPR on a batch
         Route::get('psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'index'])->name('psid.index');
         Route::get('psid/{kind}/download', [\App\Http\Controllers\Wht\WhtPsidController::class, 'download'])->name('psid.download');

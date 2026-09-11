@@ -536,6 +536,9 @@
                     <a href="{{ route('wht.parties.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.parties')) active @endif">
                         <i class="bi bi-people"></i> Vendors & Employees
                     </a>
+                    <a href="{{ route('wht.imports.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.imports')) active @endif">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Import Payments
+                    </a>
                     <a href="{{ route('wht.psid.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.psid')) active @endif">
                         <i class="bi bi-upload"></i> Prepare PSID
                     </a>

@@ -1,6 +1,6 @@
 ---
 name: wht-psid
-description: Check withholding tax deposit status across agents and pull the FBR PSID upload files in bulk. Use when the user asks which agents still owe a WHT deposit, which challans are unpaid, or wants the PSID upload files for several agents or months at once — e.g. "which agents haven't deposited June?", "get me the PSID files for all agents for June", "WHT deposit status for last month".
+description: Convert a client's payment spreadsheet into the WHT import template, check withholding tax deposit status across agents, and pull FBR PSID upload files in bulk. Use when the user hands over a client payment sheet to prepare for import, asks which agents still owe a WHT deposit, or wants PSID upload files for several agents at once — e.g. "convert this sheet for the WHT import", "turn this client Excel into withholding entries", "which agents haven't deposited June?", "get me the PSID files for all agents for June".
 ---
 
 # WHT deposit status and PSID files
@@ -16,6 +16,47 @@ agents at once**, and pulling **several files in one go**.
 If the user is working on a single agent for a single month, say so and point
 them at Prepare PSID rather than doing it here. It is faster for them and it
 keeps the app as the record.
+
+## Converting a client's payment sheet
+
+The most common request. A client sends a spreadsheet in whatever shape they
+like; the app's **WHT → Import Payments** screen needs it in a known shape.
+
+**Never calculate the tax yourself.** The app recomputes every figure from the
+rate matrix on import — that is deliberate, because the rate depends on the
+payee's category and ATL status and on the tax period, none of which a
+spreadsheet reliably knows. If the client's sheet has tax figures, keep them in
+the `tax_withheld` column: the app compares rather than trusts, and reports any
+disagreement. That is how a client's arithmetic errors get caught.
+
+Target shape — header row exactly these names:
+
+```
+payee_name, payee_cnic_ntn, payment_date, period_month, section, amount, amount_basis, tax_withheld, remarks
+```
+
+- `payment_date` — `d/m/Y`
+- `period_month` — `YYYY-MM`; leave blank to use the payment month
+- `section` — leave blank to use the payee's default section
+- `amount_basis` — `gross` or `net`; blank uses the payee's usual mode
+- `tax_withheld` — only if the client's sheet states it; blank otherwise
+- Anything else the client sent can stay in `remarks`
+
+The importer already matches many column names by alias (`supplier`, `NIC`,
+`invoice amount`, …), so a tidy client sheet often imports unchanged. Convert
+only when it will not, or when the sheet needs real reshaping — several sheets
+in one file, merged header rows, totals mixed into the data, one column per
+month.
+
+Write the result as `.csv` or `.xlsx` and send it with `SendUserFile`. Then tell
+the user to upload it at **WHT → Import Payments**, where they get a preview
+before anything is written.
+
+Flag, do not fix:
+- payees that look new — they must be added first, with the correct category and
+  ATL status, because both change the rate
+- rows with no amount or no usable date
+- anything ambiguous about which section applies
 
 ## Setup
 
