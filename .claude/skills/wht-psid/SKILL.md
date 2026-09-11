@@ -1,141 +1,104 @@
 ---
 name: wht-psid
-description: Build the FBR PSID / withholding bulk-upload Excel file for a withholding agent and tax period, and store it in SharePoint so it opens in Excel Online. Use when the user asks to prepare a PSID, generate the WHT upload file, produce the withholding challan sheet, or file the monthly withholding statement — e.g. "prepare PSID for Universal Dairies June 2026", "WHT upload file for last month", "put the withholding data in Excel online".
+description: Check withholding tax deposit status across agents and pull the FBR PSID upload files in bulk. Use when the user asks which agents still owe a WHT deposit, which challans are unpaid, or wants the PSID upload files for several agents or months at once — e.g. "which agents haven't deposited June?", "get me the PSID files for all agents for June", "WHT deposit status for last month".
 ---
 
-# WHT PSID upload file
+# WHT deposit status and PSID files
 
-Produces the Excel file that gets uploaded to FBR IRIS to raise a PSID, and files
-a copy in SharePoint so it is editable in Excel Online.
+The app does the real work. **WHT → Prepare PSID** in the software handles the
+whole cycle for one agent and month: download the upload file, paste in the PSID
+that IRIS returned, record the CPR once paid. Every entry in the batch is
+stamped at once.
 
-Two things are deliberately separated:
+This skill exists only for what that screen is bad at — looking across **all
+agents at once**, and pulling **several files in one go**.
 
-- **Where the data comes from** — the app's read-only API (`/api/wht/psid`).
-- **What the file looks like** — `references/psid-columns.json`.
+If the user is working on a single agent for a single month, say so and point
+them at Prepare PSID rather than doing it here. It is faster for them and it
+keeps the app as the record.
 
-FBR changes its template from time to time. When that happens, edit only
-`references/psid-columns.json`. Never hardcode a column layout anywhere else.
-
-## Before the first run
-
-Check these once; if anything is missing, tell the user exactly what to do and stop.
-
-1. `WHT_API_TOKEN` is set in the project `.env` **and** in the server's `.env` (same value).
-2. `/api/wht/psid` responds — the endpoint must be deployed.
-
-## Step 1 — Establish agent and period
-
-You need a withholding agent and a tax month (`YYYY-MM`).
-
-- "last month", "June", "this month" → resolve against today's date and **say which month you resolved to**.
-- Partial agent names are fine; the API matches on `LIKE`.
-- If the user named neither, list the agents and ask. Do not guess.
+## Setup
 
 ```bash
 TOKEN=$(grep -E '^WHT_API_TOKEN=' .env | cut -d= -f2-)
 BASE=$(grep -E '^WHT_API_BASE_URL=' .env | cut -d= -f2- || echo https://app.fairtaxint.com)
-
-curl -sS -H "X-Wht-Token: $TOKEN" "$BASE/api/wht/agents"
 ```
 
-## Step 2 — Fetch the period data
+If `WHT_API_TOKEN` is empty in `.env`, or the API returns 401, stop and tell the
+user the token needs setting to the same value here and in the server's `.env`.
+Do not try to work around it.
+
+## Deposit status across every agent
+
+```bash
+curl -sS -H "X-Wht-Token: $TOKEN" "$BASE/api/wht/status?month=2026-06"
+```
+
+Each agent returns two batches, `purchases` and `salaries`, each with a `status`:
+
+| status | meaning | what the user should do |
+|---|---|---|
+| `empty` | nothing recorded that month | check entries were actually keyed in |
+| `pending` | recorded, no PSID yet | generate the file and upload to IRIS |
+| `partial` | some entries carry a PSID, some do not | investigate — usually a half-finished assignment |
+| `psid` | PSID assigned, not yet paid | pay the challan, then record the CPR |
+| `paid` | CPR recorded against every entry | done |
+
+Report this as a compact table, grouped so what needs action is obvious. Lead
+with `pending` and `psid` — those are the ones with a deadline. Mention `partial`
+explicitly; it usually means something went wrong.
+
+**Deadline context worth surfacing:** withholding tax is due within 7 days of the
+end of each fortnight. If the user is asking near or past a due date, say which
+agents are exposed.
+
+## Pulling the upload files
 
 ```bash
 curl -sS -H "X-Wht-Token: $TOKEN" \
-  "$BASE/api/wht/psid?agent=Universal%20Dairies&month=2026-06" \
-  -o "$SCRATCH/wht-data.json"
+  "$BASE/api/wht/psid/file?agent=Universal%20Dairies&month=2026-06&kind=purchases" \
+  -o "$SCRATCH/PSID-universal-dairies-vendors-2026-06.xlsx"
 ```
 
-Rows are selected by **tax period**, not payment date — a June liability paid in
-August still belongs to June. Do not "fix" this.
+`kind` is `purchases` (vendors — all sections under one PSID) or `salaries`.
+`agent` takes an id or a partial name.
 
-Read back `totals` and check it against the app's Monthly Statement page before
-building anything. If `sections` is empty, say so and stop — do not produce an
-empty workbook.
+This returns the exact same workbook the Prepare PSID screen produces — same
+service, so there is no chance of a discrepancy. Never rebuild the file yourself.
 
-**If the API is unreachable** (not yet deployed, no token), fall back: ask the user to
-download **WHT → Monthly Statement → Excel** and give you the file. Convert its
-detail sheets into the same JSON shape (`agent`, `period`, `sections[].rows[]`).
-Say you are using the fallback.
-
-## Step 3 — Build the workbook
+Verify each download is a real workbook before handing it over:
 
 ```bash
-php .claude/skills/wht-psid/scripts/build_psid_workbook.php \
-  "$SCRATCH/wht-data.json" \
-  "$SCRATCH/PSID-Universal-Dairies-2026-06.xlsx"
+file "$SCRATCH/..."   # expect: Microsoft Excel 2007+
 ```
 
-The script prints JSON: `output`, `bytes`, `sheets`, `rows`. Confirm `rows`
-matches `totals.rows` from Step 2.
+A JSON body instead means an error — read it and report it rather than sending a
+broken file.
 
-One sheet per section, because IRIS takes one upload per payment section. The
-sheet tab is the section label with `/ \ ? * [ ] :` replaced by `-` (Excel
-forbids them), truncated to 31 characters.
+Send files with `SendUserFile`, `display: "attach"`, and state the tax total per
+file so figures can be eyeballed against IRIS.
 
-Naming: `PSID-<agent-slug>-<YYYY-MM>.xlsx`.
+## Raw rows
 
-## Step 4 — Hand the file to the user
+`GET /api/wht/psid?agent=&month=` returns the underlying rows as JSON. Use it for
+questions like "what did we withhold from Acme this year" — not for building
+spreadsheets.
 
-Send it with `SendUserFile`, `display: "attach"`. Say which sections are in it
-and the total tax per section, so the figures can be eyeballed before upload.
+## Boundaries
 
-## Step 5 — Store it in Excel Online
+- **The API is read-only.** Assigning a PSID or recording a CPR is a deliberate
+  human action in Prepare PSID. Never ask the user for a PSID number so you can
+  record it — send them to the screen.
+- **Never recalculate tax.** The app is the source of truth.
+- **Never rebuild the upload file.** If its columns are wrong, the fix is the
+  *Upload file column layout* editor on the Prepare PSID screen, which an admin
+  can change with no deploy. Tell them that; don't work around it.
+- Client tax data stays in the scratchpad or goes to the user. Nowhere else.
+- Never commit `.xlsx` output or the token.
 
-Put it in the agent's SharePoint folder so it opens in Excel for the web.
+## Known unknown
 
-```
-mcp__claude_ai_Microsoft_365__sharepoint_folder_search   → find the agent's folder
-mcp__claude_ai_Microsoft_365__sharepoint_upload_file     → upload
-```
-
-Client folders live under `Operations/3. Clients` in the `FairTaxInternational723`
-site. Use a `WHT` subfolder inside the agent's folder; create it with
-`sharepoint_create_folder` if absent.
-
-`.xlsx` is binary, so it must go as `contentBase64` — strict, unbroken base64:
-
-```bash
-base64 -i "$SCRATCH/PSID-....xlsx" | tr -d '\n'
-```
-
-Pass `expectedBytes` using the byte count the build script reported, and
-`conflictBehavior: "replace"` when regenerating a month that already exists
-(say so first — it overwrites).
-
-**Upload cap is 1 MB.** If the file is larger, split by section and upload one
-file per section rather than truncating.
-
-Give the user the returned `webUrl`. That link opens the file in Excel Online,
-where several people can edit it at once.
-
-## Step 6 — Append to the register
-
-Keep a cumulative workbook per agent per tax year: `WHT-Register-<agent>-TY<year>.xlsx`,
-one sheet per month. Tax year runs July–June and is named for the year it ends in,
-so July 2025 – June 2026 is **TY2026**.
-
-Find it with `sharepoint_search`; read it with `read_resource`; add the month's
-sheet; re-upload with `conflictBehavior: "replace"`.
-
-If the register would exceed the 1 MB cap, start a new file for the next tax
-year rather than dropping rows, and tell the user.
-
-## The one thing to get right
-
-**The column layout in `references/psid-columns.json` is a best guess, not a
-verified FBR template.** A wrong layout means IRIS rejects the upload.
-
-If the user has a real FBR template file, read its header row and rewrite
-`references/psid-columns.json` to match exactly — same header text, same order —
-then rebuild. Once a run is confirmed accepted by IRIS, note that in the JSON's
-`_comment` so nobody second-guesses it later.
-
-Ask for a real template on the first run if the file still says it is unverified.
-
-## Do not
-
-- Recalculate tax. The app is the source of truth; this skill only reshapes.
-- Write anything back to the app — the API is read-only by design.
-- Commit `.xlsx` output or the token to git.
-- Put client tax data anywhere other than SharePoint or the scratchpad.
+The generated file's column layout is a **best guess**, not a verified FBR
+template. If the user reports IRIS rejecting an upload, the fix is the layout
+editor on the Prepare PSID screen — have them copy the header row from a real FBR
+template into it.

@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Services\Wht;
+
+use App\Models\WhtCompany;
+use App\Models\WhtSection;
+use Illuminate\Support\Carbon;
+
+/**
+ * A PSID "batch": every transaction of one kind for one agent and tax period.
+ *
+ * The firm raises two challans a month per agent — one for all vendor
+ * withholding (spanning whatever sections apply) and one for salaries — so the
+ * batch is keyed on kind + period, not on section.
+ *
+ * Shared by the Prepare PSID screen and the read-only API so the two cannot
+ * disagree about what is in a batch.
+ */
+class WhtPsidBatcher
+{
+    public const KINDS = ['purchases', 'salaries'];
+
+    /** The underlying query, so callers can also update in bulk. */
+    public function query(WhtCompany $company, Carbon $monthStart, string $kind)
+    {
+        return $kind === 'salaries'
+            ? $company->salaries()->whereDate('salary_month', $monthStart)
+            : $company->purchases()->whereDate('period_month', $monthStart);
+    }
+
+    public function batch(WhtCompany $company, Carbon $monthStart, string $kind): array
+    {
+        $isSalary = $kind === 'salaries';
+
+        $items = $this->query($company, $monthStart, $kind)
+            ->with($isSalary ? 'employee' : 'party')
+            ->orderBy('payment_date')
+            ->get();
+
+        $sections = WhtSection::all();
+
+        $rows = $items->map(function ($t) use ($isSalary, $sections) {
+            $party = $isSalary ? $t->employee : $t->party;
+            $section = $t->section ?: ($isSalary ? '149' : '');
+            $meta = $sections->firstWhere('section', $section);
+
+            return [
+                'section'        => $section,
+                'section_code'   => $meta?->code ?? '',
+                'payment_nature' => $meta?->payment_nature ?? ($isSalary ? 'Salary' : ''),
+                'payee_name'     => $party?->name,
+                'payee_cnic_ntn' => $party?->cnic_ntn,
+                'atl_status'     => $party?->atl_status === 'non-filer' ? 'Non-filer' : 'Filer',
+                'payment_date'   => $t->payment_date?->toDateString(),
+                'gross_amount'   => (float) ($isSalary ? $t->total_salary : $t->gross_amount),
+                'taxable_salary' => $isSalary ? (float) $t->taxable_salary : null,
+                'exempt_amount'  => $isSalary ? (float) $t->exempt_amount : null,
+                'tax_rate'       => $isSalary ? null : (float) $t->tax_rate,
+                'tax_withheld'   => (float) ($isSalary ? $t->tax_deducted : $t->tax_withheld),
+                'psid_no'        => $t->psid_no,
+                'cpr_no'         => $t->cpr_no,
+            ];
+        });
+
+        $count = $rows->count();
+        $withPsid = $rows->filter(fn($r) => filled($r['psid_no']))->count();
+        $withCpr = $rows->filter(fn($r) => filled($r['cpr_no']))->count();
+
+        return [
+            'kind'      => $kind,
+            'label'     => $isSalary ? 'Salaries' : 'Vendors & Suppliers',
+            'rows'      => $rows,
+            'count'     => $count,
+            'payees'    => $rows->pluck('payee_cnic_ntn')->filter()->unique()->count(),
+            'gross'     => $rows->sum('gross_amount'),
+            'tax'       => $rows->sum('tax_withheld'),
+            'sections'  => $rows->pluck('section')->filter()->unique()->sort()->values(),
+            'psid_no'   => $rows->pluck('psid_no')->filter()->unique()->values(),
+            'cpr_no'    => $rows->pluck('cpr_no')->filter()->unique()->values(),
+            'with_psid' => $withPsid,
+            'with_cpr'  => $withCpr,
+            'status'    => match (true) {
+                $count === 0         => 'empty',
+                $withCpr === $count  => 'paid',
+                $withPsid === $count => 'psid',
+                $withPsid > 0        => 'partial',
+                default              => 'pending',
+            },
+        ];
+    }
+}

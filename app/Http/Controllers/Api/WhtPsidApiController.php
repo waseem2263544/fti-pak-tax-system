@@ -4,21 +4,30 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\WhtCompany;
-use App\Models\WhtSection;
+use App\Services\Wht\WhtPsidBatcher;
+use App\Services\Wht\WhtPsidWorkbook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * Read-only WHT data for external tooling (the wht-psid Claude skill).
+ * Read-only WHT endpoints for the wht-psid Claude skill.
  *
- * Authenticated with a single shared token in WHT_API_TOKEN rather than a user
- * session, because the caller is a script. The token gates read access to
- * withholding data, so treat it like a password: keep it out of git, and rotate
- * it if it leaks. Nothing here writes.
+ * The app itself is where the work happens — Prepare PSID does the whole
+ * download / assign / record cycle. These exist for the things a screen is bad
+ * at: looking across every agent at once, and pulling files in bulk.
+ *
+ * Authenticated with the shared WHT_API_TOKEN rather than a session, because the
+ * caller is a script. Nothing here writes; assigning a PSID or CPR is a
+ * deliberate human action in the app.
  */
 class WhtPsidApiController extends Controller
 {
-    private function authorizeToken(Request $request): bool
+    public function __construct(private WhtPsidBatcher $batcher)
+    {
+    }
+
+    private function authorized(Request $request): bool
     {
         $expected = (string) config('services.wht_api.token', '');
 
@@ -32,10 +41,10 @@ class WhtPsidApiController extends Controller
         return $given !== '' && hash_equals($expected, $given);
     }
 
-    /** GET /api/wht/agents — list withholding agents so the skill can resolve a name. */
+    /** GET /api/wht/agents */
     public function agents(Request $request)
     {
-        if (!$this->authorizeToken($request)) {
+        if (!$this->authorized($request)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -45,112 +54,152 @@ class WhtPsidApiController extends Controller
     }
 
     /**
-     * GET /api/wht/psid?agent=<id|name>&month=YYYY-MM
+     * GET /api/wht/status?month=YYYY-MM
      *
-     * Rows are selected by TAX PERIOD, not payment date, so a liability
-     * deposited late still belongs to its own month.
+     * Every agent's two batches for a period — what still needs a PSID, and
+     * what has a PSID but no CPR. This is the "who hasn't deposited yet" view.
      */
-    public function psid(Request $request)
+    public function status(Request $request)
     {
-        if (!$this->authorizeToken($request)) {
+        if (!$this->authorized($request)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $validated = $request->validate([
-            'agent' => 'required|string',
-            'month' => 'required|date_format:Y-m',
-        ]);
+        $month = $this->month($request);
+        $out = [];
 
-        $agent = ctype_digit($validated['agent'])
-            ? WhtCompany::find($validated['agent'])
-            : WhtCompany::where('name', 'like', '%' . $validated['agent'] . '%')->first();
+        foreach (WhtCompany::where('is_active', true)->orderBy('name')->get() as $agent) {
+            $batches = [];
+
+            foreach (WhtPsidBatcher::KINDS as $kind) {
+                $b = $this->batcher->batch($agent, $month, $kind);
+
+                $batches[$kind] = [
+                    'entries'   => $b['count'],
+                    'payees'    => $b['payees'],
+                    'gross'     => round($b['gross'], 2),
+                    'tax'       => round($b['tax'], 2),
+                    'status'    => $b['status'],
+                    'psid_no'   => $b['psid_no'],
+                    'cpr_no'    => $b['cpr_no'],
+                    'sections'  => $b['sections'],
+                ];
+            }
+
+            $out[] = [
+                'agent'   => ['id' => $agent->id, 'name' => $agent->name, 'ntn_cnic' => $agent->ntn_cnic],
+                'batches' => $batches,
+            ];
+        }
+
+        return response()->json(['period' => $month->format('Y-m'), 'agents' => $out]);
+    }
+
+    /** GET /api/wht/psid?agent=<id|name>&month=YYYY-MM — the rows, as JSON. */
+    public function psid(Request $request)
+    {
+        if (!$this->authorized($request)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $agent = $this->agent($request);
 
         if (!$agent) {
             return response()->json(['error' => 'Withholding agent not found'], 404);
         }
 
-        $month = Carbon::createFromFormat('Y-m-d', $validated['month'] . '-01')->startOfMonth();
+        $month = $this->month($request);
+        $batches = [];
 
-        $sections = WhtSection::all();
-        $codeFor = fn(?string $s) => $sections->firstWhere('section', $s);
-
-        $out = [];
-
-        $purchases = $agent->purchases()->with('party')
-            ->whereDate('period_month', $month)
-            ->orderBy('payment_date')->get();
-
-        foreach ($purchases->groupBy('section') as $section => $items) {
-            $meta = $codeFor($section);
-
-            $out[] = [
-                'section'        => $section ?: 'Unclassified',
-                'code'           => $meta?->code ?? '',
-                'payment_nature' => $meta?->payment_nature ?? '',
-                'kind'           => 'purchase',
-                'rows'           => $items->map(fn($p) => [
-                    'payee_name'     => $p->party?->name,
-                    'payee_cnic_ntn' => $p->party?->cnic_ntn,
-                    'payee_category' => $p->party?->category,
-                    'atl_status'     => $p->party?->atl_status === 'non-filer' ? 'Non-filer' : 'Filer',
-                    'payment_date'   => $p->payment_date?->toDateString(),
-                    'period_month'   => $p->period_month?->format('Y-m'),
-                    'gross_amount'   => (float) $p->gross_amount,
-                    'tax_rate'       => (float) $p->tax_rate,
-                    'tax_withheld'   => (float) $p->tax_withheld,
-                    'net_payment'    => (float) $p->net_payment,
-                    'psid_no'        => $p->psid_no,
-                    'cpr_no'         => $p->cpr_no,
-                    'remarks'        => $p->remarks,
-                ])->values(),
+        foreach (WhtPsidBatcher::KINDS as $kind) {
+            $b = $this->batcher->batch($agent, $month, $kind);
+            $batches[$kind] = [
+                'status' => $b['status'],
+                'count'  => $b['count'],
+                'gross'  => round($b['gross'], 2),
+                'tax'    => round($b['tax'], 2),
+                'rows'   => $b['rows'],
             ];
         }
-
-        $salaries = $agent->salaries()->with('employee')
-            ->whereDate('salary_month', $month)
-            ->orderBy('payment_date')->get();
-
-        foreach ($salaries->groupBy('section') as $section => $items) {
-            $meta = $codeFor($section ?: '149');
-
-            $out[] = [
-                'section'        => $section ?: '149',
-                'code'           => $meta?->code ?? '',
-                'payment_nature' => $meta?->payment_nature ?? 'Salary',
-                'kind'           => 'salary',
-                'rows'           => $items->map(fn($s) => [
-                    'payee_name'     => $s->employee?->name,
-                    'payee_cnic_ntn' => $s->employee?->cnic_ntn,
-                    'payment_date'   => $s->payment_date?->toDateString(),
-                    'period_month'   => $s->salary_month?->format('Y-m'),
-                    'taxable_salary' => (float) $s->taxable_salary,
-                    'exempt_amount'  => (float) $s->exempt_amount,
-                    'gross_amount'   => (float) $s->total_salary,
-                    'tax_rate'       => null,
-                    'tax_withheld'   => (float) $s->tax_deducted,
-                    'net_payment'    => (float) $s->final_net_payment,
-                    'psid_no'        => $s->psid_no,
-                    'cpr_no'         => $s->cpr_no,
-                ])->values(),
-            ];
-        }
-
-        usort($out, fn($a, $b) => strcmp($a['section'], $b['section']));
 
         return response()->json([
-            'agent' => [
-                'id'       => $agent->id,
-                'name'     => $agent->name,
-                'ntn_cnic' => $agent->ntn_cnic,
-                'address'  => $agent->address,
-            ],
-            'period'   => $month->format('Y-m'),
-            'sections' => $out,
-            'totals'   => [
-                'rows'  => collect($out)->sum(fn($s) => count($s['rows'])),
-                'gross' => collect($out)->sum(fn($s) => collect($s['rows'])->sum('gross_amount')),
-                'tax'   => collect($out)->sum(fn($s) => collect($s['rows'])->sum('tax_withheld')),
-            ],
+            'agent'   => ['id' => $agent->id, 'name' => $agent->name, 'ntn_cnic' => $agent->ntn_cnic],
+            'period'  => $month->format('Y-m'),
+            'batches' => $batches,
         ]);
+    }
+
+    /**
+     * GET /api/wht/psid/file?agent=<id|name>&month=YYYY-MM&kind=purchases|salaries
+     *
+     * The same workbook the Prepare PSID screen produces — one implementation,
+     * so a file fetched here is byte-identical to one downloaded in the app.
+     */
+    public function file(Request $request)
+    {
+        @set_time_limit(180);
+
+        if (!$this->authorized($request)) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $kind = $request->get('kind', 'purchases');
+
+        if (!in_array($kind, WhtPsidBatcher::KINDS, true)) {
+            return response()->json(['error' => 'kind must be purchases or salaries'], 422);
+        }
+
+        $agent = $this->agent($request);
+
+        if (!$agent) {
+            return response()->json(['error' => 'Withholding agent not found'], 404);
+        }
+
+        $month = $this->month($request);
+        $batch = $this->batcher->batch($agent, $month, $kind);
+
+        if ($batch['rows']->isEmpty()) {
+            return response()->json(['error' => 'Nothing recorded for ' . $month->format('F Y')], 404);
+        }
+
+        $book = (new WhtPsidWorkbook())->build($agent, $month, $kind, $batch['rows']);
+
+        $filename = sprintf(
+            'PSID-%s-%s-%s.xlsx',
+            str($agent->name)->slug(),
+            $kind === 'salaries' ? 'salaries' : 'vendors',
+            $month->format('Y-m')
+        );
+
+        return response()->streamDownload(function () use ($book) {
+            $writer = new Xlsx($book);
+            $writer->setPreCalculateFormulas(false);
+            $writer->save('php://output');
+            $book->disconnectWorksheets();
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    private function agent(Request $request): ?WhtCompany
+    {
+        $key = (string) $request->get('agent', '');
+
+        if ($key === '') {
+            return null;
+        }
+
+        return ctype_digit($key)
+            ? WhtCompany::find($key)
+            : WhtCompany::where('name', 'like', '%' . $key . '%')->first();
+    }
+
+    private function month(Request $request): Carbon
+    {
+        $request->validate(['month' => 'nullable|date_format:Y-m']);
+
+        $month = $request->get('month', now()->subMonth()->format('Y-m'));
+
+        return Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
     }
 }
