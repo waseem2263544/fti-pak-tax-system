@@ -9,6 +9,8 @@ use App\Models\WhtSalary;
 use App\Models\WhtSection;
 use App\Models\WhtSetting;
 use App\Services\Wht\WhtCalculator;
+use App\Services\Wht\WhtPeriod;
+use App\Services\Wht\WhtReconciler;
 use App\Services\Wht\WhtStatementFiler;
 use App\Services\Wht\WhtStatementWorkbook;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -91,12 +93,12 @@ class WhtReportController extends Controller
     {
         $company = $this->currentCompany();
 
-        $month = $request->get('month', now()->format('Y-m'));
-        $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+        $period = WhtPeriod::fromRequest($request);
+        $recon = (new WhtReconciler())->reconcile($company, $period);
 
-        $grouped = $this->groupedStatement($company, $monthStart);
+        $taxYears = range(WhtCalculator::taxYear(now()) + 1, WhtCalculator::taxYear(now()) - 4);
 
-        return view('wht.filing.index', compact('company', 'grouped', 'month', 'monthStart'));
+        return view('wht.filing.index', compact('company', 'period', 'recon', 'taxYears'));
     }
 
     /**
@@ -109,8 +111,7 @@ class WhtReportController extends Controller
 
         $company = $this->currentCompany();
 
-        $month = $request->get('month', now()->format('Y-m'));
-        $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+        $period = WhtPeriod::fromRequest($request);
 
         // Writing .xlsx needs these; on shared hosting they are not a given, and
         // the failure is otherwise an opaque 500.
@@ -125,18 +126,18 @@ class WhtReportController extends Controller
                 . implode(', ', $missing) . '. Ask your host to enable them, or use the CSV export.');
         }
 
-        $grouped = $this->groupedStatement($company, $monthStart);
+        $grouped = $this->groupedStatement($company, $period->from, $period->to);
 
         if ($grouped->isEmpty()) {
-            return back()->with('error', 'Nothing recorded for ' . $monthStart->format('F Y') . '.');
+            return back()->with('error', 'Nothing recorded for ' . $period->label . '.');
         }
 
-        $book = (new WhtStatementWorkbook())->build($company, $monthStart, $grouped);
+        $book = (new WhtStatementWorkbook())->build($company, $period->from, $grouped);
 
         $filename = sprintf(
             'WHT-Statement-%s-%s.xlsx',
             str($company->name)->slug(),
-            $monthStart->format('Y-m')
+            $period->slug()
         );
 
         return response()->streamDownload(function () use ($book) {
@@ -176,23 +177,22 @@ class WhtReportController extends Controller
             return back()->with('error', 'This needs PHP extensions not enabled on the server: ' . implode(', ', $missing) . '.');
         }
 
-        $month = $request->get('month', now()->format('Y-m'));
-        $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+        $period = WhtPeriod::fromRequest($request);
 
         $purchases = $company->purchases()->with('party')
-            ->whereDate('period_month', $monthStart)
+            ->whereBetween('period_month', [$period->from, $period->to])
             ->orderBy('payment_date')->get();
 
         $salaries = $company->salaries()->with('employee')
-            ->whereDate('salary_month', $monthStart)
+            ->whereBetween('salary_month', [$period->from, $period->to])
             ->orderBy('payment_date')->get();
 
         if ($purchases->isEmpty() && $salaries->isEmpty()) {
-            return back()->with('error', 'Nothing recorded for ' . $monthStart->format('F Y') . '.');
+            return back()->with('error', 'Nothing recorded for ' . $period->label . '.');
         }
 
         try {
-            $book = (new WhtStatementFiler())->build($company, $monthStart, $purchases, $salaries);
+            $book = (new WhtStatementFiler())->build($company, $period->from, $purchases, $salaries);
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -200,7 +200,7 @@ class WhtReportController extends Controller
         $filename = sprintf(
             'Withholding-Statement-%s-%s.xlsm',
             str($company->name)->slug(),
-            $monthStart->format('Y-m')
+            $period->slug()
         );
 
         return response()->streamDownload(function () use ($book) {
@@ -219,16 +219,18 @@ class WhtReportController extends Controller
      * detail underneath. Shared by the HTML view and the Excel export so the two
      * can never drift apart.
      */
-    private function groupedStatement($company, Carbon $monthStart)
+    private function groupedStatement($company, Carbon $from, ?Carbon $to = null)
     {
+        $to ??= $from;
+
         $purchaseRows = $company->purchases()
             ->with('party')
-            ->whereDate('period_month', $monthStart)
+            ->whereBetween('period_month', [$from, $to])
             ->get();
 
         $salaryRows = $company->salaries()
             ->with('employee')
-            ->whereDate('salary_month', $monthStart)
+            ->whereBetween('salary_month', [$from, $to])
             ->get();
 
         $sections = WhtSection::active()->get();
