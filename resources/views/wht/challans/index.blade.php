@@ -48,8 +48,16 @@
                         @endif
                     </td>
                     @endforeach
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-primary"
+                    <td class="text-end text-nowrap">
+                        <a href="{{ route('wht.challans.pdf', ['psid' => $c->psid_no]) }}" target="_blank"
+                           class="btn btn-sm btn-outline-primary" title="Schedule of entries (PDF)">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+                        <a href="{{ route('wht.challans.pdf', ['psid' => $c->psid_no, 'download' => 1]) }}"
+                           class="btn btn-sm btn-outline-primary" title="Download schedule">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-primary" title="Attach documents"
                                 onclick='openChallan(@json($c->psid_no), @json($c->cpr_no))'>
                             <i class="bi bi-paperclip"></i>
                         </button>

@@ -206,6 +206,7 @@ Route::middleware(['auth'])->group(function () {
         // Challans
         Route::get('challans', [\App\Http\Controllers\Wht\WhtChallanController::class, 'index'])->name('challans.index');
         Route::post('challans', [\App\Http\Controllers\Wht\WhtChallanController::class, 'upload'])->name('challans.upload');
+        Route::get('challans/schedule', [\App\Http\Controllers\Wht\WhtChallanController::class, 'pdf'])->name('challans.pdf');
         Route::get('challans/{challan}/{type}', [\App\Http\Controllers\Wht\WhtChallanController::class, 'download'])->name('challans.download');
         Route::delete('challans/{challan}/{type}', [\App\Http\Controllers\Wht\WhtChallanController::class, 'deleteFile'])->name('challans.delete-file');
 

@@ -44,12 +44,30 @@ class WhtPsidBatcher
             $section = $t->section ?: ($isSalary ? '149' : '');
             $meta = $sections->firstWhere('section', $section);
 
+            // FBR's template splits the tax number into two columns. A CNIC is
+            // 13 digits; anything shorter is an NTN, which keeps its dash.
+            $raw = (string) ($party?->cnic_ntn ?? '');
+            $digits = preg_replace('/[^0-9]/', '', $raw);
+            $isCnic = strlen($digits) === 13;
+
             return [
                 'section'        => $section,
                 'section_code'   => $meta?->code ?? '',
                 'payment_nature' => $meta?->payment_nature ?? ($isSalary ? 'Salary' : ''),
                 'payee_name'     => $party?->name,
                 'payee_cnic_ntn' => $party?->cnic_ntn,
+                'taxpayer_ntn'   => $isCnic ? null : ($raw ?: null),
+                'taxpayer_cnic'  => $isCnic ? $digits : null,
+                'taxpayer_status' => match ($party?->category) {
+                    'company'    => 'COMPANY',
+                    'aop'        => 'AOP',
+                    'individual' => 'INDIVIDUAL',
+                    default      => null,
+                },
+                'city'           => $party?->city,
+                'address'        => $party?->address,
+                // FBR wants a trading name; only companies and AOPs reliably have one.
+                'business_name'  => in_array($party?->category, ['company', 'aop'], true) ? $party?->name : null,
                 'atl_status'     => $party?->atl_status === 'non-filer' ? 'Non-filer' : 'Filer',
                 'payment_date'   => $t->payment_date?->toDateString(),
                 'gross_amount'   => (float) ($isSalary ? $t->total_salary : $t->gross_amount),

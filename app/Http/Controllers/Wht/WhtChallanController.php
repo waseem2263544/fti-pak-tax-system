@@ -59,6 +59,83 @@ class WhtChallanController extends Controller
         return view('wht.challans.index', compact('company', 'challans'));
     }
 
+    /**
+     * Every entry covered by one PSID or CPR, as a PDF.
+     *
+     * This is the schedule you attach to the challan for the file: what the
+     * single deposited figure is actually made up of, across both vendor
+     * payments and salaries.
+     */
+    public function pdf(Request $request)
+    {
+        @set_time_limit(180);
+
+        $company = $this->currentCompany();
+
+        $validated = $request->validate([
+            'psid' => 'required_without:cpr|nullable|string|max:100',
+            'cpr'  => 'required_without:psid|nullable|string|max:100',
+        ]);
+
+        // A CPR is the stronger reference once it exists, so prefer it.
+        $field = filled($validated['cpr'] ?? null) ? 'cpr_no' : 'psid_no';
+        $value = $field === 'cpr_no' ? $validated['cpr'] : $validated['psid'];
+
+        $purchases = $company->purchases()->with('party')
+            ->where($field, $value)
+            ->orderBy('period_month')->orderBy('payment_date')->get();
+
+        $salaries = $company->salaries()->with('employee')
+            ->where($field, $value)
+            ->orderBy('salary_month')->orderBy('payment_date')->get();
+
+        if ($purchases->isEmpty() && $salaries->isEmpty()) {
+            return back()->with('error', strtoupper(str_replace('_no', '', $field)) . " {$value} has no entries against it.");
+        }
+
+        // The stored documents, and whichever reference the entries carry.
+        $challan = $company->challans()
+            ->where($field === 'cpr_no' ? 'cpr_no' : 'psid_no', $value)
+            ->first();
+
+        $psid = $field === 'psid_no' ? $value : ($purchases->first()?->psid_no ?? $salaries->first()?->psid_no);
+        $cpr = $field === 'cpr_no' ? $value : ($purchases->first()?->cpr_no ?? $salaries->first()?->cpr_no);
+
+        $html = view('wht.challans.pdf', [
+            'company'   => $company,
+            'purchases' => $purchases,
+            'salaries'  => $salaries,
+            'psid'      => $psid,
+            'cpr'       => $cpr,
+            'paidOn'    => $challan?->paid_on ?? $purchases->first()?->cpr_date ?? $salaries->first()?->cpr_date,
+            'reference' => $field === 'cpr_no' ? 'CPR' : 'PSID',
+        ])->render();
+
+        $tempDir = storage_path('app/mpdf-temp');
+
+        if (!is_dir($tempDir)) {
+            @mkdir($tempDir, 0775, true);
+        }
+
+        $name = sprintf('%s-%s-%s', $field === 'cpr_no' ? 'CPR' : 'PSID',
+            preg_replace('/[^A-Za-z0-9_-]/', '', $value), str($company->name)->slug());
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8', 'format' => 'A4-L',
+            'margin_left' => 10, 'margin_right' => 10,
+            'margin_top' => 12, 'margin_bottom' => 14,
+            'tempDir' => $tempDir,
+        ]);
+        $mpdf->SetTitle($name);
+        $mpdf->WriteHTML($html);
+
+        $dest = $request->boolean('download')
+            ? \Mpdf\Output\Destination::DOWNLOAD
+            : \Mpdf\Output\Destination::INLINE;
+
+        $mpdf->Output($name . '.pdf', $dest);
+    }
+
     public function upload(Request $request)
     {
         $company = $this->currentCompany();

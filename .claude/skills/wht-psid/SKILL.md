@@ -137,9 +137,12 @@ spreadsheets.
 - Client tax data stays in the scratchpad or goes to the user. Nowhere else.
 - Never commit `.xlsx` output or the token.
 
-## Known unknown
+## If IRIS rejects an upload
 
-The generated file's column layout is a **best guess**, not a verified FBR
-template. If the user reports IRIS rejecting an upload, the fix is the layout
-editor on the Prepare PSID screen — have them copy the header row from a real FBR
-template into it.
+The generated file matches FBR's ePayments Import Template as downloaded from
+IRIS: ten columns, header on row 1, data from row 2, sheet named Sheet1. IRIS
+reads the grid literally — a title block or totals row breaks it.
+
+If FBR revises the template, the fix is the *Upload file column layout* editor on
+the Prepare PSID screen, which an admin changes with no deploy. Tell the user
+that; do not rebuild the file yourself.

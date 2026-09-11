@@ -95,6 +95,10 @@
                                 <div class="mb-2">
                                     @foreach($b['psid_no'] as $p)
                                         <span class="badge bg-info bg-opacity-10 text-info">{{ $p }}</span>
+                                        <a href="{{ route('wht.challans.pdf', ['psid' => $p]) }}" target="_blank"
+                                           class="btn btn-sm btn-outline-primary py-0" title="Schedule of entries (PDF)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
                                     @endforeach
                                     <span class="text-muted ms-1" style="font-size: 0.78rem;">
                                         on {{ $b['with_psid'] }} of {{ $b['count'] }} entries
@@ -120,6 +124,10 @@
                                 <div class="mb-2">
                                     @foreach($b['cpr_no'] as $c)
                                         <span class="badge bg-success bg-opacity-10 text-success">{{ $c }}</span>
+                                        <a href="{{ route('wht.challans.pdf', ['cpr' => $c]) }}" target="_blank"
+                                           class="btn btn-sm btn-outline-primary py-0" title="Schedule of entries (PDF)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
                                     @endforeach
                                     <span class="text-muted ms-1" style="font-size: 0.78rem;">
                                         on {{ $b['with_cpr'] }} of {{ $b['count'] }} entries
@@ -171,16 +179,16 @@
     <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;"
          onclick="document.getElementById('layoutBox').classList.toggle('d-none')">
         <strong>Upload file column layout</strong>
-        <span class="badge bg-{{ $layoutIsCustom ? 'success' : 'warning' }} bg-opacity-10 text-{{ $layoutIsCustom ? 'success' : 'warning' }}">
-            {{ $layoutIsCustom ? 'Customised' : 'Built-in default — unverified' }}
+        <span class="badge bg-{{ $layoutIsCustom ? 'warning' : 'success' }} bg-opacity-10 text-{{ $layoutIsCustom ? 'warning' : 'success' }}">
+            {{ $layoutIsCustom ? 'Customised' : 'Matches FBR ePayments Import Template' }}
         </span>
     </div>
     <div class="card-body d-none" id="layoutBox">
         <p class="text-muted" style="font-size: 0.85rem;">
-            This is what the generated file's columns look like. The built-in default is a
-            <strong>best guess</strong> — if IRIS rejects an upload, open a real FBR template, copy its header
-            row exactly, and edit the <code>header</code> values below to match. Changes apply immediately,
-            with no deploy.
+            These columns match FBR's <strong>ePayments Import Template</strong> exactly — ten columns,
+            header on row 1, data from row 2, sheet named Sheet1. IRIS reads the grid literally, so do not
+            add a title block or a totals row. If FBR revises the template, paste its header row in here;
+            changes apply immediately, with no deploy.
         </p>
         <form method="POST" action="{{ route('wht.psid.layout') }}">
             @csrf
