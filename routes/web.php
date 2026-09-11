@@ -166,6 +166,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Transactions — payments and salaries on one page.
         Route::get('transactions', [\App\Http\Controllers\Wht\WhtTransactionController::class, 'index'])->name('transactions.index');
+        Route::post('transactions/delete', [\App\Http\Controllers\Wht\WhtTransactionController::class, 'destroyBulk'])->name('transactions.delete-bulk');
 
         // Setup — the configuration hub.
         Route::get('setup', [\App\Http\Controllers\Wht\WhtSetupController::class, 'index'])->name('setup.index');
