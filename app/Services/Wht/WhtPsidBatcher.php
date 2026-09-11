@@ -20,6 +20,33 @@ class WhtPsidBatcher
 {
     public const KINDS = ['purchases', 'salaries'];
 
+    /**
+     * Every PSID already raised, with the period it covers and its tax total.
+     * Shared by the Deposit page and the Challans listing.
+     */
+    public function challanSummary(WhtCompany $company)
+    {
+        $purchases = \Illuminate\Support\Facades\DB::table('wht_purchases')
+            ->selectRaw("psid_no, cpr_no, tax_withheld AS tax, period_month AS period")
+            ->where('wht_company_id', $company->id)
+            ->whereNotNull('psid_no')->where('psid_no', '!=', '');
+
+        $rows = \Illuminate\Support\Facades\DB::table('wht_salaries')
+            ->selectRaw("psid_no, cpr_no, tax_deducted AS tax, salary_month AS period")
+            ->where('wht_company_id', $company->id)
+            ->whereNotNull('psid_no')->where('psid_no', '!=', '')
+            ->unionAll($purchases);
+
+        return \Illuminate\Support\Facades\DB::query()
+            ->fromSub($rows, 'd')
+            ->selectRaw('d.psid_no, MAX(d.cpr_no) AS cpr_no, SUM(d.tax) AS total_tax, COUNT(*) AS entries,
+                         MIN(d.period) AS period_from, MAX(d.period) AS period_to')
+            ->groupBy('d.psid_no')
+            ->orderByDesc('period_to')
+            ->orderByDesc('total_tax')
+            ->get();
+    }
+
     /** The underlying query, so callers can also update in bulk. */
     public function query(WhtCompany $company, Carbon $monthStart, string $kind)
     {

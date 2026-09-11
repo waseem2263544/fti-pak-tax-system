@@ -18,6 +18,27 @@ class WhtCompany extends Model
     public function challans() { return $this->hasMany(WhtChallan::class, 'wht_company_id'); }
     public function client() { return $this->belongsTo(Client::class); }
 
+    /**
+     * Agents a user may open. Admins see every active one; everyone else sees
+     * what their wht_company_user grant allows.
+     */
+    public static function accessibleTo($user)
+    {
+        if (!$user) {
+            return static::whereRaw('1 = 0')->get();
+        }
+
+        $query = static::query()->where('is_active', true)->orderBy('name');
+
+        if (!$user->hasRole('admin')) {
+            $query->whereHas('users', fn($q) => $q
+                ->where('users.id', $user->id)
+                ->where('wht_company_user.can_view', true));
+        }
+
+        return $query->get();
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class, 'wht_company_user', 'wht_company_id', 'user_id')

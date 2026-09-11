@@ -90,8 +90,6 @@ class Client extends Model
     }
 
     public function secpDirectors() { return $this->hasMany(SecpDirector::class); }
-    public function salesInvoices() { return $this->hasMany(AccSalesInvoice::class); }
-    public function receipts() { return $this->hasMany(AccVoucher::class)->where('type', 'receipt'); }
 
     /**
      * Encrypt password when setting.

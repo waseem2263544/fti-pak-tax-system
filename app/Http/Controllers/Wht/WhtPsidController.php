@@ -66,7 +66,7 @@ class WhtPsidController extends Controller
             ->where($this->taxColumn($kind), '>', 0)
             ->count();
 
-        return view('wht.psid.index', [
+        return view('wht.deposit.index', [
             'company'        => $company,
             'kind'           => $kind,
             'month'          => $month,
@@ -75,6 +75,7 @@ class WhtPsidController extends Controller
             'outstanding'    => $outstanding,
             'layoutJson'     => json_encode(WhtPsidWorkbook::layout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
             'layoutIsCustom' => (bool) WhtSetting::get(WhtPsidWorkbook::SETTING_KEY),
+            'challans'       => $this->batcher->challanSummary($company),
         ]);
     }
 

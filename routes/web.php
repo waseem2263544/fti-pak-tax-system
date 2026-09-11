@@ -13,7 +13,6 @@ use App\Http\Controllers\AutomatedTaskController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ClientDocumentController;
-use App\Http\Controllers\NewsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MicrosoftAuthController;
@@ -98,12 +97,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('client-documents/{client}/update-link', [ClientDocumentController::class, 'updateLink'])->name('client-documents.update-link');
     Route::post('client-documents/link-folder', [ClientDocumentController::class, 'linkFolder'])->name('client-documents.link-folder');
 
-    // News
-    Route::get('news', [NewsController::class, 'index'])->name('news.index');
-    Route::get('news/fetch', [NewsController::class, 'fetchNow'])->name('news.fetch');
-    Route::post('news/{newsArticle}/pin', [NewsController::class, 'togglePin'])->name('news.pin');
-    Route::delete('news/{newsArticle}', [NewsController::class, 'destroy'])->name('news.destroy');
-
     // Comments
     Route::post('comments', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
@@ -118,61 +111,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Chrome Extension
     Route::get('extension', function () { return view('extension.download'); })->name('extension.download');
-
-    // ── ACCOUNTING MODULE ──
-    Route::prefix('accounting')->name('accounting.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'dashboard'])->name('dashboard');
-
-        Route::resource('accounts', \App\Http\Controllers\Accounting\AccountController::class);
-
-        Route::resource('journal-entries', \App\Http\Controllers\Accounting\JournalEntryController::class)->except(['edit', 'update'])->parameters(['journal-entries' => 'journalEntry']);
-        Route::post('journal-entries/{journalEntry}/post', [\App\Http\Controllers\Accounting\JournalEntryController::class, 'post'])->name('journal-entries.post');
-        Route::post('journal-entries/{journalEntry}/reverse', [\App\Http\Controllers\Accounting\JournalEntryController::class, 'reverse'])->name('journal-entries.reverse');
-
-        Route::post('recurring-invoices/generate-due', [\App\Http\Controllers\Accounting\AccRecurringInvoiceController::class, 'generateDue'])->name('recurring-invoices.generate-due');
-        Route::post('recurring-invoices/{recurringInvoice}/generate', [\App\Http\Controllers\Accounting\AccRecurringInvoiceController::class, 'generate'])->name('recurring-invoices.generate');
-        Route::resource('recurring-invoices', \App\Http\Controllers\Accounting\AccRecurringInvoiceController::class)->except(['show'])->parameters(['recurring-invoices' => 'recurringInvoice']);
-
-        Route::resource('sales-invoices', \App\Http\Controllers\Accounting\SalesInvoiceController::class)->parameters(['sales-invoices' => 'salesInvoice']);
-        Route::post('sales-invoices/{salesInvoice}/send', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'markSent'])->name('sales-invoices.send');
-        Route::get('sales-invoices/{salesInvoice}/pdf', [\App\Http\Controllers\Accounting\SalesInvoiceController::class, 'pdf'])->name('sales-invoices.pdf');
-
-        Route::resource('purchase-invoices', \App\Http\Controllers\Accounting\PurchaseInvoiceController::class)->parameters(['purchase-invoices' => 'purchaseInvoice']);
-        Route::get('purchase-invoices/{purchaseInvoice}/pdf', [\App\Http\Controllers\Accounting\PurchaseInvoiceController::class, 'pdf'])->name('purchase-invoices.pdf');
-
-        Route::resource('payment-vouchers', \App\Http\Controllers\Accounting\PaymentVoucherController::class)->except(['edit', 'update'])->parameters(['payment-vouchers' => 'paymentVoucher']);
-        Route::get('payment-vouchers/{paymentVoucher}/pdf', [\App\Http\Controllers\Accounting\PaymentVoucherController::class, 'pdf'])->name('payment-vouchers.pdf');
-
-        Route::resource('receipt-vouchers', \App\Http\Controllers\Accounting\ReceiptVoucherController::class)->except(['edit', 'update'])->parameters(['receipt-vouchers' => 'receiptVoucher']);
-        Route::get('receipt-vouchers/{receiptVoucher}/pdf', [\App\Http\Controllers\Accounting\ReceiptVoucherController::class, 'pdf'])->name('receipt-vouchers.pdf');
-
-        Route::resource('contacts', \App\Http\Controllers\Accounting\AccContactController::class)->parameters(['contacts' => 'contact']);
-
-        Route::resource('fiscal-years', \App\Http\Controllers\Accounting\AccFiscalYearController::class)->except(['show'])->parameters(['fiscal-years' => 'fiscalYear']);
-        Route::post('fiscal-years/{fiscalYear}/close', [\App\Http\Controllers\Accounting\AccFiscalYearController::class, 'close'])->name('fiscal-years.close');
-
-        Route::get('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'index'])->name('settings.index');
-        Route::put('settings', [\App\Http\Controllers\Accounting\AccSettingController::class, 'update'])->name('settings.update');
-        Route::get('audit-log', [\App\Http\Controllers\Accounting\AccSettingController::class, 'auditLog'])->name('audit-log');
-
-        Route::get('reconciliation', [\App\Http\Controllers\Accounting\AccBankReconciliationController::class, 'index'])->name('reconciliation.index');
-        Route::get('reconciliation/{account}', [\App\Http\Controllers\Accounting\AccBankReconciliationController::class, 'show'])->name('reconciliation.show');
-        Route::post('reconciliation/{account}', [\App\Http\Controllers\Accounting\AccBankReconciliationController::class, 'save'])->name('reconciliation.save');
-
-        Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('trial-balance', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'trialBalance'])->name('trial-balance');
-            Route::get('balance-sheet', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'balanceSheet'])->name('balance-sheet');
-            Route::get('income-statement', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'incomeStatement'])->name('income-statement');
-            Route::get('general-ledger', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'generalLedger'])->name('general-ledger');
-            Route::get('account-ledger/{account}', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'accountLedger'])->name('account-ledger');
-            Route::get('customer-statement', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'customerStatement'])->name('customer-statement');
-            Route::get('tax-report', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'taxReport'])->name('tax-report');
-            Route::get('diagnostics', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'diagnostics'])->name('diagnostics');
-            Route::get('receivable-aging', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'receivableAging'])->name('receivable-aging');
-            Route::get('payable-aging', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'payableAging'])->name('payable-aging');
-            Route::get('cash-flow', [\App\Http\Controllers\Accounting\AccountingReportController::class, 'cashFlow'])->name('cash-flow');
-        });
-    });
 
     // ── WITHHOLDING TAX (WHT) MODULE ──
     Route::prefix('wht')->name('wht.')->group(function () {

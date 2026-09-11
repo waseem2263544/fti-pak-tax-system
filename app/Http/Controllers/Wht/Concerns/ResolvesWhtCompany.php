@@ -56,17 +56,7 @@ trait ResolvesWhtCompany
      */
     protected function accessibleCompanies()
     {
-        $user = Auth::user();
-
-        $query = WhtCompany::query()->where('is_active', true)->orderBy('name');
-
-        if (!$user?->hasRole('admin')) {
-            $query->whereHas('users', fn($q) => $q
-                ->where('users.id', $user?->id)
-                ->where('wht_company_user.can_view', true));
-        }
-
-        return $query->get();
+        return WhtCompany::accessibleTo(Auth::user());
     }
 
     /**
