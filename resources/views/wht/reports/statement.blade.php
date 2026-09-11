@@ -13,8 +13,11 @@
                 <input type="month" name="month" class="form-control" value="{{ $month }}">
             </div>
             <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Show</button>
-            <a href="{{ route('wht.reports.statement-excel', ['month' => $month]) }}" class="btn btn-success">
-                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+            <a href="{{ route('wht.reports.statement-filing', ['month' => $month]) }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> FBR Statement (.xlsm)
+            </a>
+            <a href="{{ route('wht.reports.statement-excel', ['month' => $month]) }}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-excel me-1"></i> Working Copy
             </a>
             <div class="ms-auto text-muted" style="font-size: 0.82rem; max-width: 460px;">
                 Grouped by section for the statement under s.165. Entries are matched on their

@@ -9,6 +9,7 @@ use App\Models\WhtSalary;
 use App\Models\WhtSection;
 use App\Models\WhtSetting;
 use App\Services\Wht\WhtCalculator;
+use App\Services\Wht\WhtStatementFiler;
 use App\Services\Wht\WhtStatementWorkbook;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Http\Request;
@@ -145,6 +146,70 @@ class WhtReportController extends Controller
             $book->disconnectWorksheets();
         }, $filename, [
             'Content-Type'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0, no-store',
+        ]);
+    }
+
+    /**
+     * The s.165 statement in FBR's own Withholding Statement workbook.
+     *
+     * Their .xlsm is used as the template and written back as .xlsm so the
+     * validation macro survives — bad rows get flagged locally before anything
+     * reaches IRIS.
+     */
+    public function statementFiling(Request $request)
+    {
+        @set_time_limit(240);
+
+        $company = $this->currentCompany();
+
+        if (!WhtStatementFiler::templateExists()) {
+            return back()->with('error', 'The FBR withholding statement template is missing from the server.');
+        }
+
+        $missing = array_values(array_filter(
+            ['zip', 'xmlreader', 'xmlwriter', 'dom', 'simplexml', 'mbstring'],
+            fn($e) => !extension_loaded($e)
+        ));
+
+        if ($missing) {
+            return back()->with('error', 'This needs PHP extensions not enabled on the server: ' . implode(', ', $missing) . '.');
+        }
+
+        $month = $request->get('month', now()->format('Y-m'));
+        $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+
+        $purchases = $company->purchases()->with('party')
+            ->whereDate('period_month', $monthStart)
+            ->orderBy('payment_date')->get();
+
+        $salaries = $company->salaries()->with('employee')
+            ->whereDate('salary_month', $monthStart)
+            ->orderBy('payment_date')->get();
+
+        if ($purchases->isEmpty() && $salaries->isEmpty()) {
+            return back()->with('error', 'Nothing recorded for ' . $monthStart->format('F Y') . '.');
+        }
+
+        try {
+            $book = (new WhtStatementFiler())->build($company, $monthStart, $purchases, $salaries);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $filename = sprintf(
+            'Withholding-Statement-%s-%s.xlsm',
+            str($company->name)->slug(),
+            $monthStart->format('Y-m')
+        );
+
+        return response()->streamDownload(function () use ($book) {
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, 'Xlsx');
+            $writer->setPreCalculateFormulas(false);
+            $writer->save('php://output');
+            $book->disconnectWorksheets();
+        }, $filename, [
+            'Content-Type'  => 'application/vnd.ms-excel.sheet.macroEnabled.12',
             'Cache-Control' => 'max-age=0, no-store',
         ]);
     }
