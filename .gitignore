@@ -23,5 +23,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
-.claude/
+.claude/*
+!.claude/skills/
 .env.deploy

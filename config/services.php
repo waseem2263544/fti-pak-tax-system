@@ -2,6 +2,12 @@
 
 return [
 
+    'wht_api' => [
+        // Shared token for the read-only WHT endpoints used by the wht-psid skill.
+        'token' => env('WHT_API_TOKEN'),
+    ],
+
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
