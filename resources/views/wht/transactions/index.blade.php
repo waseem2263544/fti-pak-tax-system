@@ -82,11 +82,17 @@
     </div>
 </div>
 
+<form method="POST" action="{{ route('wht.transactions.delete-bulk') }}" id="bulkForm"
+      onsubmit="return confirmBulkDelete()">
+@csrf
+<input type="hidden" name="kind" value="{{ $kind }}">
+
 <div class="card">
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead>
                 <tr>
+                    <th style="width: 34px;"><input type="checkbox" class="form-check-input" id="checkAll"></th>
                     <th>{{ $isSalary ? 'Month' : 'Period' }}</th>
                     <th>{{ $isSalary ? 'Employee' : 'Vendor' }}</th>
                     @unless($isSalary)<th>Section</th>@endunless
@@ -103,6 +109,11 @@
                 @forelse($rows as $r)
                 @php $party = $isSalary ? $r->employee : $r->party; @endphp
                 <tr>
+                    <td>
+                        <input type="checkbox" class="form-check-input row-check" name="ids[]" value="{{ $r->id }}"
+                               data-tax="{{ $isSalary ? $r->tax_deducted : $r->tax_withheld }}"
+                               data-cpr="{{ filled($r->cpr_no) ? 1 : 0 }}">
+                    </td>
                     <td>{{ ($isSalary ? $r->salary_month : $r->period_month)?->format('M Y') }}</td>
                     <td>
                         {{ $party?->name ?? '—' }}
@@ -151,7 +162,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="10" class="text-center text-muted py-5">
+                <tr><td colspan="11" class="text-center text-muted py-5">
                     Nothing matches these filters.
                 </td></tr>
                 @endforelse
@@ -159,7 +170,7 @@
             @if($rows->isNotEmpty())
             <tfoot>
                 <tr class="fw-semibold">
-                    <td colspan="{{ $isSalary ? 2 : 3 }}" class="text-end">Totals (filtered)</td>
+                    <td colspan="{{ $isSalary ? 3 : 4 }}" class="text-end">Totals (filtered)</td>
                     <td class="text-end">{{ number_format($totals->g, 0) }}</td>
                     @if($isSalary)<td></td><td></td>@else<td></td>@endif
                     <td class="text-end">{{ number_format($totals->t, 0) }}</td>
@@ -172,5 +183,68 @@
     </div>
 </div>
 
+@if($rows->isNotEmpty())
+<div class="card mt-3" id="bulkBar" style="display: none; position: sticky; bottom: 12px;">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <span class="fw-bold"><span id="selCount">0</span> selected</span>
+            <span class="text-muted ms-2">·</span>
+            <span class="ms-2">Tax <span class="fw-bold" id="selTax">0</span></span>
+            <span id="cprWarn" class="badge bg-warning text-dark ms-2 d-none"></span>
+        </div>
+        <button class="btn btn-outline-danger">
+            <i class="bi bi-trash me-1"></i> Delete selected
+        </button>
+    </div>
+</div>
+@endif
+</form>
+
 <div class="mt-3">{{ $rows->links() }}</div>
 @endsection
+
+@section('scripts')
+<script>
+(function () {
+    const checks = () => Array.from(document.querySelectorAll('.row-check'));
+
+    function refresh() {
+        const sel = checks().filter(c => c.checked);
+        const tax = sel.reduce((t, c) => t + parseFloat(c.dataset.tax || 0), 0);
+        const cpr = sel.filter(c => c.dataset.cpr === '1').length;
+
+        document.getElementById('selCount').textContent = sel.length;
+        document.getElementById('selTax').textContent = tax.toLocaleString(undefined, {maximumFractionDigits: 0});
+        document.getElementById('bulkBar').style.display = sel.length ? '' : 'none';
+
+        // Deleting an entry that has been deposited is the risky case, so say so.
+        const warn = document.getElementById('cprWarn');
+        warn.classList.toggle('d-none', cpr === 0);
+        warn.textContent = cpr ? cpr + ' already deposited (has a CPR)' : '';
+
+        const all = document.getElementById('checkAll');
+        all.checked = sel.length > 0 && sel.length === checks().length;
+        all.indeterminate = sel.length > 0 && sel.length < checks().length;
+    }
+
+    document.getElementById('checkAll').addEventListener('change', e => {
+        checks().forEach(c => c.checked = e.target.checked);
+        refresh();
+    });
+
+    document.addEventListener('change', e => {
+        if (e.target.classList.contains('row-check')) refresh();
+    });
+
+    window.confirmBulkDelete = function () {
+        const sel = checks().filter(c => c.checked);
+        const cpr = sel.filter(c => c.dataset.cpr === '1').length;
+        let msg = 'Delete ' + sel.length + ' entries? This cannot be undone.';
+        if (cpr) msg += '\n\n' + cpr + ' of them record tax already deposited with FBR. '
+                     + 'If the period has been filed, your records will no longer match the return.';
+        return confirm(msg);
+    };
+
+    refresh();
+})();
+</script>

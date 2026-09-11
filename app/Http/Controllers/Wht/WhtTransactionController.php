@@ -7,6 +7,7 @@ use App\Http\Controllers\Wht\Concerns\ResolvesWhtCompany;
 use App\Models\WhtSection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Transactions — vendor payments and salaries on one page.
@@ -83,5 +84,47 @@ class WhtTransactionController extends Controller
         return view('wht.transactions.index', compact(
             'company', 'kind', 'isSalary', 'rows', 'totals', 'parties', 'sections'
         ));
+    }
+
+    /**
+     * Delete a selected set of entries.
+     *
+     * Entries carrying a CPR record tax already deposited with FBR, so the count
+     * of those is reported back rather than deleted quietly — if a quarter has
+     * been filed, removing them puts your records out of step with the return.
+     */
+    public function destroyBulk(Request $request)
+    {
+        $company = $this->currentCompany();
+        $this->authorizeAbility('delete', $company);
+
+        $validated = $request->validate([
+            'kind'  => 'required|in:purchases,salaries',
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $isSalary = $validated['kind'] === 'salaries';
+        $query = ($isSalary ? $company->salaries() : $company->purchases())
+            ->whereIn('id', $validated['ids']);
+
+        $taxColumn = $isSalary ? 'tax_deducted' : 'tax_withheld';
+
+        $deposited = (clone $query)->whereNotNull('cpr_no')->where('cpr_no', '!=', '')->count();
+        $depositedTax = (clone $query)->whereNotNull('cpr_no')->where('cpr_no', '!=', '')->sum($taxColumn);
+        $tax = (clone $query)->sum($taxColumn);
+
+        $count = 0;
+        DB::transaction(function () use ($query, &$count) {
+            $count = $query->delete();
+        });
+
+        $note = $deposited
+            ? " {$deposited} of them carried a CPR, so " . number_format((float) $depositedTax, 0)
+              . ' of already-deposited tax is no longer recorded.'
+            : '';
+
+        return back()->with($deposited ? 'error' : 'success',
+            "Deleted {$count} entries totalling " . number_format((float) $tax, 0) . " in tax.{$note}");
     }
 }
