@@ -2,6 +2,11 @@
 
 return [
 
+    'wht_mcp' => [
+        // Secret embedded in the MCP connector URL. Empty disables the endpoint.
+        'secret' => env('WHT_MCP_SECRET'),
+    ],
+
     'wht_api' => [
         // Shared token for the read-only WHT endpoints used by the wht-psid skill.
         'token' => env('WHT_API_TOKEN'),

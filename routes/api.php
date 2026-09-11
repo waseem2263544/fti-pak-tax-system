@@ -12,3 +12,9 @@ Route::get('wht/agents', [\App\Http\Controllers\Api\WhtPsidApiController::class,
 Route::get('wht/psid', [\App\Http\Controllers\Api\WhtPsidApiController::class, 'psid']);
 Route::get('wht/psid/file', [\App\Http\Controllers\Api\WhtPsidApiController::class, 'file']);
 Route::get('wht/status', [\App\Http\Controllers\Api\WhtPsidApiController::class, 'status']);
+
+// MCP connector for the claude.ai app. The secret is part of the path; an unset
+// secret makes the endpoint 404 rather than merely unauthenticated.
+Route::post('mcp/{secret}', [\App\Http\Controllers\Mcp\WhtMcpController::class, 'handle'])
+    ->middleware('throttle:120,1')
+    ->where('secret', '[A-Za-z0-9_-]{32,128}');

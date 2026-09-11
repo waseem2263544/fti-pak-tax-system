@@ -73,19 +73,44 @@ class WhtTransactionImporter
             'rows'     => $rows,
             'headers'  => $headerRow,
             'unmapped' => $unmapped,
-            'summary'  => [
-                'total'    => $rows->count(),
-                'ok'       => $rows->where('status', self::STATUS_OK)->count(),
-                'warning'  => $rows->where('status', self::STATUS_WARNING)->count(),
-                'blocked'  => $rows->where('status', self::STATUS_BLOCKED)->count(),
-                'gross'    => $rows->where('status', '!=', self::STATUS_BLOCKED)->sum('gross_amount'),
-                'tax'      => $rows->where('status', '!=', self::STATUS_BLOCKED)->sum('tax_withheld'),
-                // Only rows blocked *because of* the payee — not ones blocked
-                // for a bad date that happen to name a known vendor.
-                'unknown'  => $rows->filter(fn($r) => collect($r['problems'])
-                                        ->contains(fn($p) => str_contains($p, 'Payee not found')))
-                                   ->pluck('raw_payee')->filter()->unique()->values(),
-            ],
+            'summary'  => $this->summarise($rows),
+        ];
+    }
+
+    /**
+     * Same analysis, but for rows supplied directly rather than read from a
+     * sheet — used by the MCP connector, where Claude has already parsed the
+     * spreadsheet and sends structured rows.
+     *
+     * @param  array<int,array<string,mixed>>  $rows  keyed by the canonical field names
+     */
+    public function analyseRows(WhtCompany $company, array $rows): array
+    {
+        $fields = array_keys(self::ALIASES);
+        $map = array_flip($fields);
+
+        $parties = $company->parties()->get();
+        $byCnic = $parties->filter(fn($p) => filled($p->cnic_ntn))
+            ->keyBy(fn($p) => $this->normaliseId($p->cnic_ntn));
+        $byName = $parties->keyBy(fn($p) => $this->normaliseName($p->name));
+
+        $sections = WhtSection::all();
+
+        $analysed = collect($rows)->map(function ($row, $i) use ($fields, $map, $byCnic, $byName, $sections) {
+            // Flatten to the indexed shape analyseRow expects.
+            $indexed = [];
+            foreach ($fields as $n => $field) {
+                $indexed[$n] = $row[$field] ?? '';
+            }
+
+            return $this->analyseRow($indexed, $i + 1, $map, $byCnic, $byName, $sections);
+        })->filter()->values();
+
+        return [
+            'rows'     => $analysed,
+            'headers'  => $fields,
+            'unmapped' => [],
+            'summary'  => $this->summarise($analysed),
         ];
     }
 
@@ -368,6 +393,23 @@ class WhtTransactionImporter
     private function normaliseId(?string $v): string
     {
         return preg_replace('/[^0-9]/', '', (string) $v);
+    }
+
+    private function summarise(Collection $rows): array
+    {
+        return [
+            'total'   => $rows->count(),
+            'ok'      => $rows->where('status', self::STATUS_OK)->count(),
+            'warning' => $rows->where('status', self::STATUS_WARNING)->count(),
+            'blocked' => $rows->where('status', self::STATUS_BLOCKED)->count(),
+            'gross'   => $rows->where('status', '!=', self::STATUS_BLOCKED)->sum('gross_amount'),
+            'tax'     => $rows->where('status', '!=', self::STATUS_BLOCKED)->sum('tax_withheld'),
+            // Only rows blocked *because of* the payee — not ones blocked for a
+            // bad date that happen to name a known vendor.
+            'unknown' => $rows->filter(fn($r) => collect($r['problems'])
+                                   ->contains(fn($p) => str_contains($p, 'Payee not found')))
+                              ->pluck('raw_payee')->filter()->unique()->values(),
+        ];
     }
 
     private function normaliseName(?string $v): string

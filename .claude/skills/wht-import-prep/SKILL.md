@@ -9,6 +9,23 @@ The user runs a tax practice. Clients send payment records in whatever shape
 they like. The withholding software imports a fixed shape. Your job is the
 translation, and nothing else.
 
+## First: is the connector available?
+
+If you have FTI Pak WHT tools available (`list_agents`, `preview_import`,
+`commit_import`), use them instead of producing a file — that posts straight
+into the software and the user never handles a spreadsheet:
+
+1. `list_agents` to confirm which withholding agent is meant
+2. Parse the sheet into rows using the field names below
+3. `preview_import` with those rows — it returns what would be created
+4. **Show the user the summary** — rows importing, anything blocked, unknown
+   payees, any tax figures that disagree
+5. `commit_import` with the token, only after they agree
+
+The rules below still apply in full: send the rows, never your own tax figures.
+
+If those tools are not available, fall back to producing a CSV as described here.
+
 ## Output template
 
 One file. Header row exactly these nine names, in this order:
