@@ -3,7 +3,7 @@
 @section('page-title', 'Withholding Tax')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">

@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Prepare PSID')
-@section('page-title', 'Prepare PSID')
+@section('title', 'Deposit')
+@section('page-title', 'Deposit')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
 <form method="POST" id="psidForm">
 @csrf
@@ -13,9 +13,9 @@
     <div class="card-body" style="padding: 14px 20px;">
         <div class="d-flex align-items-end gap-3 flex-wrap">
             <div class="btn-group" role="group">
-                <a href="{{ route('wht.psid.index', ['kind' => 'purchases', 'month' => $month, 'show' => $show]) }}"
+                <a href="{{ route('wht.deposit.index', ['kind' => 'purchases', 'month' => $month, 'show' => $show]) }}"
                    class="btn btn-{{ $kind === 'purchases' ? 'primary' : 'outline-primary' }}">Vendor Payments</a>
-                <a href="{{ route('wht.psid.index', ['kind' => 'salaries', 'month' => $month, 'show' => $show]) }}"
+                <a href="{{ route('wht.deposit.index', ['kind' => 'salaries', 'month' => $month, 'show' => $show]) }}"
                    class="btn btn-{{ $kind === 'salaries' ? 'primary' : 'outline-primary' }}">Salaries</a>
             </div>
 
@@ -142,7 +142,7 @@
         <div class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label">1. Upload file</label>
-                <button class="btn btn-success w-100" formaction="{{ route('wht.psid.download') }}">
+                <button class="btn btn-success w-100" formaction="{{ route('wht.deposit.download') }}">
                     <i class="bi bi-file-earmark-excel me-1"></i> Generate for IRIS
                 </button>
             </div>
@@ -151,7 +151,7 @@
                 <label class="form-label">2. PSID returned by IRIS</label>
                 <div class="input-group">
                     <input type="text" name="psid_no" class="form-control" placeholder="PSID number">
-                    <button class="btn btn-primary" formaction="{{ route('wht.psid.assign-psid') }}">Assign</button>
+                    <button class="btn btn-primary" formaction="{{ route('wht.deposit.assign-psid') }}">Assign</button>
                 </div>
             </div>
 
@@ -160,15 +160,15 @@
                 <div class="input-group">
                     <input type="text" name="cpr_no" class="form-control" placeholder="CPR number">
                     <input type="date" name="cpr_date" class="form-control" style="max-width: 150px;">
-                    <button class="btn btn-primary" formaction="{{ route('wht.psid.assign-cpr') }}">Record</button>
+                    <button class="btn btn-primary" formaction="{{ route('wht.deposit.assign-cpr') }}">Record</button>
                 </div>
             </div>
         </div>
 
         <div class="mt-3 d-flex gap-2">
-            <button class="btn btn-sm btn-outline-danger" formaction="{{ route('wht.psid.clear') }}"
+            <button class="btn btn-sm btn-outline-danger" formaction="{{ route('wht.deposit.clear') }}"
                     name="what" value="cpr" onclick="return confirm('Clear the CPR on the selected entries?')">Clear CPR</button>
-            <button class="btn btn-sm btn-outline-danger" formaction="{{ route('wht.psid.clear') }}"
+            <button class="btn btn-sm btn-outline-danger" formaction="{{ route('wht.deposit.clear') }}"
                     name="what" value="psid" onclick="return confirm('Clear the PSID and CPR on the selected entries?')">Clear PSID &amp; CPR</button>
         </div>
     </div>
@@ -179,6 +179,65 @@
 <form method="GET" id="filterForm">
     <input type="hidden" name="kind" value="{{ $kind }}">
 </form>
+
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Challans raised</strong>
+        <span class="text-muted" style="font-size: 0.82rem;">{{ $challans->count() }} PSID{{ $challans->count() === 1 ? '' : 's' }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>PSID No.</th>
+                    <th>CPR No.</th>
+                    <th>Tax Period</th>
+                    <th class="text-center">Entries</th>
+                    <th class="text-end">Total Tax</th>
+                    <th class="text-end">Schedule</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($challans as $c)
+                @php
+                    $cf = $c->period_from ? \Illuminate\Support\Carbon::parse($c->period_from) : null;
+                    $ct = $c->period_to ? \Illuminate\Support\Carbon::parse($c->period_to) : null;
+                @endphp
+                <tr>
+                    <td class="fw-semibold">{{ $c->psid_no }}</td>
+                    <td>
+                        @if($c->cpr_no)
+                            <span class="badge bg-success bg-opacity-10 text-success">{{ $c->cpr_no }}</span>
+                        @else
+                            <span class="badge bg-info bg-opacity-10 text-info">awaiting payment</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($cf && $ct)
+                            {{ $cf->format('M Y') }}@if($cf->format('Y-m') !== $ct->format('Y-m')) &ndash; {{ $ct->format('M Y') }}@endif
+                        @else
+                            <span class="text-muted">&mdash;</span>
+                        @endif
+                    </td>
+                    <td class="text-center">{{ $c->entries }}</td>
+                    <td class="text-end fw-semibold">{{ number_format($c->total_tax, 0) }}</td>
+                    <td class="text-end">
+                        <a href="{{ route('wht.challans.pdf', ['psid' => $c->psid_no]) }}" target="_blank"
+                           class="btn btn-sm btn-outline-primary" title="Schedule of entries behind this challan">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Schedule
+                        </a>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="6" class="text-center text-muted py-4">
+                    No challans raised yet. Select entries above and assign a PSID.
+                </td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
 @if(Auth::user()->hasRole('admin'))
 <div class="card mt-4">
@@ -198,13 +257,13 @@
             <code>false</code> below if that ever changes. If FBR revises the template, paste its header row in
             here; changes apply immediately.
         </p>
-        <form method="POST" action="{{ route('wht.psid.layout') }}">
+        <form method="POST" action="{{ route('wht.deposit.layout') }}">
             @csrf
             <textarea name="layout" class="form-control font-monospace" rows="16" style="font-size: 0.78rem;">{{ $layoutJson }}</textarea>
             <div class="mt-3 d-flex gap-2">
                 <button class="btn btn-primary">Save layout</button>
                 @if($layoutIsCustom)
-                <button type="submit" formaction="{{ route('wht.psid.layout-reset') }}" class="btn btn-outline-primary"
+                <button type="submit" formaction="{{ route('wht.deposit.layout-reset') }}" class="btn btn-outline-primary"
                         onclick="return confirm('Reset to the FBR default layout?')">Reset to default</button>
                 @endif
             </div>

@@ -3,7 +3,7 @@
 @section('page-title', $purchase->exists ? 'Edit Payment' : 'Record Payment')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
 @php
     $amount = $purchase->exists

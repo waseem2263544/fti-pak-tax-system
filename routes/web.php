@@ -154,14 +154,26 @@ Route::middleware(['auth'])->group(function () {
         Route::post('imports/preview', [\App\Http\Controllers\Wht\WhtImportController::class, 'preview'])->name('imports.preview');
         Route::post('imports/commit', [\App\Http\Controllers\Wht\WhtImportController::class, 'commit'])->name('imports.commit');
 
-        // Prepare PSID — generate the IRIS upload file and stamp PSID/CPR on a batch
-        Route::get('psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'index'])->name('psid.index');
-        Route::post('psid/download', [\App\Http\Controllers\Wht\WhtPsidController::class, 'download'])->name('psid.download');
-        Route::post('psid/assign-psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignPsid'])->name('psid.assign-psid');
-        Route::post('psid/assign-cpr', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignCpr'])->name('psid.assign-cpr');
-        Route::post('psid/clear', [\App\Http\Controllers\Wht\WhtPsidController::class, 'clear'])->name('psid.clear');
-        Route::post('psid-layout', [\App\Http\Controllers\Wht\WhtPsidController::class, 'saveLayout'])->name('psid.layout');
-        Route::post('psid-layout/reset', [\App\Http\Controllers\Wht\WhtPsidController::class, 'resetLayout'])->name('psid.layout-reset');
+        // Deposit — select entries, generate the IRIS file, record PSID then CPR,
+        // and see the challans already raised.
+        Route::get('deposit', [\App\Http\Controllers\Wht\WhtPsidController::class, 'index'])->name('deposit.index');
+        Route::post('deposit/download', [\App\Http\Controllers\Wht\WhtPsidController::class, 'download'])->name('deposit.download');
+        Route::post('deposit/assign-psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignPsid'])->name('deposit.assign-psid');
+        Route::post('deposit/assign-cpr', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignCpr'])->name('deposit.assign-cpr');
+        Route::post('deposit/clear', [\App\Http\Controllers\Wht\WhtPsidController::class, 'clear'])->name('deposit.clear');
+        Route::post('deposit-layout', [\App\Http\Controllers\Wht\WhtPsidController::class, 'saveLayout'])->name('deposit.layout');
+        Route::post('deposit-layout/reset', [\App\Http\Controllers\Wht\WhtPsidController::class, 'resetLayout'])->name('deposit.layout-reset');
+
+        // Transactions — payments and salaries on one page.
+        Route::get('transactions', [\App\Http\Controllers\Wht\WhtTransactionController::class, 'index'])->name('transactions.index');
+
+        // Setup — the configuration hub.
+        Route::get('setup', [\App\Http\Controllers\Wht\WhtSetupController::class, 'index'])->name('setup.index');
+
+        // Old paths keep working.
+        Route::get('psid', fn() => redirect()->route('wht.deposit.index', request()->query()))->name('psid.index');
+        Route::get('purchases-list', fn() => redirect()->route('wht.transactions.index', ['kind' => 'purchases']));
+        Route::get('salaries-list', fn() => redirect()->route('wht.transactions.index', ['kind' => 'salaries']));
 
         // Reports
         Route::get('reports', [\App\Http\Controllers\Wht\WhtReportController::class, 'index'])->name('reports.index');

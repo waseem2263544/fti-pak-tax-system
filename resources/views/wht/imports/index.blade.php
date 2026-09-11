@@ -3,7 +3,7 @@
 @section('page-title', 'Import Payments')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
 @if(!$analysis)
 <div class="card" style="max-width: 780px;">

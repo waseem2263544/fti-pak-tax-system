@@ -3,7 +3,7 @@
 @section('page-title', $salary->exists ? 'Edit Salary' : 'Record Salary')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
 @php
     $amount = $salary->exists ? $salary->input_amount : old('amount');

@@ -439,46 +439,20 @@
                 </div>
                 <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'wht.')) open @endif" id="section-wht">
                     <a href="{{ route('wht.dashboard') }}" class="@if(Route::currentRouteName() == 'wht.dashboard') active @endif">
-                        <i class="bi bi-speedometer2"></i> WHT Dashboard
+                        <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
-                    <a href="{{ route('wht.purchases.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.purchases')) active @endif">
-                        <i class="bi bi-file-earmark-text"></i> Payments
+                    <a href="{{ route('wht.transactions.index') }}" class="@if(in_array(Route::currentRouteName(), ['wht.transactions.index']) || str_starts_with(Route::currentRouteName() ?? '', 'wht.purchases') || str_starts_with(Route::currentRouteName() ?? '', 'wht.salaries') || str_starts_with(Route::currentRouteName() ?? '', 'wht.imports')) active @endif">
+                        <i class="bi bi-list-ul"></i> Transactions
                     </a>
-                    <a href="{{ route('wht.salaries.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.salaries')) active @endif">
-                        <i class="bi bi-cash-stack"></i> Salaries
+                    <a href="{{ route('wht.deposit.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.deposit') || str_starts_with(Route::currentRouteName() ?? '', 'wht.challans')) active @endif">
+                        <i class="bi bi-bank"></i> Deposit
                     </a>
-                    <a href="{{ route('wht.parties.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.parties')) active @endif">
-                        <i class="bi bi-people"></i> Vendors & Employees
+                    <a href="{{ route('wht.reports.statement') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.reports')) active @endif">
+                        <i class="bi bi-journal-text"></i> Filing
                     </a>
-                    <a href="{{ route('wht.imports.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.imports')) active @endif">
-                        <i class="bi bi-file-earmark-arrow-up"></i> Import Payments
+                    <a href="{{ route('wht.setup.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.setup') || str_starts_with(Route::currentRouteName() ?? '', 'wht.parties') || str_starts_with(Route::currentRouteName() ?? '', 'wht.companies') || str_starts_with(Route::currentRouteName() ?? '', 'wht.rates') || str_starts_with(Route::currentRouteName() ?? '', 'wht.slabs') || str_starts_with(Route::currentRouteName() ?? '', 'wht.sections')) active @endif">
+                        <i class="bi bi-sliders"></i> Setup
                     </a>
-                    <a href="{{ route('wht.psid.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.psid')) active @endif">
-                        <i class="bi bi-upload"></i> Prepare PSID
-                    </a>
-                    <a href="{{ route('wht.challans.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.challans')) active @endif">
-                        <i class="bi bi-receipt"></i> Challans (PSID/CPR)
-                    </a>
-                    <a href="{{ route('wht.reports.statement') }}" class="@if(Route::currentRouteName() == 'wht.reports.statement') active @endif">
-                        <i class="bi bi-journal-text"></i> Monthly Statement
-                    </a>
-                    <a href="{{ route('wht.reports.index') }}" class="@if(Route::currentRouteName() == 'wht.reports.index') active @endif">
-                        <i class="bi bi-bar-chart"></i> WHT Reports
-                    </a>
-                    <a href="{{ route('wht.companies.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.companies')) active @endif">
-                        <i class="bi bi-building"></i> Withholding Agents
-                    </a>
-                    @if(Auth::user()->hasRole('admin'))
-                    <a href="{{ route('wht.rates.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.rates')) active @endif">
-                        <i class="bi bi-percent"></i> Tax Rates
-                    </a>
-                    <a href="{{ route('wht.slabs.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.slabs')) active @endif">
-                        <i class="bi bi-diagram-3"></i> Salary Slabs
-                    </a>
-                    <a href="{{ route('wht.sections.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wht.sections')) active @endif">
-                        <i class="bi bi-list-ol"></i> FBR Sections
-                    </a>
-                    @endif
                 </div>
 
                 <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || Route::currentRouteName() == 'mini-apps.index') open @endif" onclick="toggleSection('operations')">

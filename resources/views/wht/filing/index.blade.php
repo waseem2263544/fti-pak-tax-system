@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Monthly Withholding Statement')
-@section('page-title', 'Monthly Withholding Statement')
+@section('title', 'WHT Filing')
+@section('page-title', 'Filing')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
-<div class="card mb-4">
+<div class="card mb-3">
     <div class="card-body" style="padding: 16px 20px;">
         <form method="GET" class="d-flex align-items-end gap-2 flex-wrap">
             <div>
@@ -13,15 +13,22 @@
                 <input type="month" name="month" class="form-control" value="{{ $month }}">
             </div>
             <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i> Show</button>
+
+            <div class="vr mx-2"></div>
+
             <a href="{{ route('wht.reports.statement-filing', ['month' => $month]) }}" class="btn btn-success">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i> FBR Statement (.xlsm)
             </a>
             <a href="{{ route('wht.reports.statement-excel', ['month' => $month]) }}" class="btn btn-outline-primary">
                 <i class="bi bi-file-earmark-excel me-1"></i> Working Copy
             </a>
-            <div class="ms-auto text-muted" style="font-size: 0.82rem; max-width: 460px;">
-                Grouped by section for the statement under s.165. Entries are matched on their
-                <strong>tax period</strong>, so a payment deposited later still lands in the month it belongs to.
+            <a href="{{ route('wht.reports.index') }}" class="btn btn-outline-primary">
+                <i class="bi bi-bar-chart me-1"></i> Custom Report
+            </a>
+
+            <div class="ms-auto text-muted" style="font-size: 0.8rem; max-width: 380px;">
+                Entries are matched on their <strong>tax period</strong>, so a payment deposited later
+                still lands in the month it belongs to.
             </div>
         </form>
     </div>
@@ -33,7 +40,7 @@
     </div></div>
 @else
 <div class="card mb-4">
-    <div class="card-header"><strong>Summary — {{ $monthStart->format('F Y') }}</strong></div>
+    <div class="card-header"><strong>Summary &mdash; {{ $monthStart->format('F Y') }}</strong></div>
     <div class="table-responsive">
         <table class="table align-middle mb-0">
             <thead>
@@ -70,7 +77,7 @@
 @foreach($grouped as $g)
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>{{ $g['section'] }} — {{ $g['nature'] }}</strong>
+        <strong>{{ $g['section'] }} &mdash; {{ $g['nature'] }}</strong>
         <span class="text-muted" style="font-size: 0.82rem;">{{ $g['items']->count() }} entries</span>
     </div>
     <div class="table-responsive">
@@ -94,19 +101,11 @@
                     <td>{{ $party?->name ?? '—' }}</td>
                     <td>{{ $party?->cnic_ntn ?: '—' }}</td>
                     <td>{{ $party?->atl_status === 'non-filer' ? 'Non-filer' : 'Filer' }}</td>
+                    <td class="text-end">{{ number_format($g['kind'] === 'salary' ? $i->total_salary : $i->gross_amount, 0) }}</td>
                     <td class="text-end">
-                        {{ number_format($g['kind'] === 'salary' ? $i->total_salary : $i->gross_amount, 0) }}
+                        @if($g['kind'] === 'salary') — @else {{ rtrim(rtrim(number_format($i->tax_rate, 2), '0'), '.') }}% @endif
                     </td>
-                    <td class="text-end">
-                        @if($g['kind'] === 'salary')
-                            —
-                        @else
-                            {{ rtrim(rtrim(number_format($i->tax_rate, 2), '0'), '.') }}%
-                        @endif
-                    </td>
-                    <td class="text-end fw-semibold">
-                        {{ number_format($g['kind'] === 'salary' ? $i->tax_deducted : $i->tax_withheld, 0) }}
-                    </td>
+                    <td class="text-end fw-semibold">{{ number_format($g['kind'] === 'salary' ? $i->tax_deducted : $i->tax_withheld, 0) }}</td>
                     <td>{{ $i->payment_date?->format('d M Y') }}</td>
                     <td>{{ $i->cpr_no ?: '—' }}</td>
                 </tr>

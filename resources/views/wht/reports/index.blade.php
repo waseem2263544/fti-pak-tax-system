@@ -3,7 +3,7 @@
 @section('page-title', 'WHT Reports')
 
 @section('content')
-@include('wht.partials.agent-bar')
+@include('wht.partials.agent-switch', ['company' => $company])
 
 <div class="card mb-4">
     <div class="card-body" style="padding: 16px 20px;">

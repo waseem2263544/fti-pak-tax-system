@@ -96,7 +96,7 @@ class WhtReportController extends Controller
 
         $grouped = $this->groupedStatement($company, $monthStart);
 
-        return view('wht.reports.statement', compact('company', 'grouped', 'month', 'monthStart'));
+        return view('wht.filing.index', compact('company', 'grouped', 'month', 'monthStart'));
     }
 
     /**
