@@ -1,0 +1,4 @@
+payee_name,payee_cnic_ntn,payment_date,period_month,section,amount,amount_basis,tax_withheld,remarks
+Acme Traders,1730112345678,15/06/2026,,153(1)(a)/9,1000000,gross,45000,Invoice 221
+Beta Supplies,3520298765432,20/06/2026,,,250000,net,,Invoice 222 - section from party default
+Gamma Services,1730199998888,25/06/2026,2026-05,64060130,340000,net,,Paid June for May period
