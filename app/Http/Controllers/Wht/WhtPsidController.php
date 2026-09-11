@@ -12,15 +12,16 @@ use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * Prepare PSID — the whole deposit cycle for one tax period, in one screen.
+ * Prepare PSID — pick the entries a challan covers, generate the IRIS file,
+ * then record the PSID and CPR against exactly those entries.
  *
- * The firm raises two PSIDs a month per agent: one covering all vendor
- * withholding (across whatever sections apply) and one covering salaries. So a
- * "batch" here is a kind + a tax period, not a section.
+ * Selection is manual and deliberate. An earlier version acted on a whole tax
+ * period at once, which was wrong: when a client sends a second file for a
+ * month already deposited, "everything in June" silently includes entries that
+ * are already on a challan and you end up raising a second PSID over them.
  *
- * Download the upload file, take it to IRIS, paste the PSID back, and later the
- * CPR — each stamped across every transaction in the batch at once, which is
- * the part that previously meant editing dozens of rows by hand.
+ * So entries that already carry a PSID are shown but NOT selected by default,
+ * and assigning over a different PSID is called out rather than done quietly.
  */
 class WhtPsidController extends Controller
 {
@@ -36,31 +37,52 @@ class WhtPsidController extends Controller
     {
         $company = $this->currentCompany();
 
+        $kind = $request->get('kind') === 'salaries' ? 'salaries' : 'purchases';
         $month = $request->get('month', now()->subMonth()->format('Y-m'));
-        $monthStart = Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
+        $show = $request->get('show', 'unassigned');
 
-        $batches = [];
+        $query = $this->baseQuery($company, $kind);
 
-        foreach (self::KINDS as $kind) {
-            $batches[$kind] = $this->batch($company, $monthStart, $kind);
+        if ($month !== '') {
+            $query->whereDate($this->periodColumn($kind), $this->monthStart($month));
         }
 
-        $layoutJson = json_encode(WhtPsidWorkbook::layout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        $layoutIsCustom = (bool) WhtSetting::get(WhtPsidWorkbook::SETTING_KEY);
+        if ($show === 'unassigned') {
+            $query->where(fn($q) => $q->whereNull('psid_no')->orWhere('psid_no', ''));
+        }
 
-        return view('wht.psid.index', compact(
-            'company', 'month', 'monthStart', 'batches', 'layoutJson', 'layoutIsCustom'
-        ));
+        $items = $query->with($kind === 'salaries' ? 'employee' : 'party')
+            ->orderBy($this->periodColumn($kind))
+            ->orderBy('payment_date')
+            ->get();
+
+        $rows = $this->batcher->mapRows($items, $kind);
+
+        // How much of this period is still unaccounted for, regardless of filter.
+        $outstanding = $this->baseQuery($company, $kind)
+            ->when($month !== '', fn($q) => $q->whereDate($this->periodColumn($kind), $this->monthStart($month)))
+            ->where(fn($q) => $q->whereNull('psid_no')->orWhere('psid_no', ''))
+            ->count();
+
+        return view('wht.psid.index', [
+            'company'        => $company,
+            'kind'           => $kind,
+            'month'          => $month,
+            'show'           => $show,
+            'rows'           => $rows,
+            'outstanding'    => $outstanding,
+            'layoutJson'     => json_encode(WhtPsidWorkbook::layout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+            'layoutIsCustom' => (bool) WhtSetting::get(WhtPsidWorkbook::SETTING_KEY),
+        ]);
     }
 
-    public function download(Request $request, string $kind)
+    /** The IRIS upload file for the selected entries only. */
+    public function download(Request $request)
     {
         @set_time_limit(180);
 
-        abort_unless(in_array($kind, self::KINDS, true), 404);
-
         $company = $this->currentCompany();
-        $monthStart = $this->monthFrom($request);
+        [$kind, $ids] = $this->selection($request);
 
         $missing = array_values(array_filter(
             ['zip', 'xmlwriter', 'dom', 'simplexml', 'mbstring'],
@@ -71,19 +93,23 @@ class WhtPsidController extends Controller
             return back()->with('error', 'Excel export needs these PHP extensions, not enabled on the server: ' . implode(', ', $missing) . '.');
         }
 
-        $batch = $this->batch($company, $monthStart, $kind);
+        $rows = $this->batcher->rowsForIds($company, $kind, $ids);
 
-        if ($batch['rows']->isEmpty()) {
-            return back()->with('error', 'Nothing to upload for ' . $monthStart->format('F Y') . '.');
+        if ($rows->isEmpty()) {
+            return back()->with('error', 'Select at least one entry first.');
         }
 
-        $book = (new WhtPsidWorkbook())->build($company, $monthStart, $kind, $batch['rows']);
+        // The period is only used to name the file; the selection may span months.
+        $period = Carbon::parse(($rows->first()['period'] ?? now()->format('Y-m')) . '-01');
+
+        $book = (new WhtPsidWorkbook())->build($company, $period, $kind, $rows);
 
         $filename = sprintf(
-            'PSID-%s-%s-%s.xlsx',
+            'PSID-%s-%s-%s-%d-entries.xlsx',
             str($company->name)->slug(),
             $kind === 'salaries' ? 'salaries' : 'vendors',
-            $monthStart->format('Y-m')
+            $period->format('Y-m'),
+            $rows->count()
         );
 
         return response()->streamDownload(function () use ($book) {
@@ -97,51 +123,46 @@ class WhtPsidController extends Controller
         ]);
     }
 
-    /** Stamp the PSID IRIS returned across every transaction in the batch. */
-    public function assignPsid(Request $request, string $kind)
+    /** Stamp the PSID IRIS returned onto exactly the selected entries. */
+    public function assignPsid(Request $request)
     {
-        abort_unless(in_array($kind, self::KINDS, true), 404);
-
         $company = $this->currentCompany();
         $this->authorizeAbility('edit', $company);
 
-        $validated = $request->validate(['psid_no' => 'required|string|max:50']);
-        $monthStart = $this->monthFrom($request);
+        [$kind, $ids] = $this->selection($request);
+        $psid = $request->validate(['psid_no' => 'required|string|max:50'])['psid_no'];
 
-        $query = $this->query($company, $monthStart, $kind);
+        $query = $this->baseQuery($company, $kind)->whereIn('id', $ids);
 
-        // Flag entries already carrying a different PSID rather than silently
-        // relabelling someone else's challan.
+        // Never relabel someone else's challan without saying so.
         $conflicting = (clone $query)
             ->whereNotNull('psid_no')->where('psid_no', '!=', '')
-            ->where('psid_no', '!=', $validated['psid_no'])
+            ->where('psid_no', '!=', $psid)
             ->count();
 
-        $affected = $query->update(['psid_no' => $validated['psid_no'], 'updated_at' => now()]);
+        $affected = $query->update(['psid_no' => $psid, 'updated_at' => now()]);
 
         $note = $conflicting
-            ? " {$conflicting} entr" . ($conflicting === 1 ? 'y' : 'ies') . ' previously had a different PSID and were reassigned.'
+            ? " Warning: {$conflicting} of them already carried a different PSID and were reassigned."
             : '';
 
-        return back()->with('success', "PSID {$validated['psid_no']} assigned to {$affected} entries.{$note}");
+        return back()->with($conflicting ? 'error' : 'success',
+            "PSID {$psid} assigned to {$affected} entries.{$note}");
     }
 
-    /** Record the CPR once the challan has been paid. */
-    public function assignCpr(Request $request, string $kind)
+    public function assignCpr(Request $request)
     {
-        abort_unless(in_array($kind, self::KINDS, true), 404);
-
         $company = $this->currentCompany();
         $this->authorizeAbility('edit', $company);
+
+        [$kind, $ids] = $this->selection($request);
 
         $validated = $request->validate([
             'cpr_no'   => 'required|string|max:50',
             'cpr_date' => 'nullable|date',
         ]);
 
-        $monthStart = $this->monthFrom($request);
-
-        $affected = $this->query($company, $monthStart, $kind)->update([
+        $affected = $this->baseQuery($company, $kind)->whereIn('id', $ids)->update([
             'cpr_no'     => $validated['cpr_no'],
             'cpr_date'   => $validated['cpr_date'] ?? null,
             'updated_at' => now(),
@@ -150,22 +171,20 @@ class WhtPsidController extends Controller
         return back()->with('success', "CPR {$validated['cpr_no']} recorded against {$affected} entries.");
     }
 
-    /** Undo a mis-keyed PSID or CPR for the batch. */
-    public function clear(Request $request, string $kind)
+    public function clear(Request $request)
     {
-        abort_unless(in_array($kind, self::KINDS, true), 404);
-
         $company = $this->currentCompany();
         $this->authorizeAbility('edit', $company);
 
+        [$kind, $ids] = $this->selection($request);
         $what = $request->validate(['what' => 'required|in:psid,cpr'])['what'];
-        $monthStart = $this->monthFrom($request);
 
         $fields = $what === 'psid'
             ? ['psid_no' => null, 'cpr_no' => null, 'cpr_date' => null]
             : ['cpr_no' => null, 'cpr_date' => null];
 
-        $affected = $this->query($company, $monthStart, $kind)->update($fields + ['updated_at' => now()]);
+        $affected = $this->baseQuery($company, $kind)->whereIn('id', $ids)
+            ->update($fields + ['updated_at' => now()]);
 
         return back()->with('success', strtoupper($what) . " cleared on {$affected} entries.");
     }
@@ -175,9 +194,7 @@ class WhtPsidController extends Controller
     {
         abort_unless(auth()->user()?->hasRole('admin'), 403);
 
-        $validated = $request->validate(['layout' => 'required|string']);
-
-        $decoded = json_decode($validated['layout'], true);
+        $decoded = json_decode($request->validate(['layout' => 'required|string'])['layout'], true);
 
         if (!is_array($decoded) || empty($decoded['columns'])) {
             return back()->with('error', 'That is not valid layout JSON — it needs at least a "columns" array.');
@@ -200,25 +217,35 @@ class WhtPsidController extends Controller
 
         WhtSetting::put(WhtPsidWorkbook::SETTING_KEY, '');
 
-        return back()->with('success', 'Column layout reset to the built-in default.');
+        return back()->with('success', 'Column layout reset to the FBR default.');
     }
 
     // ── internals ────────────────────────────────────────────────────────────
 
-    private function monthFrom(Request $request): Carbon
+    /** @return array{0: string, 1: array<int>} */
+    private function selection(Request $request): array
     {
-        $month = $request->get('month', now()->subMonth()->format('Y-m'));
+        $validated = $request->validate([
+            'kind'  => 'required|in:purchases,salaries',
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
 
+        return [$validated['kind'], $validated['ids']];
+    }
+
+    private function baseQuery($company, string $kind)
+    {
+        return $kind === 'salaries' ? $company->salaries() : $company->purchases();
+    }
+
+    private function periodColumn(string $kind): string
+    {
+        return $kind === 'salaries' ? 'salary_month' : 'period_month';
+    }
+
+    private function monthStart(string $month): Carbon
+    {
         return Carbon::createFromFormat('Y-m-d', $month . '-01')->startOfMonth();
-    }
-
-    private function query($company, Carbon $monthStart, string $kind)
-    {
-        return $this->batcher->query($company, $monthStart, $kind);
-    }
-
-    private function batch($company, Carbon $monthStart, string $kind): array
-    {
-        return $this->batcher->batch($company, $monthStart, $kind);
     }
 }

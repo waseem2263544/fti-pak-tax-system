@@ -218,10 +218,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Prepare PSID — generate the IRIS upload file and stamp PSID/CPR on a batch
         Route::get('psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'index'])->name('psid.index');
-        Route::get('psid/{kind}/download', [\App\Http\Controllers\Wht\WhtPsidController::class, 'download'])->name('psid.download');
-        Route::post('psid/{kind}/assign-psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignPsid'])->name('psid.assign-psid');
-        Route::post('psid/{kind}/assign-cpr', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignCpr'])->name('psid.assign-cpr');
-        Route::post('psid/{kind}/clear', [\App\Http\Controllers\Wht\WhtPsidController::class, 'clear'])->name('psid.clear');
+        Route::post('psid/download', [\App\Http\Controllers\Wht\WhtPsidController::class, 'download'])->name('psid.download');
+        Route::post('psid/assign-psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignPsid'])->name('psid.assign-psid');
+        Route::post('psid/assign-cpr', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignCpr'])->name('psid.assign-cpr');
+        Route::post('psid/clear', [\App\Http\Controllers\Wht\WhtPsidController::class, 'clear'])->name('psid.clear');
         Route::post('psid-layout', [\App\Http\Controllers\Wht\WhtPsidController::class, 'saveLayout'])->name('psid.layout');
         Route::post('psid-layout/reset', [\App\Http\Controllers\Wht\WhtPsidController::class, 'resetLayout'])->name('psid.layout-reset');
 

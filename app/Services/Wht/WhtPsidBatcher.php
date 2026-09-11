@@ -56,9 +56,39 @@ class WhtPsidBatcher
             ->orderBy('payment_date')
             ->get();
 
+        $rows = $this->mapRows($items, $kind);
+
+        return $this->summariseBatch($rows, $kind);
+    }
+
+    /**
+     * Rows for an explicit set of transaction ids — the manual selection the
+     * Prepare PSID screen works from.
+     */
+    public function rowsForIds(WhtCompany $company, string $kind, array $ids)
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        $isSalary = $kind === 'salaries';
+
+        $items = ($isSalary ? $company->salaries() : $company->purchases())
+            ->with($isSalary ? 'employee' : 'party')
+            ->whereIn('id', $ids)
+            ->orderBy('payment_date')
+            ->get();
+
+        return $this->mapRows($items, $kind);
+    }
+
+    /** Turn transactions into the flat rows the workbook and preview use. */
+    public function mapRows($items, string $kind)
+    {
+        $isSalary = $kind === 'salaries';
         $sections = WhtSection::all();
 
-        $rows = $items->map(function ($t) use ($isSalary, $sections) {
+        return $items->map(function ($t) use ($isSalary, $sections) {
             $party = $isSalary ? $t->employee : $t->party;
             $section = $t->section ?: ($isSalary ? '149' : '');
             $meta = $sections->firstWhere('section', $section);
@@ -72,6 +102,7 @@ class WhtPsidBatcher
             $formatted = self::formatTaxNumber($digits, $raw);
 
             return [
+                'id'             => $t->id,
                 'section'        => $section,
                 'section_code'   => $meta?->code ?? '',
                 'payment_nature' => $meta?->payment_nature ?? ($isSalary ? 'Salary' : ''),
@@ -98,9 +129,16 @@ class WhtPsidBatcher
                 'tax_withheld'   => (float) ($isSalary ? $t->tax_deducted : $t->tax_withheld),
                 'psid_no'        => $t->psid_no,
                 'cpr_no'         => $t->cpr_no,
+                'cpr_date'       => $t->cpr_date?->toDateString(),
+                'period'         => $isSalary ? $t->salary_month?->format('Y-m') : $t->period_month?->format('Y-m'),
             ];
         });
+    }
 
+    /** Headline figures for a set of rows. */
+    public function summariseBatch($rows, string $kind): array
+    {
+        $isSalary = $kind === 'salaries';
         $count = $rows->count();
         $withPsid = $rows->filter(fn($r) => filled($r['psid_no']))->count();
         $withCpr = $rows->filter(fn($r) => filled($r['cpr_no']))->count();
