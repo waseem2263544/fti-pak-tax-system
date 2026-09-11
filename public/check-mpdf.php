@@ -70,6 +70,40 @@ if (is_file($vendor . '/autoload.php')) {
     echo "autoload.php missing.\n";
 }
 
+echo "\n─── PhpSpreadsheet (.xlsx generation) ─────\n";
+
+$ssPath = $vendor . '/phpoffice/phpspreadsheet';
+printf("%-42s%s\n", 'vendor/phpoffice/phpspreadsheet/', is_dir($ssPath) ? 'OK' : 'MISSING');
+
+// Everything PhpSpreadsheet needs to read and write .xlsx.
+$required = ['zip', 'xmlwriter', 'xmlreader', 'simplexml', 'dom', 'libxml',
+             'mbstring', 'iconv', 'gd', 'fileinfo', 'ctype', 'filter', 'zlib'];
+$missing = [];
+
+foreach ($required as $ext) {
+    $ok = extension_loaded($ext);
+    if (!$ok) { $missing[] = $ext; }
+    printf("%-42s%s\n", "ext-$ext", $ok ? 'OK' : 'MISSING');
+}
+
+if (!$missing && is_dir($ssPath)) {
+    try {
+        require_once $vendor . '/autoload.php';
+        $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $book->getActiveSheet()->setCellValue('A1', 'test');
+        $tmp = sys_get_temp_dir() . '/wht-xlsx-check-' . getmypid() . '.xlsx';
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($book))->save($tmp);
+        $size = file_exists($tmp) ? filesize($tmp) : 0;
+        @unlink($tmp);
+        printf("%-42s%s\n", 'write a real .xlsx', $size > 0 ? "OK ($size bytes)" : 'FAILED');
+    } catch (Throwable $e) {
+        printf("%-42s%s\n", 'write a real .xlsx', 'FAILED: ' . $e->getMessage());
+    }
+} elseif ($missing) {
+    echo "\n  Enable the MISSING extensions in cPanel -> Select PHP Version -> Extensions.\n";
+    echo "  Until then the Excel statement, PSID files and spreadsheet import stay unavailable.\n";
+}
+
 echo "\n─── Summary ───────────────────────────────\n";
 if ($missing) {
     echo "Missing: " . implode(', ', $missing) . "\n";
