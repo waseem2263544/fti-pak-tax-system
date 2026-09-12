@@ -147,7 +147,54 @@ class SharePointClient
 
         $this->guard($response);
 
-        return $response->json('value', []);
+        // Search returns a thinner item than a folder listing does: childCount is
+        // present but always 0, and parentReference carries no path. Strip the
+        // count so nothing downstream reports a folder as empty when it is not.
+        return array_map(function ($item) {
+            if (isset($item['folder'])) {
+                unset($item['folder']['childCount']);
+            }
+
+            return $item;
+        }, $response->json('value', []));
+    }
+
+    /**
+     * Readable paths for a set of search results, resolved from their parent ids.
+     *
+     * Search omits parentReference.path, so the parent has to be fetched. Results
+     * overwhelmingly share a handful of parents, so they are looked up once each
+     * and capped — a search returning fifty folders costs one or two calls, not
+     * fifty.
+     */
+    public function resolveParentPaths(array $items, int $maxLookups = 25): array
+    {
+        $ids = collect($items)
+            ->pluck('parentReference.id')
+            ->filter()
+            ->unique()
+            ->take($maxLookups);
+
+        $paths = [];
+
+        foreach ($ids as $id) {
+            try {
+                $parent = $this->item($id);
+                $own = $this->relativePath($parent);
+                $name = $parent['name'] ?? '';
+
+                // relativePath gives where the PARENT sits; append its own name.
+                $label = $own === config('services.sharepoint.root_label', 'Clients')
+                    ? $name
+                    : trim($own . '/' . $name, '/');
+
+                $paths[$id] = $label ?: config('services.sharepoint.root_label', 'Clients');
+            } catch (\Throwable) {
+                // A parent we cannot read just means no path for those rows.
+            }
+        }
+
+        return $paths;
     }
 
     public function item(string $itemId): array

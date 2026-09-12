@@ -61,8 +61,22 @@ class DocumentController extends Controller
         // Attach a readable location to every row, so search results say where
         // they came from without the caller parsing Graph paths in a template.
         $sp = $this->sharepoint;
-        $items = $items->map(function ($item) use ($sp) {
-            $item['_path'] = $sp->relativePath($item);
+
+        // Search results have no parentReference.path, so those are resolved by
+        // looking their parents up once each.
+        $parentPaths = [];
+
+        if ($search !== '' && $items->isNotEmpty() && !$error) {
+            try {
+                $parentPaths = $sp->resolveParentPaths($items->all());
+            } catch (\Throwable) {
+                $parentPaths = [];
+            }
+        }
+
+        $items = $items->map(function ($item) use ($sp, $parentPaths) {
+            $item['_path'] = $sp->relativePath($item)
+                ?: ($parentPaths[$item['parentReference']['id'] ?? ''] ?? '');
 
             return $item;
         });
