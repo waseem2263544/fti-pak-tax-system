@@ -53,11 +53,18 @@
         @endif
     </nav>
 
-    <form method="GET" class="d-flex gap-2" style="flex: 1; max-width: 420px; margin: 0 16px;">
+    <form method="GET" class="d-flex gap-2 position-relative" id="searchForm"
+          style="flex: 1; max-width: 460px; margin: 0 16px;" autocomplete="off">
         <input type="hidden" name="folder" value="{{ $folder }}">
         <input type="hidden" name="type" value="{{ $type }}">
-        <input type="search" name="q" class="form-control form-control-sm" value="{{ $search ?? '' }}"
-               placeholder="Search files and folders…">
+        <div class="position-relative flex-grow-1">
+            <input type="search" name="q" id="searchInput" class="form-control form-control-sm"
+                   value="{{ $search ?? '' }}" placeholder="Search files and folders…"
+                   role="combobox" aria-expanded="false" aria-controls="suggestBox" aria-autocomplete="list">
+            <div id="suggestBox" class="card shadow position-absolute w-100 d-none"
+                 style="top: 100%; left: 0; z-index: 1050; margin-top: 4px; max-height: 380px; overflow-y: auto;"
+                 role="listbox"></div>
+        </div>
         <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
         @if(($search ?? '') !== '')
             <a href="{{ route('documents.index') }}" class="btn btn-outline-primary btn-sm" title="Clear"><i class="bi bi-x-lg"></i></a>
@@ -279,6 +286,118 @@
 
 @section('scripts')
 <script>
+// ── Search suggestions ──────────────────────────────────────────────────────
+(function () {
+    const input = document.getElementById('searchInput');
+    const box = document.getElementById('suggestBox');
+
+    if (!input || !box) return;
+
+    const ICONS = {
+        folder: ['bi-folder-fill', '#f0ad4e'],
+        word:   ['bi-file-earmark-word-fill', '#2b579a'],
+        excel:  ['bi-file-earmark-excel-fill', '#217346'],
+        pdf:    ['bi-file-earmark-pdf-fill', '#d9534f'],
+        image:  ['bi-file-earmark-image-fill', '#6f42c1'],
+        other:  ['bi-file-earmark-fill', '#8a94a6'],
+    };
+
+    let timer = null;
+    let pending = null;
+    let items = [];
+    let active = -1;
+
+    const escape = s => String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    // Show where the term matched, since Graph also searches file contents.
+    function highlight(name, term) {
+        const safe = escape(name);
+        if (!term) return safe;
+        const i = safe.toLowerCase().indexOf(term.toLowerCase());
+        if (i < 0) return safe;
+        return safe.slice(0, i) + '<strong>' + safe.slice(i, i + term.length) + '</strong>' + safe.slice(i + term.length);
+    }
+
+    function close() {
+        box.classList.add('d-none');
+        input.setAttribute('aria-expanded', 'false');
+        active = -1;
+    }
+
+    function render(term) {
+        if (!items.length) {
+            box.innerHTML = '<div class="px-3 py-2 text-muted" style="font-size:0.84rem;">No matches</div>';
+        } else {
+            box.innerHTML = items.map((it, i) => {
+                const [ic, colour] = ICONS[it.type] || ICONS.other;
+                return `<a href="${escape(it.folder
+                            ? '{{ route('documents.index') }}?folder=' + encodeURIComponent(it.id)
+                            : it.url)}"
+                           ${it.folder ? '' : 'target="_blank" rel="noopener"'}
+                           class="d-block px-3 py-2 text-decoration-none suggest-item ${i === active ? 'bg-light' : ''}"
+                           data-index="${i}" role="option">
+                          <i class="bi ${ic} me-2" style="color:${colour};"></i>
+                          <span style="font-size:0.88rem;">${highlight(it.name, term)}</span>
+                          ${it.path ? `<div class="text-muted" style="font-size:0.73rem; padding-left:1.6rem;">
+                              <i class="bi bi-folder me-1"></i>${escape(it.path)}</div>` : ''}
+                        </a>`;
+            }).join('');
+        }
+
+        box.classList.remove('d-none');
+        input.setAttribute('aria-expanded', 'true');
+    }
+
+    function move(step) {
+        if (box.classList.contains('d-none') || !items.length) return;
+        active = (active + step + items.length) % items.length;
+        render(input.value.trim());
+        box.querySelector(`[data-index="${active}"]`)?.scrollIntoView({block: 'nearest'});
+    }
+
+    input.addEventListener('input', () => {
+        const term = input.value.trim();
+        clearTimeout(timer);
+
+        if (term.length < 2) { close(); return; }
+
+        // Debounced: this is a Graph round trip per call.
+        timer = setTimeout(async () => {
+            if (pending) pending.abort();
+            pending = new AbortController();
+
+            try {
+                const res = await fetch('{{ route('documents.suggest') }}?q=' + encodeURIComponent(term),
+                    {signal: pending.signal, headers: {'Accept': 'application/json'}});
+                if (!res.ok) return;
+                const data = await res.json();
+                items = data.items || [];
+                active = -1;
+                render(term);
+            } catch (e) {
+                // aborted or offline — leave whatever is on screen
+            }
+        }, 300);
+    });
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+        else if (e.key === 'Escape') { close(); }
+        else if (e.key === 'Enter' && active >= 0) {
+            e.preventDefault();
+            box.querySelector(`[data-index="${active}"]`)?.click();
+        }
+    });
+
+    document.addEventListener('click', e => {
+        if (!box.contains(e.target) && e.target !== input) close();
+    });
+
+    input.addEventListener('focus', () => { if (items.length) render(input.value.trim()); });
+})();
+
 const officeModal = new bootstrap.Modal(document.getElementById('officeModal'));
 const renameModal = new bootstrap.Modal(document.getElementById('renameModal'));
 

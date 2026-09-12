@@ -94,6 +94,7 @@ Route::middleware(['auth'])->group(function () {
 
     // SharePoint document browser
     Route::get('documents', [\App\Http\Controllers\DocumentController::class, 'index'])->name('documents.index');
+    Route::get('documents/suggest', [\App\Http\Controllers\DocumentController::class, 'suggest'])->name('documents.suggest');
     Route::post('documents/office', [\App\Http\Controllers\DocumentController::class, 'createOffice'])->name('documents.create-office');
     Route::post('documents/folder', [\App\Http\Controllers\DocumentController::class, 'createFolder'])->name('documents.create-folder');
     Route::post('documents/upload', [\App\Http\Controllers\DocumentController::class, 'upload'])->name('documents.upload');

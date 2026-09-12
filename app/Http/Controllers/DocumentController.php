@@ -138,6 +138,54 @@ class DocumentController extends Controller
         return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search', 'type', 'typeCounts'));
     }
 
+    /**
+     * Type-ahead suggestions for the search box.
+     *
+     * Kept deliberately small and briefly cached: this runs on every keystroke
+     * once debounced, and each call is a Graph round trip. Parent paths are
+     * resolved with a low cap since suggestions share a handful of folders.
+     */
+    public function suggest(Request $request)
+    {
+        $query = trim((string) $request->get('q', ''));
+
+        if (mb_strlen($query) < 2) {
+            return response()->json(['items' => []]);
+        }
+
+        $key = 'sp_suggest:' . md5($query);
+
+        try {
+            $items = \Illuminate\Support\Facades\Cache::remember($key, now()->addSeconds(60), function () use ($query) {
+                $results = collect($this->sharepoint->search($query, $this->sharepoint->rootFolder()))
+                    ->take(8)
+                    ->values();
+
+                $paths = $results->isNotEmpty()
+                    ? $this->sharepoint->resolveParentPaths($results->all(), 5)
+                    : [];
+
+                return $results->map(function ($item) use ($paths) {
+                    $type = self::classify($item);
+
+                    return [
+                        'id'     => $item['id'] ?? null,
+                        'name'   => $item['name'] ?? '',
+                        'type'   => $type,
+                        'folder' => $type === 'folder',
+                        'path'   => $this->sharepoint->relativePath($item)
+                                    ?: ($paths[$item['parentReference']['id'] ?? ''] ?? ''),
+                        'url'    => $item['webUrl'] ?? null,
+                    ];
+                })->all();
+            });
+        } catch (\Throwable $e) {
+            return response()->json(['items' => [], 'error' => $e->getMessage()]);
+        }
+
+        return response()->json(['items' => $items]);
+    }
+
     /** New blank Word or Excel document, created then opened for editing. */
     public function createOffice(Request $request)
     {
