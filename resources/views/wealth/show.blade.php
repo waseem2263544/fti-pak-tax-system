@@ -23,6 +23,13 @@
                 padding: 10px 18px; border-top: 2px solid var(--border-strong); font-weight: 700; }
     .ws-sub { font-size: 0.73rem; color: var(--text-muted); }
     .ws-money { text-align: right; font-variant-numeric: tabular-nums; }
+    /* A disclosure styled as a button: opens on click or Enter, and needs no
+       script to do it. */
+    details.ws-open > summary { list-style: none; padding: 14px 18px; }
+    details.ws-open > summary::-webkit-details-marker { display: none; }
+    details.ws-open > summary .btn { pointer-events: none; }
+    details.ws-open > div { padding: 0 18px 16px; }
+
     details.ws-add > summary { cursor: pointer; padding: 10px 18px; font-size: 0.82rem;
                                font-weight: 600; color: var(--accent-dark); list-style: none; }
     details.ws-add > summary::-webkit-details-marker { display: none; }
@@ -324,9 +331,11 @@
         </div>
     </form>
 
-    <div class="ws-sheet">
-        <div class="ws-head"><h2>Add a line</h2></div>
-        <div style="padding: 16px 18px;">
+    <details class="ws-sheet ws-open">
+        <summary>
+            <span class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> Add a line to the statement</span>
+        </summary>
+        <div>
             <form method="POST" action="{{ route('wealth.lines.store', $client) }}" id="addLineForm">
                 @csrf
                 <input type="hidden" name="tax_year" value="{{ $taxYear }}">
@@ -367,11 +376,13 @@
                 <span class="ws-sub ms-2">Assets are declared at cost, including stamp duty, registration and transfer fees.</span>
             </form>
         </div>
-    </div>
+    </details>
 
-    <div class="ws-sheet">
-        <div class="ws-head"><h2>Carry figures forward</h2></div>
-        <div style="padding: 16px 18px;">
+    <details class="ws-sheet ws-open">
+        <summary>
+            <span class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-right me-1"></i> Carry figures forward from another year</span>
+        </summary>
+        <div>
             <p class="ws-sub mb-2">Copies each line's figure into another year. Anything already entered for the target year is left alone.</p>
             <form method="POST" action="{{ route('wealth.carry-forward', $client) }}" class="row g-2 align-items-end" style="max-width: 460px;">
                 @csrf
@@ -382,7 +393,7 @@
                 <div class="col-2"><button class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-arrow-right"></i></button></div>
             </form>
         </div>
-    </div>
+    </details>
 </div>
 
 {{-- ════════ ANNEX-F ════════ --}}

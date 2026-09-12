@@ -20,6 +20,10 @@
     .sw-table input[type=number] { text-align: right; }
     .sw-table .tot td { border-top: 2px solid var(--border-strong); border-bottom: none; font-weight: 700; padding-top: 9px; }
     .sw-mini { width: 86px; }
+    details.sw-open > summary { list-style: none; padding: 14px 18px; cursor: pointer; }
+    details.sw-open > summary::-webkit-details-marker { display: none; }
+    details.sw-open > summary .btn { pointer-events: none; }
+    details.sw-open > div { padding: 0 18px 16px; }
 </style>
 @endsection
 
@@ -217,9 +221,13 @@
     <form method="POST" id="addc{{ $w->id }}" action="{{ route('wealth.salary.components.store', [$client, $w]) }}" class="d-none">@csrf</form>
 @endforeach
 
-<div class="sw-sheet">
-    <div class="sw-head"><h2>Add an employer</h2></div>
-    <div style="padding: 14px 18px;">
+{{-- Open by default only when there is nothing yet, so a new year starts ready
+     to type into rather than behind a click. --}}
+<details class="sw-sheet sw-open" @if($workings->isEmpty()) open @endif>
+    <summary>
+        <span class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> Add an employer</span>
+    </summary>
+    <div>
         <form method="POST" action="{{ route('wealth.salary.store', $client) }}" class="row g-2 align-items-end">
             @csrf
             <input type="hidden" name="tax_year" value="{{ $taxYear }}">
@@ -245,7 +253,7 @@
             figures entered on one basis are kept.
         </p>
     </div>
-</div>
+</details>
 
 <form method="POST" id="dropForm" class="d-none">@csrf @method('DELETE')</form>
 @endsection
