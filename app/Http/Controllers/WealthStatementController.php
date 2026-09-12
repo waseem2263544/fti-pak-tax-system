@@ -6,7 +6,10 @@ use App\Models\Client;
 use App\Models\IncomeWorking;
 use App\Models\WealthLine;
 use App\Models\WealthReconciliation;
+use App\Models\IncomeItem;
+use App\Models\WealthExpense;
 use App\Models\WealthValue;
+use App\Support\FbrSchema;
 use Illuminate\Http\Request;
 
 /**
@@ -59,6 +62,26 @@ class WealthStatementController extends Controller
         $income = IncomeWorking::firstOrNew(['client_id' => $client->id, 'tax_year' => $taxYear]);
         $recon  = WealthReconciliation::firstOrNew(['client_id' => $client->id, 'tax_year' => $taxYear]);
 
+        $items = IncomeItem::with('wealthLine')
+            ->where('client_id', $client->id)->where('tax_year', $taxYear)
+            ->orderBy('head')->orderBy('sort_order')->orderBy('id')
+            ->get()->groupBy('head');
+
+        $expenses = WealthExpense::where('client_id', $client->id)
+            ->where('tax_year', $taxYear)->pluck('amount', 'code');
+
+        // The income working feeds the reconciliation: what was declared under
+        // each treatment is what Sr. 23(i)-(iii) has to show.
+        $declared = [
+            'taxable' => 0.0, 'exempt' => 0.0, 'final' => 0.0,
+        ];
+        foreach ($items->flatten() as $item) {
+            $declared[$item->treatment] = ($declared[$item->treatment] ?? 0) + (float) $item->amount;
+        }
+
+        $expenseTotal = $expenses->except([FbrSchema::EXPENSE_CONTRA])->sum()
+                      - (float) ($expenses[FbrSchema::EXPENSE_CONTRA] ?? 0);
+
         $totals = [
             'current' => $this->netWealth($lines, $taxYear),
             'prior'   => $this->netWealth($lines, $taxYear - 1),
@@ -71,7 +94,8 @@ class WealthStatementController extends Controller
         }
 
         return view('wealth.show', compact(
-            'client', 'taxYear', 'years', 'lines', 'income', 'recon', 'totals'
+            'client', 'taxYear', 'years', 'lines', 'income', 'recon', 'totals',
+            'items', 'expenses', 'declared', 'expenseTotal'
         ));
     }
 
@@ -116,20 +140,26 @@ class WealthStatementController extends Controller
     public function storeLine(Request $request, Client $client)
     {
         $validated = $request->validate([
-            'kind'        => 'required|in:asset,liability',
-            'section'     => 'required|string|max:40',
+            'code'        => 'required|string|max:8',
             'description' => 'required|string|max:400',
             'tax_year'    => 'required|integer|min:2000|max:2100',
             'amount'      => 'nullable|numeric',
+            'details'     => 'array',
         ]);
+
+        $code = $validated['code'];
+        $head = FbrSchema::head($code) ?? abort(404, 'Unknown head.');
+        $kind = array_key_exists($code, FbrSchema::liabilityHeads()) ? 'liability' : 'asset';
 
         $line = WealthLine::create([
             'client_id'   => $client->id,
-            'kind'        => $validated['kind'],
-            'section'     => $validated['section'],
+            'kind'        => $kind,
+            'code'        => $code,
+            'section'     => $code,
             'description' => $validated['description'],
+            'details'     => $this->cleanDetails($head['fields'], $validated['details'] ?? []),
             'sort_order'  => (int) WealthLine::where('client_id', $client->id)
-                                ->where('section', $validated['section'])->max('sort_order') + 1,
+                                ->where('code', $code)->max('sort_order') + 1,
         ]);
 
         if ($validated['amount'] !== null && $validated['amount'] !== '') {
@@ -149,12 +179,21 @@ class WealthStatementController extends Controller
 
         $validated = $request->validate([
             'description' => 'required|string|max:400',
-            'section'     => 'required|string|max:40',
-            'kind'        => 'required|in:asset,liability',
+            'code'        => 'required|string|max:8',
             'notes'       => 'nullable|string|max:500',
+            'details'     => 'array',
         ]);
 
-        $line->update($validated);
+        $head = FbrSchema::head($validated['code']) ?? abort(404, 'Unknown head.');
+
+        $line->update([
+            'description' => $validated['description'],
+            'code'        => $validated['code'],
+            'section'     => $validated['code'],
+            'kind'        => array_key_exists($validated['code'], FbrSchema::liabilityHeads()) ? 'liability' : 'asset',
+            'notes'       => $validated['notes'] ?? null,
+            'details'     => $this->cleanDetails($head['fields'], $validated['details'] ?? []),
+        ]);
 
         return back()->with('success', 'Line updated.');
     }
@@ -255,6 +294,125 @@ class WealthStatementController extends Controller
         );
 
         return back()->with('success', 'Reconciliation saved.');
+    }
+
+    public function storeIncomeItem(Request $request, Client $client)
+    {
+        $head = (string) $request->get('head');
+        $schema = FbrSchema::incomeHeads()[$head] ?? abort(404, 'Unknown income head.');
+
+        $validated = $request->validate([
+            'head'           => 'required|string|max:30',
+            'tax_year'       => 'required|integer|min:2000|max:2100',
+            'description'    => 'nullable|string|max:400',
+            'wealth_line_id' => 'nullable|integer',
+            'treatment'      => 'required|in:taxable,exempt,final',
+            'tax_deducted'   => 'nullable|numeric',
+            'details'        => 'array',
+        ]);
+
+        // A linked asset has to belong to this client.
+        $lineId = $validated['wealth_line_id'] ?? null;
+        if ($lineId && !WealthLine::where('id', $lineId)->where('client_id', $client->id)->exists()) {
+            $lineId = null;
+        }
+
+        $item = new IncomeItem([
+            'client_id'      => $client->id,
+            'tax_year'       => (int) $validated['tax_year'],
+            'head'           => $head,
+            'description'    => $validated['description'] ?? null,
+            'wealth_line_id' => $lineId,
+            'details'        => $this->cleanDetails($schema['fields'], $validated['details'] ?? []),
+            'treatment'      => $validated['treatment'],
+            'tax_deducted'   => $validated['tax_deducted'] ?? 0,
+            'sort_order'     => (int) IncomeItem::where('client_id', $client->id)
+                                    ->where('tax_year', $validated['tax_year'])
+                                    ->where('head', $head)->max('sort_order') + 1,
+        ]);
+        $item->amount = $item->computeAmount();
+        $item->save();
+
+        return back()->with('success', $schema['label'] . ' line added.');
+    }
+
+    public function updateIncomeItem(Request $request, Client $client, IncomeItem $item)
+    {
+        abort_unless($item->client_id === $client->id, 404);
+
+        $schema = FbrSchema::incomeHeads()[$item->head] ?? abort(404);
+
+        $validated = $request->validate([
+            'description'  => 'nullable|string|max:400',
+            'treatment'    => 'required|in:taxable,exempt,final',
+            'tax_deducted' => 'nullable|numeric',
+            'details'      => 'array',
+        ]);
+
+        $item->fill([
+            'description'  => $validated['description'] ?? null,
+            'treatment'    => $validated['treatment'],
+            'tax_deducted' => $validated['tax_deducted'] ?? 0,
+            'details'      => $this->cleanDetails($schema['fields'], $validated['details'] ?? []),
+        ]);
+        $item->amount = $item->computeAmount();
+        $item->save();
+
+        return back()->with('success', 'Line updated.');
+    }
+
+    public function destroyIncomeItem(Client $client, IncomeItem $item)
+    {
+        abort_unless($item->client_id === $client->id, 404);
+
+        $item->delete();
+
+        return back()->with('success', 'Line removed.');
+    }
+
+    /** Keep only the keys the head actually defines, and drop empty ones. */
+    private function cleanDetails(array $fields, array $input): array
+    {
+        $allowed = array_column($fields, 'key');
+        $out = [];
+
+        foreach ($allowed as $key) {
+            $v = $input[$key] ?? null;
+            if ($v !== null && $v !== '') {
+                $out[$key] = is_numeric($v) ? (float) $v : $v;
+            }
+        }
+
+        return $out;
+    }
+
+    public function saveExpenses(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'tax_year'   => 'required|integer|min:2000|max:2100',
+            'expenses'   => 'array',
+            'expenses.*' => 'nullable|numeric',
+        ]);
+
+        $year = (int) $validated['tax_year'];
+        $codes = array_merge(array_keys(FbrSchema::EXPENSES), [FbrSchema::EXPENSE_CONTRA]);
+
+        foreach ($codes as $code) {
+            $amount = $validated['expenses'][$code] ?? null;
+
+            if ($amount === null || $amount === '') {
+                WealthExpense::where('client_id', $client->id)
+                    ->where('tax_year', $year)->where('code', $code)->delete();
+                continue;
+            }
+
+            WealthExpense::updateOrCreate(
+                ['client_id' => $client->id, 'tax_year' => $year, 'code' => $code],
+                ['amount' => $amount]
+            );
+        }
+
+        return back()->with('success', 'Annex-F saved.');
     }
 
     /** Copy a year's figures forward, so next year starts from last year's closing position. */

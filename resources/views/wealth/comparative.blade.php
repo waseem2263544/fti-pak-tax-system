@@ -26,9 +26,8 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach(['asset', 'liability'] as $kind)
-                @foreach(\App\Models\WealthLine::SECTIONS[$kind] as $key => $label)
-                    @php $group = $lines->where('kind', $kind)->where('section', $key); @endphp
+            @foreach(\App\Support\FbrSchema::assetHeads() + \App\Support\FbrSchema::liabilityHeads() as $code => $head)
+                @php $group = $lines->where('code', (string) $code); $label = $head['sr'] . '. ' . $head['label']; @endphp
                     @continue($group->isEmpty())
                     <tr>
                         <td colspan="{{ $years->count() + 1 }}"
@@ -55,7 +54,6 @@
                             </td>
                         @endforeach
                     </tr>
-                @endforeach
             @endforeach
             </tbody>
             <tfoot>

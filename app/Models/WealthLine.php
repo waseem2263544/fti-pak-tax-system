@@ -13,41 +13,43 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WealthLine extends Model
 {
-    protected $fillable = ['client_id', 'kind', 'section', 'description', 'sort_order', 'disposed_in', 'notes'];
+    protected $fillable = ['client_id', 'kind', 'code', 'section', 'description', 'details', 'sort_order', 'disposed_in', 'notes'];
 
-    /**
-     * Sections, in the order a wealth statement presents them.
-     *
-     * Labels follow the firm's own working papers; the grouping follows what
-     * IRIS asks for, so a line can be read straight onto the return.
-     */
-    public const SECTIONS = [
-        'asset' => [
-            'agricultural_property'   => 'Agricultural property',
-            'immovable_property'      => 'Commercial, industrial, residential property (non-business)',
-            'foreign_immovable'       => 'Foreign immoveable property',
-            'business_capital'        => 'Business capital',
-            'foreign_business_capital'=> 'Foreign business capital',
-            'financial_assets'        => 'Financial assets & investments (non-business)',
-            'bank_accounts'           => 'Cash at bank',
-            'cash_in_hand'            => 'Cash in hand',
-            'motor_vehicles'          => 'Motor vehicles',
-            'household_effects'       => 'Household effects',
-            'assets_in_others_name'   => "Assets in the name of others",
-            'receivables'             => 'Receivables / debtors',
-            'other_assets'            => 'Any other assets',
-        ],
-        'liability' => [
-            'creditors'               => 'Creditors / payables (borrowing, loans, credit)',
-            'other_liabilities'       => 'Any other liabilities',
-        ],
-    ];
+    protected $casts = ['details' => 'array'];
 
-    public static function sectionLabel(string $section): string
+    /** Kept for rows created before the move onto FBR codes. */
+    public const LEGACY_SECTION = 'legacy';
+
+    public static function headLabel(string $code): string
     {
-        return self::SECTIONS['asset'][$section]
-            ?? self::SECTIONS['liability'][$section]
-            ?? $section;
+        return \App\Support\FbrSchema::headLabel($code);
+    }
+
+    /** The head's own attributes, as IRIS asks for them. */
+    public function detail(string $key, $default = null)
+    {
+        return $this->details[$key] ?? $default;
+    }
+
+    /** A one-line summary of the attributes, for the statement's description column. */
+    public function attributeSummary(): string
+    {
+        $head = \App\Support\FbrSchema::head((string) $this->code);
+
+        if (!$head || empty($this->details)) {
+            return '';
+        }
+
+        $parts = [];
+        foreach ($head['fields'] as $field) {
+            $v = $this->details[$field['key']] ?? null;
+            if ($v === null || $v === '') {
+                continue;
+            }
+            $parts[] = $field['key'] === 'form' ? $v : "{$field['label']}: {$v}";
+        }
+
+        return implode(' · ', array_slice($parts, 0, 5));
     }
 
     public function client()
