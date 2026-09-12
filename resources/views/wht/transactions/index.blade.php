@@ -153,12 +153,10 @@
                            target="_blank" class="btn btn-sm btn-outline-primary" title="Certificate"><i class="bi bi-file-earmark-pdf"></i></a>
                         <a href="{{ $isSalary ? route('wht.salaries.edit', $r) : route('wht.purchases.edit', $r) }}"
                            class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                        <form method="POST" class="d-inline"
-                              action="{{ $isSalary ? route('wht.salaries.destroy', $r) : route('wht.purchases.destroy', $r) }}"
-                              onsubmit="return confirm('Delete this entry?')">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                        </form>
+                        {{-- No per-row delete form here: it would nest inside the bulk form above,
+                             which browsers resolve by discarding the inner <form> while keeping its
+                             hidden _method=DELETE — so the trash icon submitted the bulk form as a
+                             DELETE and got a 405. Tick the row and use Delete selected instead. --}}
                     </td>
                 </tr>
                 @empty
