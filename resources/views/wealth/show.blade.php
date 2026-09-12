@@ -4,68 +4,123 @@
 
 @section('styles')
 <style>
-    /* A working paper, not a dashboard: ruled rows, figures to the right,
-       totals underlined the way the form itself does it. */
-    .ws-sheet { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
-    .ws-sheet + .ws-sheet { margin-top: 18px; }
-    .ws-head { padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex;
-               justify-content: space-between; align-items: center; gap: 12px; }
-    .ws-head h2 { font-size: 0.92rem; font-weight: 700; margin: 0; }
-    .ws-row { display: grid; grid-template-columns: 1fr 150px 130px 78px; gap: 10px; align-items: center;
-              padding: 7px 18px; border-bottom: 1px solid var(--n-100); font-size: 0.83rem; }
+    /* ════════════════════════════════════════════════════════════════
+       A working paper: ruled rows, one grid, figures in a clean column.
+       ════════════════════════════════════════════════════════════════ */
+
+    /* ── Sheets (income working, salary summary, Annex-F) ── */
+    .ws-sheet { background: var(--surface); border: 1px solid var(--border);
+                border-radius: var(--radius-lg); margin-bottom: 16px; }
+    .ws-head  { padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex;
+                justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .ws-head h2 { font-size: 0.94rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+    .ws-row   { display: grid; grid-template-columns: minmax(0, 1fr) 150px 150px 90px; gap: 14px;
+                align-items: center; padding: 8px 20px; border-bottom: 1px solid var(--n-100);
+                font-size: 0.84rem; }
     .ws-row:last-child { border-bottom: none; }
-    .ws-group { padding: 7px 18px; background: var(--surface-sunk); border-bottom: 1px solid var(--border);
-                font-size: 0.78rem; font-weight: 600; color: var(--text-soft);
+    .ws-group { padding: 8px 20px; background: var(--surface-sunk); border-bottom: 1px solid var(--border);
+                font-size: 0.76rem; font-weight: 600; color: var(--text-soft);
                 display: flex; justify-content: space-between; gap: 10px; }
-    .ws-total { display: grid; grid-template-columns: 1fr 150px 130px 78px; gap: 10px;
-                padding: 10px 18px; border-top: 2px solid var(--border-strong); font-weight: 700; }
-    .ws-sub { font-size: 0.73rem; color: var(--text-muted); }
+    .ws-sub   { font-size: 0.74rem; color: var(--text-muted); }
     .ws-money { text-align: right; font-variant-numeric: tabular-nums; }
+    .num      { font-variant-numeric: tabular-nums; }
 
-    /* The statement itself: Sr. | description | code | this year | last year. */
-    .st-head, .st-row { display: grid; grid-template-columns: 42px 1fr 12px 150px 150px;
-                        gap: 10px; align-items: center; padding: 6px 18px; font-size: 0.83rem; }
-    .st-head { background: var(--surface-sunk); border-bottom: 1px solid var(--border);
-               font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
-    .st-row { border-bottom: 1px solid var(--n-100); }
-    .st-headrow { font-weight: 600; background: var(--surface-sunk); }
-    .st-count { background: var(--n-100); color: var(--text-soft); border-radius: 10px;
-                padding: 0 6px; font-size: 0.68rem; margin-left: 6px; font-weight: 600; }
-    .st-detail { background: var(--n-25); }
-    .st-line { font-weight: 400; padding-left: 30px; }
-    .st-rn { text-align: right; color: var(--text-faint); font-size: 0.75rem; }
-    .st-sum { font-weight: 600; background: var(--surface); }
-    .st-strong { border-top: 1px solid var(--border-strong); }
-    .st-py { color: var(--text-muted); position: relative; }
-    .st-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-               display: none; gap: 4px; background: var(--n-25); padding-left: 6px; }
-    .st-line:hover .st-acts { display: flex; }
-    .st-save { padding: 12px 18px; border-bottom: 1px solid var(--border); }
-
-    /* The working behind a line: opening, what moved, closing. */
-    .st-moves { display: none; background: var(--surface); border-left: 2px solid var(--accent);
-                margin: 0 18px 8px 48px; border-radius: 0 var(--radius) var(--radius) 0; }
-    .st-moves.open { display: block; }
-    .st-mv-head { padding: 7px 14px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
-                  letter-spacing: 0.6px; color: var(--text-muted); border-bottom: 1px solid var(--n-100); }
-    .st-mv { display: grid; grid-template-columns: 1fr 40px 140px 46px; gap: 8px; align-items: center;
-             padding: 6px 14px; font-size: 0.82rem; border-bottom: 1px solid var(--n-100); }
-    .st-mv form { margin: 0; }
-    .st-mv-op, .st-mv-cl { color: var(--text-soft); font-weight: 600; background: var(--n-25); }
-    .st-mv-add { padding: 10px 14px; }
-    /* A disclosure styled as a button: opens on click or Enter, and needs no
-       script to do it. */
-    details.ws-open > summary { list-style: none; padding: 14px 18px; }
-    details.ws-open > summary::-webkit-details-marker { display: none; }
-    details.ws-open > summary .btn { pointer-events: none; }
-    details.ws-open > div { padding: 0 18px 16px; }
-
-    details.ws-add > summary { cursor: pointer; padding: 10px 18px; font-size: 0.82rem;
+    details.ws-add > summary { cursor: pointer; padding: 11px 20px; font-size: 0.82rem;
                                font-weight: 600; color: var(--accent-dark); list-style: none; }
     details.ws-add > summary::-webkit-details-marker { display: none; }
     details.ws-add > summary::before { content: '+ '; }
     details.ws-add[open] > summary::before { content: '− '; }
-    details.ws-add > div { padding: 0 18px 16px; border-top: 1px solid var(--n-100); }
+    details.ws-add > div { padding: 0 20px 18px; border-top: 1px solid var(--n-100); }
+
+    /* ── The statement ───────────────────────────────────────────────
+       One grid for every row: serial, particulars, this year, last year. */
+    .st-doc { background: var(--surface); border: 1px solid var(--border);
+              border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px; }
+
+    .st-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+                padding: 16px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .st-title h2 { font-size: 1rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+    .st-title p  { margin: 3px 0 0; font-size: 0.78rem; color: var(--text-muted); }
+    .st-title-sub { border-top: 8px solid var(--n-100); }
+    .st-actions { display: flex; gap: 8px; align-items: center; }
+
+    .st-cols, .st-r { display: grid; grid-template-columns: 46px minmax(0, 1fr) 158px 138px;
+                      gap: 14px; align-items: center; padding: 7px 20px; }
+    .st-cols { background: var(--surface-sunk); border-bottom: 1px solid var(--border);
+               font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
+               text-transform: uppercase; letter-spacing: 0.5px; }
+    .st-r    { border-bottom: 1px solid var(--n-100); font-size: 0.84rem; }
+
+    .st-sr   { font-size: 0.75rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+    .st-rn   { text-align: right; padding-right: 4px; font-style: italic; }
+    .st-num  { text-align: right; font-variant-numeric: tabular-nums; }
+    .st-prior { color: var(--text-muted); }
+
+    .st-head  { background: var(--surface-sunk); font-weight: 600; }
+    .st-sub   { font-weight: 600; }
+    .st-total { font-weight: 700; border-top: 1px solid var(--border-strong); }
+    .st-final { font-weight: 700; border-top: 1px solid var(--border-strong); }
+    .st-final.ok  { background: var(--ok-tint);     color: var(--ok-ink); }
+    .st-final.bad { background: var(--danger-tint); color: var(--danger-ink); }
+
+    .st-l     { background: var(--surface); }
+    .st-l .st-sr { color: transparent; }
+    .st-desc  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+    .st-name  { font-weight: 500; }
+    .st-attrs { font-size: 0.73rem; color: var(--text-muted); }
+    .st-from  { display: block; font-size: 0.73rem; color: var(--text-muted); font-weight: 400; }
+    .st-tag   { font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+                background: var(--n-100); color: var(--text-soft); border-radius: 3px; padding: 1px 5px; }
+    .st-tag-b { background: var(--info-tint); color: var(--info-ink); }
+
+    /* Row tools stay out of the way until the row is under the cursor. */
+    .st-tools { display: inline-flex; gap: 2px; opacity: 0; transition: opacity 0.12s; margin-left: auto; }
+    .st-r:hover .st-tools, .st-tools:focus-within { opacity: 1; }
+    .st-tool  { border: none; background: transparent; color: var(--text-muted); cursor: pointer;
+                padding: 2px 5px; border-radius: var(--radius-sm); font-size: 0.8rem; line-height: 1; }
+    .st-tool:hover { background: var(--n-100); color: var(--text); }
+    .st-tool-x:hover { background: var(--danger-tint); color: var(--danger-ink); }
+
+    /* One input style, right-aligned, so the figures form a clean column. */
+    .st-in { width: 100%; text-align: right; font-variant-numeric: tabular-nums;
+             border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+             padding: 4px 8px; font-size: 0.83rem; background: var(--surface); color: var(--text);
+             font-family: inherit; outline: none; }
+    .st-in:hover { border-color: var(--n-300); }
+    .st-in:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .st-in.dirty { border-color: var(--accent); }
+    .st-derived  { font-weight: 600; border-bottom: 1px dotted var(--text-faint); cursor: help; }
+
+    .st-status { font-size: 0.76rem; color: var(--text-muted); min-width: 92px; text-align: right; }
+    .st-status.saving { color: var(--text-soft); }
+    .st-status.saved  { color: var(--ok-ink); }
+    .st-status.failed { color: var(--danger-ink); font-weight: 600; }
+
+    /* ── The working behind a line ── */
+    .st-mv-box { display: none; background: var(--n-25); border-bottom: 1px solid var(--n-100);
+                 padding: 0 20px 14px 60px; }
+    .st-mv-box.open { display: block; }
+    .st-mv-t { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+               color: var(--text-muted); padding: 11px 0 6px; }
+    .st-mv   { display: grid; grid-template-columns: minmax(0, 1fr) 158px 34px; gap: 14px;
+               align-items: center; padding: 5px 0; font-size: 0.82rem;
+               border-bottom: 1px solid var(--n-100); }
+    .st-mv-edge { font-weight: 600; color: var(--text-soft); }
+    .st-in-amt { color: var(--ok-ink); }
+    .st-out    { color: var(--danger-ink); }
+    .st-mv-add { display: grid; grid-template-columns: 108px minmax(0, 1fr) 140px 130px 68px;
+                 gap: 8px; align-items: center; padding-top: 11px; }
+
+    .st-notes { padding: 14px 20px; }
+
+    /* Annex-F rides the same rows, two columns wide. */
+    .st-cols-2, .st-r-2 { grid-template-columns: minmax(0, 1fr) 158px 34px; }
+
+    @media (max-width: 900px) {
+        .st-cols, .st-r { grid-template-columns: 34px minmax(0, 1fr) 110px 96px; gap: 8px; padding: 7px 12px; }
+        .st-mv-add { grid-template-columns: 1fr 1fr; }
+        .st-mv-box { padding-left: 20px; }
+    }
 </style>
 @endsection
 
@@ -518,7 +573,7 @@
                 </div>
                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addExpense')">Add</button>
             </div>
-            <div class="ws-row" style="grid-template-columns: 1fr 180px 90px; background: var(--warn-tint);">
+            <div class="st-r st-r-2" style="background: var(--warn-tint);">
                 <div>{{ FbrSchema::EXPENSE_CONTRA_LABEL }}</div>
                 <div><input type="number" step="1" name="expenses[{{ FbrSchema::EXPENSE_CONTRA }}]"
                             class="st-in"
@@ -527,12 +582,12 @@
                 <div></div>
             </div>
             @if($salaryDeductions > 0)
-                <div class="st-r st-r-2 st-head"><span>From the salary working</span></div>
+                <div class="st-r st-r-2 st-head"><div>From the salary working</div><div></div><div></div></div>
                 @foreach($salary as $w)
                     @foreach($w->deductions() as $c)
                         @continue($c->amount() == 0)
                         <div class="st-r st-r-2" >
-                            <div>{{ $c->label }} <span class="ws-sub">— {{ $w->employer }}</span></div>
+                            <div>{{ $c->label }} <span class="st-attrs">— {{ $w->employer }}</span></div>
                             <div class="st-num">{{ $n($c->amount()) }}</div>
                             <div></div>
                         </div>
