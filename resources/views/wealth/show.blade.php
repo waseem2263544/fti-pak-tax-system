@@ -367,10 +367,11 @@
         <header class="st-title">
             <div>
                 <h2>Wealth Statement</h2>
-                <p>{{ $client->name }} · as at 30 June {{ $taxYear }} · figures in PKR, at cost</p>
+                <p>{{ $client->name }} · as at 30 June {{ $taxYear }} · figures in PKR, at cost.
+                   Each figure is the running total of that line's additions and disposals.</p>
             </div>
             <div class="st-actions">
-                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addLineModal">
+                <button type="button" class="btn btn-sm btn-accent" data-bs-toggle="modal" data-bs-target="#addLineModal">
                     <i class="bi bi-plus-lg me-1"></i> Add a line
                 </button>
                 <span class="st-status" data-status></span>
@@ -384,9 +385,7 @@
             <div class="st-num st-prior">{{ $taxYear - 1 }}</div>
         </div>
 
-        <form method="POST" action="{{ route('wealth.values.save', $client) }}" id="stmtForm" data-autosave>
-            @csrf
-            <input type="hidden" name="tax_year" value="{{ $taxYear }}">
+        <div class="st-body">
 
             @php
                 $renderLines = function ($group) use ($client, $taxYear, $n) { return $group; };
@@ -459,7 +458,7 @@
                 <div class="st-num">{{ $n($totals['current']['liabilities']) }}</div>
                 <div class="st-num st-prior">{{ $n($totals['prior']['liabilities']) }}</div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -620,21 +619,71 @@
 
 </div>
 
-{{-- Movement forms live out here, clear of the statement's save form. --}}
-@foreach($lines as $line)
-    <form method="POST" id="mvadd{{ $line->id }}" class="d-none"
-          action="{{ route('wealth.movements.store', [$client, $line]) }}">
-        @csrf
-        <input type="hidden" name="tax_year" value="{{ $taxYear }}">
-    </form>
-    @foreach($line->movementsFor($taxYear) as $m)
-        <form method="POST" id="mvdel{{ $m->id }}" class="d-none"
-              action="{{ route('wealth.movements.destroy', [$client, $line, $m]) }}"
-              onsubmit="return confirm('Remove this movement?')">
-            @csrf @method('DELETE')
+
+{{-- Add a line. Its value at cost becomes the line's opening movement, so every
+     figure on the statement traces back to something that happened. --}}
+<div class="modal fade" id="addLineModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content" method="POST" action="{{ route('wealth.lines.store', $client) }}" id="addLineForm">
+            @csrf
+            <input type="hidden" name="tax_year" value="{{ $taxYear }}">
+            <div class="modal-header">
+                <h5 class="modal-title">Add a line to the statement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="lineHead">Head</label>
+                        <select name="code" id="lineHead" class="form-select form-select-sm" required onchange="showHeadFields(this.value)">
+                            <optgroup label="Assets">
+                                @foreach($assetHeads as $code => $h)<option value="{{ $code }}">{{ $h['sr'] }}. {{ $h['label'] }}</option>@endforeach
+                            </optgroup>
+                            <optgroup label="Liabilities">
+                                @foreach($liabHeads as $code => $h)<option value="{{ $code }}">{{ $h['sr'] }}. {{ $h['label'] }}</option>@endforeach
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="lineDesc">Description</label>
+                        <input type="text" name="description" id="lineDesc" class="form-control form-control-sm" required
+                               placeholder="e.g. 1 Kanal Plot 59/E-1, Hayatabad">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="lineAmt">Value at cost</label>
+                        <input type="number" step="1" name="amount" id="lineAmt"
+                               class="form-control form-control-sm" style="text-align: right;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="lineWhen">Date acquired</label>
+                        <input type="date" name="acquired_on" id="lineWhen" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="lineNote">How it was acquired</label>
+                        <input type="text" name="acquired_note" id="lineNote" class="form-control form-control-sm"
+                               placeholder="e.g. Purchased — sale deed dated 14 May 2025">
+                    </div>
+                </div>
+
+                @foreach($assetHeads + $liabHeads as $code => $h)
+                    <div class="row g-2 head-fields" data-code="{{ $code }}" style="display: none;">
+                        @include('wealth.partials._fields', ['fields' => $h['fields'], 'values' => [], 'name' => 'details'])
+                    </div>
+                @endforeach
+
+                <p class="ws-sub mt-3 mb-0">
+                    Assets are declared at cost, including stamp duty, registration and transfer fees. This
+                    becomes the line's opening entry; later changes — construction, a further instalment, a
+                    part disposal — are recorded against the line as movements.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-accent">Add to statement</button>
+            </div>
         </form>
-    @endforeach
-@endforeach
+    </div>
+</div>
 
 <form method="POST" id="balancingForm" class="d-none">@csrf<input type="hidden" name="tax_year" value="{{ $taxYear }}"></form>
 

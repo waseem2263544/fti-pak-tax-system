@@ -236,6 +236,8 @@ class WealthStatementController extends Controller
             'description' => 'required|string|max:400',
             'tax_year'    => 'required|integer|min:2000|max:2100',
             'amount'      => 'nullable|numeric',
+            'acquired_on' => 'nullable|date',
+            'acquired_note' => 'nullable|string|max:200',
             'details'     => 'array',
         ]);
 
@@ -261,13 +263,20 @@ class WealthStatementController extends Controller
             $line->update(['balancing' => true]);
         }
 
+        // The opening value is recorded as the line's first movement, so every
+        // figure on the statement traces back to something that happened.
         if ($validated['amount'] !== null && $validated['amount'] !== '') {
-            WealthValue::create([
+            WealthMovement::create([
                 'wealth_line_id' => $line->id,
-                'tax_year'       => $validated['tax_year'],
+                'tax_year'       => (int) $validated['tax_year'],
+                'kind'           => 'addition',
+                'note'           => $validated['acquired_note'] ?? 'Opening value',
+                'occurred_on'    => $validated['acquired_on'] ?? null,
                 'amount'         => $validated['amount'],
             ]);
         }
+
+        $this->rebalance($client, (int) $validated['tax_year']);
 
         return back()->with('success', 'Added to the wealth statement.');
     }
