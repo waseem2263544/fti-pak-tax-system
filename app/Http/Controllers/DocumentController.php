@@ -21,6 +21,44 @@ class DocumentController extends Controller
     {
     }
 
+    /** The type buckets the browser filters by, in display order. */
+    public const TYPES = [
+        'folder' => 'Folders',
+        'word'   => 'Word',
+        'excel'  => 'Excel',
+        'pdf'    => 'PDF',
+        'image'  => 'Images',
+        'other'  => 'Other',
+    ];
+
+    private const EXTENSIONS = [
+        'word'  => ['doc', 'docx', 'docm', 'dot', 'dotx', 'rtf', 'odt'],
+        'excel' => ['xls', 'xlsx', 'xlsm', 'xlsb', 'csv', 'ods'],
+        'pdf'   => ['pdf'],
+        'image' => ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'heic', 'svg', 'tif', 'tiff'],
+    ];
+
+    /**
+     * Which bucket an item belongs to. Classified once here rather than in the
+     * template, so the filter and the icon can never disagree.
+     */
+    public static function classify(array $item): string
+    {
+        if (isset($item['folder'])) {
+            return 'folder';
+        }
+
+        $ext = strtolower(pathinfo($item['name'] ?? '', PATHINFO_EXTENSION));
+
+        foreach (self::EXTENSIONS as $type => $extensions) {
+            if (in_array($ext, $extensions, true)) {
+                return $type;
+            }
+        }
+
+        return 'other';
+    }
+
     public function index(Request $request)
     {
         // With a root folder configured the browser opens there and stays
@@ -34,6 +72,8 @@ class DocumentController extends Controller
                 'breadcrumb' => [],
                 'folder'     => null,
                 'search'     => '',
+                'type'       => null,
+                'typeCounts' => [],
             ]);
         }
 
@@ -77,11 +117,25 @@ class DocumentController extends Controller
         $items = $items->map(function ($item) use ($sp, $parentPaths) {
             $item['_path'] = $sp->relativePath($item)
                 ?: ($parentPaths[$item['parentReference']['id'] ?? ''] ?? '');
+            $item['_type'] = self::classify($item);
 
             return $item;
         });
 
-        return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search'));
+        // Counted before filtering, so every button shows what it would give.
+        $typeCounts = collect(self::TYPES)
+            ->map(fn($label, $type) => $items->where('_type', $type)->count())
+            ->all();
+
+        $type = $request->get('type');
+
+        if ($type && array_key_exists($type, self::TYPES)) {
+            $items = $items->where('_type', $type)->values();
+        } else {
+            $type = null;
+        }
+
+        return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search', 'type', 'typeCounts'));
     }
 
     /** New blank Word or Excel document, created then opened for editing. */

@@ -4,21 +4,26 @@
 
 @section('content')
 @php
-    $officeExt = ['docx','doc','xlsx','xls','pptx','ppt'];
-    $icon = function ($item) use ($officeExt) {
-        if (isset($item['folder'])) return ['bi-folder-fill', '#f0ad4e'];
-        $ext = strtolower(pathinfo($item['name'] ?? '', PATHINFO_EXTENSION));
-        return match (true) {
-            in_array($ext, ['docx','doc'])  => ['bi-file-earmark-word-fill', '#2b579a'],
-            in_array($ext, ['xlsx','xls'])  => ['bi-file-earmark-excel-fill', '#217346'],
-            in_array($ext, ['pptx','ppt'])  => ['bi-file-earmark-ppt-fill', '#d24726'],
-            $ext === 'pdf'                  => ['bi-file-earmark-pdf-fill', '#d9534f'],
-            in_array($ext, ['png','jpg','jpeg','gif']) => ['bi-file-earmark-image-fill', '#6f42c1'],
-            default                         => ['bi-file-earmark-fill', '#8a94a6'],
-        };
-    };
-    $isOffice = fn($item) => !isset($item['folder'])
-        && in_array(strtolower(pathinfo($item['name'] ?? '', PATHINFO_EXTENSION)), $officeExt);
+    use App\Http\Controllers\DocumentController;
+
+    $typeStyle = [
+        'folder' => ['bi-folder-fill',              '#f0ad4e'],
+        'word'   => ['bi-file-earmark-word-fill',   '#2b579a'],
+        'excel'  => ['bi-file-earmark-excel-fill',  '#217346'],
+        'pdf'    => ['bi-file-earmark-pdf-fill',    '#d9534f'],
+        'image'  => ['bi-file-earmark-image-fill',  '#6f42c1'],
+        'other'  => ['bi-file-earmark-fill',        '#8a94a6'],
+    ];
+
+    $icon = fn($item) => $typeStyle[$item['_type'] ?? 'other'] ?? $typeStyle['other'];
+
+    // Word and Excel open in Office for the web; everything else just opens.
+    $isOffice = fn($item) => in_array($item['_type'] ?? '', ['word', 'excel'], true);
+
+    $keep = fn(array $extra) => array_filter(
+        array_merge(['folder' => $folder, 'q' => $search ?: null, 'type' => $type], $extra),
+        fn($v) => $v !== null && $v !== ''
+    );
 @endphp
 
 @if($error)
@@ -50,6 +55,7 @@
 
     <form method="GET" class="d-flex gap-2" style="flex: 1; max-width: 420px; margin: 0 16px;">
         <input type="hidden" name="folder" value="{{ $folder }}">
+        <input type="hidden" name="type" value="{{ $type }}">
         <input type="search" name="q" class="form-control form-control-sm" value="{{ $search ?? '' }}"
                placeholder="Search files and folders…">
         <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
@@ -73,6 +79,24 @@
         </button>
     </div>
 </div>
+
+@if(!empty($typeCounts))
+<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <span class="text-muted" style="font-size: 0.8rem;">Show:</span>
+    <a href="{{ route('documents.index', $keep(['type' => null])) }}"
+       class="btn btn-sm btn-{{ $type ? 'outline-primary' : 'primary' }}">
+        All <span class="opacity-75">{{ array_sum($typeCounts) }}</span>
+    </a>
+    @foreach(DocumentController::TYPES as $key => $label)
+        @php [$ic, $colour] = $typeStyle[$key]; @endphp
+        <a href="{{ route('documents.index', $keep(['type' => $key])) }}"
+           class="btn btn-sm btn-{{ $type === $key ? 'primary' : 'outline-primary' }} {{ ($typeCounts[$key] ?? 0) === 0 ? 'disabled opacity-50' : '' }}">
+            <i class="bi {{ $ic }} me-1" @if($type !== $key) style="color: {{ $colour }};" @endif></i>
+            {{ $label }} <span class="opacity-75">{{ $typeCounts[$key] ?? 0 }}</span>
+        </a>
+    @endforeach
+</div>
+@endif
 
 <div class="card">
     <div class="table-responsive">
@@ -152,7 +176,9 @@
                     @if($error)
                         Could not read this folder.
                     @elseif(($search ?? '') !== '')
-                        Nothing matched &ldquo;{{ $search }}&rdquo;.
+                        Nothing matched &ldquo;{{ $search }}&rdquo;@if($type) in {{ strtolower(DocumentController::TYPES[$type]) }}@endif.
+                    @elseif($type)
+                        No {{ strtolower(DocumentController::TYPES[$type]) }} in this folder.
                     @else
                         This folder is empty.
                     @endif
