@@ -40,26 +40,42 @@
                     <label class="form-label">File No.</label>
                     <input type="text" name="file_no" class="form-control" value="{{ $nextFileNo }}" placeholder="{{ $nextFileNo }}" style="font-weight: 700; font-size: 1.1rem; text-align: center; color: var(--primary);">
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Client Name</label>
-                    <select name="client_id" class="form-select" required>
-                        <option value="">Select Client</option>
+                <div class="col-md-3">
+                    <label class="form-label">Client</label>
+                    <select name="client_id" class="form-select">
+                        <option value="">Not a client on file</option>
                         @foreach($clients as $client)
                             <option value="{{ $client->id }}">{{ $client->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Description</label>
-                    <input type="text" name="description" class="form-control" placeholder="Optional description...">
+                <div class="col-md-3">
+                    <label class="form-label">…or a name</label>
+                    <input type="text" name="client_name" class="form-control" value="{{ old('client_name') }}" placeholder="Name on the file">
+                    <div class="form-text">Used only when no client is selected.</div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-accent w-100"><i class="bi bi-plus-lg me-1"></i>Add</button>
+                <div class="col-md-3">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="description" class="form-control" placeholder="What the file is about">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-accent w-100"><i class="bi bi-plus-lg"></i></button>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Search -->
+<form method="GET" action="{{ route('files.index') }}" class="d-flex gap-2 mb-3">
+    <input type="hidden" name="tab" value="files">
+    <input type="search" name="q" value="{{ $search ?? '' }}" class="form-control form-control-sm"
+           placeholder="Search by file number, name, or description…" style="max-width: 420px;">
+    <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
+    @if(($search ?? '') !== '')
+        <a href="{{ route('files.index', ['tab' => 'files']) }}" class="btn btn-outline-primary btn-sm" title="Clear"><i class="bi bi-x-lg"></i></a>
+    @endif
+</form>
 
 <!-- File Numbers List -->
 <div class="card">
@@ -81,7 +97,12 @@
                         <span style="font-weight: 800; font-size: 1rem; color: var(--primary); background: var(--n-100); padding: 4px 12px; border-radius: 6px;">{{ $file->file_no }}</span>
                     </td>
                     <td>
-                        <a href="{{ route('clients.show', $file->client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">{{ $file->client->name }}</a>
+                        @if($file->client)
+                            <a href="{{ route('clients.show', $file->client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">{{ $file->client->name }}</a>
+                        @else
+                            <span style="font-weight: 600;">{{ $file->client_name ?: '—' }}</span>
+                            <span class="badge bg-secondary ms-1" style="font-size: 0.62rem;" title="Not linked to a client record">unlinked</span>
+                        @endif
                     </td>
                     <td style="color: var(--n-500); font-size: 0.85rem;">{{ $file->description ?: '-' }}</td>
                     <td style="color: var(--n-400); font-size: 0.82rem;">{{ $file->created_at->format('M d, Y') }}</td>
@@ -96,7 +117,11 @@
                 <tr>
                     <td colspan="5" class="text-center py-5" style="color: var(--n-400);">
                         <i class="bi bi-folder2" style="font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
-                        No file numbers yet. Add your first one above.
+                        @if(($search ?? '') !== '')
+                            Nothing matches “{{ $search }}”.
+                        @else
+                            No file numbers yet. Add your first one above.
+                        @endif
                     </td>
                 </tr>
                 @endforelse
