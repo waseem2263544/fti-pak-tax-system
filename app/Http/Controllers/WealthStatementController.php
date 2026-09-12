@@ -338,6 +338,10 @@ class WealthStatementController extends Controller
 
         $this->rebalance($client, $year);
 
+        if ($request->wantsJson()) {
+            return response()->json(['saved' => true]);
+        }
+
         return back()->with('success', "Figures saved for tax year {$year}.");
     }
 
@@ -365,6 +369,10 @@ class WealthStatementController extends Controller
             ['client_id' => $client->id, 'tax_year' => (int) $validated['tax_year']],
             $data
         );
+
+        if ($request->wantsJson()) {
+            return response()->json(['saved' => true]);
+        }
 
         return back()->with('success', 'Income working saved.');
     }
@@ -395,6 +403,10 @@ class WealthStatementController extends Controller
         );
 
         $this->rebalance($client, (int) $validated['tax_year']);
+
+        if ($request->wantsJson()) {
+            return response()->json(['saved' => true]);
+        }
 
         return back()->with('success', 'Reconciliation saved.');
     }
@@ -516,6 +528,10 @@ class WealthStatementController extends Controller
         }
 
         $this->rebalance($client, $year);
+
+        if ($request->wantsJson()) {
+            return response()->json(['saved' => true]);
+        }
 
         return back()->with('success', 'Annex-F saved.');
     }
