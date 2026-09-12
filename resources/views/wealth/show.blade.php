@@ -76,9 +76,13 @@
 
 {{-- ════════ INCOME WORKING ════════ --}}
 <div class="tab-pane fade show active" id="t-income">
+    {{-- Only heads that have something declared are shown. The rest are in the
+         picker below, and reveal themselves when chosen - the same way IRIS
+         only shows the heads you say apply. --}}
     @foreach(FbrSchema::incomeHeads() as $key => $head)
         @php $rows = $items[$key] ?? collect(); @endphp
-        <div class="ws-sheet">
+        <div class="ws-sheet head-sheet" id="head-{{ $key }}" data-head="{{ $key }}"
+             @if($rows->isEmpty()) style="display: none;" @endif>
             <div class="ws-head">
                 <div>
                     <h2>{{ $head['label'] }}</h2>
@@ -172,6 +176,22 @@
             </details>
         </div>
     @endforeach
+
+    <div class="ws-sheet" id="addHeadCard">
+        <div class="ws-head"><h2>Add a source of income</h2></div>
+        <div style="padding: 14px 18px;" class="d-flex flex-wrap gap-2 align-items-end">
+            <div style="min-width: 280px;">
+                <label class="form-label" for="addHead">Head</label>
+                <select id="addHead" class="form-select form-select-sm">
+                    @foreach(FbrSchema::incomeHeads() as $key => $head)
+                        <option value="{{ $key }}" @if(!($items[$key] ?? collect())->isEmpty()) hidden @endif>{{ $head['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="button" class="btn btn-accent btn-sm" onclick="revealHead()">Add</button>
+            <span class="ws-sub">Only the heads that apply to this client are shown.</span>
+        </div>
+    </div>
 
     {{-- Tax is typed in. Nothing above is used to compute it. --}}
     <div class="ws-sheet">
@@ -339,13 +359,26 @@
                 <button class="btn btn-sm btn-primary">Save</button>
             </div>
             @foreach(FbrSchema::EXPENSES as $code => $label)
-                <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
+                @php $shown = isset($expenses[$code]); @endphp
+                <div class="ws-row opt-row" id="exp-{{ $code }}" data-key="{{ $code }}"
+                     style="grid-template-columns: 1fr 180px 90px;@if(!$shown) display: none;@endif">
                     <div>{{ $label }}</div>
                     <div><input type="number" step="0.01" name="expenses[{{ $code }}]" class="form-control form-control-sm num"
-                                value="{{ $expenses[$code] ?? '' }}" aria-label="{{ $label }}"></div>
+                                value="{{ $expenses[$code] ?? '' }}" aria-label="{{ $label }}" @if(!$shown) disabled @endif></div>
                     <div class="ws-code">{{ $code }}</div>
                 </div>
             @endforeach
+            <div style="padding: 12px 18px; border-bottom: 1px solid var(--n-100);" class="d-flex flex-wrap gap-2 align-items-end">
+                <div style="min-width: 300px;">
+                    <label class="form-label" for="addExpense">Add an expense head</label>
+                    <select id="addExpense" class="form-select form-select-sm">
+                        @foreach(FbrSchema::EXPENSES as $code => $label)
+                            <option value="exp-{{ $code }}" @if(isset($expenses[$code])) hidden @endif>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addExpense')">Add</button>
+            </div>
             <div class="ws-row" style="grid-template-columns: 1fr 180px 90px; background: var(--warn-tint);">
                 <div>{{ FbrSchema::EXPENSE_CONTRA_LABEL }}</div>
                 <div><input type="number" step="0.01" name="expenses[{{ FbrSchema::EXPENSE_CONTRA }}]"
@@ -397,13 +430,23 @@
             @endforeach
             @foreach(['adjustments' => '7034', 'foreign_remittance' => '7035', 'inheritance' => '7036',
                       'gift_received' => '7037', 'gain_disposal' => '7038', 'other_sources' => '7048'] as $f => $code)
-                <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
+                @php $shown = (float) $recon->{$f} != 0; @endphp
+                <div class="ws-row opt-row" id="in-{{ $f }}" style="grid-template-columns: 1fr 180px 90px;@if(!$shown) display: none;@endif">
                     <div>{{ FbrSchema::INFLOWS[$code] }}</div>
                     <div><input type="number" step="0.01" name="{{ $f }}" class="form-control form-control-sm num"
                                 value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::INFLOWS[$code] }}"></div>
                     <div class="ws-code">{{ $code }}</div>
                 </div>
             @endforeach
+            <div style="padding: 10px 18px;" class="d-flex flex-wrap gap-2 align-items-end">
+                <select id="addInflow" class="form-select form-select-sm" style="max-width: 420px;">
+                    @foreach(['adjustments' => '7034', 'foreign_remittance' => '7035', 'inheritance' => '7036',
+                              'gift_received' => '7037', 'gain_disposal' => '7038', 'other_sources' => '7048'] as $f => $code)
+                        <option value="in-{{ $f }}" @if((float) $recon->{$f} != 0) hidden @endif>{{ FbrSchema::INFLOWS[$code] }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addInflow')">Add inflow</button>
+            </div>
             <div class="ws-total" style="grid-template-columns: 1fr 180px 90px;">
                 <div>Total inflows</div><div class="ws-money">{{ $n($inflows) }}</div><div class="ws-code">7049</div>
             </div>
@@ -415,13 +458,22 @@
 
             <div class="ws-group"><span>Sr. 25 — Outflows</span><span class="ws-code">7099</span></div>
             @foreach(['gift_given' => '7091', 'loss_disposal' => '7092', 'other_outflows' => '7098'] as $f => $code)
-                <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
+                @php $shown = (float) $recon->{$f} != 0; @endphp
+                <div class="ws-row opt-row" id="out-{{ $f }}" style="grid-template-columns: 1fr 180px 90px;@if(!$shown) display: none;@endif">
                     <div>{{ FbrSchema::OUTFLOWS[$code] }}</div>
                     <div><input type="number" step="0.01" name="{{ $f }}" class="form-control form-control-sm num"
                                 value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::OUTFLOWS[$code] }}"></div>
                     <div class="ws-code">{{ $code }}</div>
                 </div>
             @endforeach
+            <div style="padding: 10px 18px;" class="d-flex flex-wrap gap-2 align-items-end">
+                <select id="addOutflow" class="form-select form-select-sm" style="max-width: 420px;">
+                    @foreach(['gift_given' => '7091', 'loss_disposal' => '7092', 'other_outflows' => '7098'] as $f => $code)
+                        <option value="out-{{ $f }}" @if((float) $recon->{$f} != 0) hidden @endif>{{ FbrSchema::OUTFLOWS[$code] }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addOutflow')">Add outflow</button>
+            </div>
             <div class="ws-total" style="grid-template-columns: 1fr 180px 90px;">
                 <div>Total outflows</div><div class="ws-money">{{ $n($outflows) }}</div><div class="ws-code">7099</div>
             </div>
@@ -447,6 +499,56 @@
 
 @section('scripts')
 <script>
+/*
+ * Reveal a head or a row that was hidden because nothing had been entered
+ * against it. Hidden number inputs are disabled so an untouched field is never
+ * submitted - otherwise saving would write a zero over a head the preparer
+ * never opened.
+ */
+function revealHead() {
+    var sel = document.getElementById('addHead');
+    var opt = sel.selectedOptions[0];
+    if (!opt) return;
+
+    var sheet = document.getElementById('head-' + sel.value);
+    if (!sheet) return;
+
+    sheet.style.display = '';
+    opt.hidden = true;
+
+    // Open its add form and put the cursor in the first field.
+    var det = sheet.querySelector('details.ws-add');
+    if (det) {
+        det.open = true;
+        var first = det.querySelector('input, select');
+        if (first) first.focus();
+    }
+    sheet.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Move on to the next head still available, so repeated adds are quick.
+    var next = Array.prototype.find.call(sel.options, function (o) { return !o.hidden; });
+    if (next) { sel.value = next.value; } else { document.getElementById('addHeadCard').style.display = 'none'; }
+}
+
+function revealRow(selectId) {
+    var sel = document.getElementById(selectId);
+    var opt = sel.selectedOptions[0];
+    if (!opt) return;
+
+    var row = document.getElementById(sel.value);
+    if (!row) return;
+
+    row.style.display = '';
+    row.querySelectorAll('input, select').forEach(function (i) { i.disabled = false; });
+    opt.hidden = true;
+
+    var input = row.querySelector('input');
+    if (input) input.focus();
+
+    var next = Array.prototype.find.call(sel.options, function (o) { return !o.hidden; });
+    if (next) { sel.value = next.value; } else { sel.closest('div').style.display = 'none'; }
+}
+
 function showHeadFields(code) {
     document.querySelectorAll('.head-fields').forEach(function (el) {
         var on = el.dataset.code === code;
