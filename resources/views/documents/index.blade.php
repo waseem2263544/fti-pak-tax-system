@@ -31,7 +31,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <nav style="font-size: 0.9rem;">
         <a href="{{ route('documents.index') }}" class="text-decoration-none">
-            <i class="bi bi-hdd-stack me-1"></i> Documents
+            <i class="bi bi-folder2-open me-1"></i> {{ config('services.sharepoint.root_label', 'Documents') }}
         </a>
         @foreach($breadcrumb as $crumb)
             <span class="text-muted mx-1">/</span>

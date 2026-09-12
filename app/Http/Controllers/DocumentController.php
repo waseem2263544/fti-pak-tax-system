@@ -23,7 +23,9 @@ class DocumentController extends Controller
 
     public function index(Request $request)
     {
-        $folder = $request->get('folder');
+        // With a root folder configured the browser opens there and stays
+        // inside it, rather than at the top of the whole library.
+        $folder = $request->get('folder') ?: $this->sharepoint->rootFolder();
 
         if (!$this->sharepoint->connected()) {
             return view('documents.index', [
@@ -36,7 +38,7 @@ class DocumentController extends Controller
 
         try {
             $items = collect($this->sharepoint->children($folder));
-            $breadcrumb = $folder ? $this->sharepoint->breadcrumb($folder) : [];
+            $breadcrumb = $this->sharepoint->breadcrumb($folder);
             $error = null;
         } catch (\Throwable $e) {
             $items = collect();

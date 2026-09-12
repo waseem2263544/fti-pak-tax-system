@@ -136,13 +136,28 @@ class SharePointClient
         return $response->json();
     }
 
-    /** Walk up the parent chain so the browser can show where you are. */
+    /** The folder the browser treats as its root, if one is configured. */
+    public function rootFolder(): ?string
+    {
+        return config('services.sharepoint.root_folder') ?: null;
+    }
+
+    /**
+     * Walk up the parent chain so the browser can show where you are, stopping
+     * at the configured root so the trail does not expose the whole library.
+     */
     public function breadcrumb(?string $itemId): array
     {
+        $root = $this->rootFolder();
         $trail = [];
         $guard = 0;
 
         while ($itemId && $guard++ < 20) {
+            // The root is represented by the browser's own home link.
+            if ($root && $itemId === $root) {
+                break;
+            }
+
             try {
                 $item = $this->item($itemId);
             } catch (\Throwable) {

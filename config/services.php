@@ -5,6 +5,12 @@ return [
     'sharepoint' => [
         // The SharePoint site whose default document library the browser opens.
         'site' => env('SHAREPOINT_SITE', 'FairTaxInternational723'),
+
+        // The folder the Documents browser opens at and treats as its root.
+        // Operations/3. Clients — set to null to browse the whole library.
+        'root_folder' => env('SHAREPOINT_ROOT_FOLDER', '01CC2DZ2K4AMXS7NOOSNAJ37X5YARIIZDF'),
+
+        'root_label' => env('SHAREPOINT_ROOT_LABEL', 'Clients'),
     ],
 
 
