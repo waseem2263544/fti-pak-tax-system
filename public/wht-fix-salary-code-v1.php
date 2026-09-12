@@ -55,8 +55,9 @@ foreach ($before as $r) {
         $r['code'] ?: 'NONE');
 }
 
-$move = $db->query("SELECT COUNT(*) FROM wht_salaries WHERE section = '149' OR section IS NULL OR section = ''")->fetchColumn();
-printf("\n  %d entries on section 149 (or blank) would move to %s\n", $move, $target['section']);
+// Every salary line for this employer files under the same code.
+$move = $db->query("SELECT COUNT(*) FROM wht_salaries WHERE section IS NULL OR section != '" . $target['section'] . "'")->fetchColumn();
+printf("\n  %d entries would move to %s (all salaries not already on it)\n", $move, $target['section']);
 
 if ($dry) {
     exit("\nDRY RUN — nothing changed.\n");
@@ -64,8 +65,8 @@ if ($dry) {
 
 $db->beginTransaction();
 $upd = $db->prepare("UPDATE wht_salaries SET section = ?, updated_at = NOW()
-                     WHERE section = '149' OR section IS NULL OR section = ''");
-$upd->execute([$target['section']]);
+                     WHERE section IS NULL OR section != ?");
+$upd->execute([$target['section'], $target['section']]);
 $changed = $upd->rowCount();
 $db->commit();
 
