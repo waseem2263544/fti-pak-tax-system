@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{client}/reconciliation', [$c, 'saveReconciliation'])->name('reconciliation.save');
         Route::post('{client}/carry-forward', [$c, 'carryForward'])->name('carry-forward');
         Route::post('{client}/lines/{line}/balancing', [$c, 'setBalancing'])->name('lines.balancing');
+        Route::post('{client}/lines/{line}/dispose', [$c, 'disposeLine'])->name('lines.dispose');
         Route::post('{client}/lines/{line}/movements', [$c, 'storeMovement'])->name('movements.store');
         Route::delete('{client}/lines/{line}/movements/{movement}', [$c, 'destroyMovement'])->name('movements.destroy');
         Route::post('{client}/income-items', [$c, 'storeIncomeItem'])->name('income-items.store');

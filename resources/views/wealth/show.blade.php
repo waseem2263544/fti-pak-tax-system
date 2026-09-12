@@ -116,6 +116,18 @@
 
     .st-notes { padding: 14px 20px; }
 
+    /* The three ways an asset leaves the statement. */
+    .rm-choice { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+    .rm-choice label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+                       border: 1px solid var(--border); border-radius: var(--radius);
+                       padding: 10px 12px; transition: border-color 0.12s, background 0.12s; }
+    .rm-choice label:hover { background: var(--n-25); }
+    .rm-choice label:has(input:checked) { border-color: var(--accent); background: var(--accent-glow); }
+    .rm-choice input { margin-top: 3px; }
+    .rm-choice strong { display: block; font-size: 0.86rem; font-weight: 600; }
+    .rm-choice em { display: block; font-style: normal; font-size: 0.76rem; color: var(--text-muted); margin-top: 2px; }
+    .rm-fields { margin-top: 14px; }
+
     /* Annex-F rides the same rows, two columns wide. */
     .st-cols-2, .st-r-2 { grid-template-columns: minmax(0, 1fr) 158px 34px; }
 
@@ -820,6 +832,55 @@ function toggleMoves(lineId) {
         save(e.target);
     });
 })();
+
+/*
+ * Removing an asset is three different events, and each asks for different
+ * things. Hidden fields are disabled so a mode's inputs never reach the server
+ * when another mode was chosen.
+ */
+function rmMode(lineId) {
+    var dialog = document.getElementById('rm' + lineId);
+    if (!dialog) { return; }
+
+    var mode = dialog.querySelector('input[name=mode]:checked');
+    mode = mode ? mode.value : 'error';
+
+    var relativeBox = dialog.querySelector('input[name=relative]');
+    var toRelative  = relativeBox ? relativeBox.checked : true;
+
+    dialog.querySelectorAll('.rm-fields').forEach(function (box) {
+        var on = box.dataset.for.split(' ').indexOf(mode) >= 0;
+        box.hidden = !on;
+        box.querySelectorAll('input, select').forEach(function (i) {
+            if (i.name === 'relative') { return; }
+            i.disabled = !on;
+        });
+    });
+
+    // Fair market value only matters for a gift to someone who is not a relative.
+    var fmv = document.getElementById('rmfmv' + lineId);
+    if (fmv) {
+        var show = (mode === 'gift') && !toRelative;
+        fmv.hidden = !show;
+        fmv.querySelectorAll('input').forEach(function (i) { i.disabled = !show; });
+    }
+
+    var note = document.getElementById('rmnote' + lineId);
+    if (note) {
+        note.textContent =
+            mode === 'error' ? 'The line will simply be removed. Nothing is posted anywhere else.'
+          : mode === 'sale'  ? 'The cost leaves the statement as a disposal, and the gain or loss goes to capital gains in the income working.'
+          : toRelative       ? 'The cost leaves the statement and appears as a gift given under outflows on the reconciliation.'
+                             : 'The cost leaves the statement, and the fair market value less cost goes to capital gains in the income working.';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[id^=rm]').forEach(function (el) {
+        var m = el.id.match(/^rm(\d+)$/);
+        if (m) { rmMode(m[1]); }
+    });
+});
 
 function setBalancing(lineId) {
     if (!confirm('Make this the balancing figure?\n\nIt will be worked out so the reconciliation comes to nil, and can no longer be typed in.')) return;

@@ -20,7 +20,7 @@
                             onclick="setBalancing({{ $line->id }})"><i class="bi bi-calculator"></i></button>
                 @endunless
                 <button type="button" class="st-tool st-tool-x" title="Remove this line"
-                        onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
+                        data-bs-toggle="modal" data-bs-target="#rm{{ $line->id }}"><i class="bi bi-trash"></i></button>
             </span>
         </div>
         <div class="st-num">
@@ -133,6 +133,100 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
                     <button class="btn btn-accent">Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Taking an asset off the statement is three different events, and each
+         posts somewhere different. --}}
+    <div class="modal fade" id="rm{{ $line->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="POST" action="{{ route('wealth.lines.dispose', [$client, $line]) }}">
+                @csrf
+                <input type="hidden" name="tax_year" value="{{ $taxYear }}">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title">Remove from the statement</h5>
+                        <p class="ws-sub mb-0">{{ $line->description }} · held at {{ $n($line->amountFor($taxYear)) }}</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="rm-choice">
+                        <label><input type="radio" name="mode" value="error" checked onchange="rmMode({{ $line->id }})">
+                            <span><strong>Entered in error</strong><em>Just remove it. Nothing is posted anywhere else.</em></span></label>
+                        <label><input type="radio" name="mode" value="gift" onchange="rmMode({{ $line->id }})">
+                            <span><strong>Gifted out</strong><em>To a relative it is an outflow; to anyone else it is a disposal at fair market value.</em></span></label>
+                        <label><input type="radio" name="mode" value="sale" onchange="rmMode({{ $line->id }})">
+                            <span><strong>Sold</strong><em>Goes to capital gains, against what the asset cost.</em></span></label>
+                    </div>
+
+                    <div class="rm-fields" data-for="gift sale" id="rmcommon{{ $line->id }}" hidden>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="rd{{ $line->id }}">Date</label>
+                                <input type="date" name="occurred_on" id="rd{{ $line->id }}" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="rs{{ $line->id }}">Share disposed (%)</label>
+                                <input type="number" step="0.01" min="0.01" max="100" name="share" id="rs{{ $line->id }}"
+                                       class="form-control form-control-sm" value="100" style="text-align: right;">
+                                <div class="form-text">Less than 100 leaves the rest on the statement.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rm-fields" data-for="sale" id="rmsale{{ $line->id }}" hidden>
+                        <div class="row g-3 mt-0">
+                            <div class="col-md-6">
+                                <label class="form-label" for="rc{{ $line->id }}">Sale consideration</label>
+                                <input type="number" step="1" name="consideration" id="rc{{ $line->id }}"
+                                       class="form-control form-control-sm" style="text-align: right;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="rsc{{ $line->id }}">Expenses of sale</label>
+                                <input type="number" step="1" name="selling_cost" id="rsc{{ $line->id }}"
+                                       class="form-control form-control-sm" style="text-align: right;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rm-fields" data-for="gift" id="rmgift{{ $line->id }}" hidden>
+                        <div class="row g-3 mt-0">
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="relative" value="1"
+                                           id="rr{{ $line->id }}" checked onchange="rmMode({{ $line->id }})">
+                                    <label class="form-check-label" for="rr{{ $line->id }}">The recipient is a relative</label>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label" for="rn{{ $line->id }}">Recipient's name</label>
+                                <input type="text" name="recipient" id="rn{{ $line->id }}" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label" for="ri{{ $line->id }}">CNIC / NTN</label>
+                                <input type="text" name="recipient_id" id="ri{{ $line->id }}" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-6 rm-fmv" id="rmfmv{{ $line->id }}" hidden>
+                                <label class="form-label" for="rf{{ $line->id }}">Fair market value</label>
+                                <input type="number" step="1" name="fair_value" id="rf{{ $line->id }}"
+                                       class="form-control form-control-sm" style="text-align: right;">
+                                <div class="form-text">A gift to someone who is not a relative is taxed on this.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="ws-sub mt-3 mb-0" id="rmnote{{ $line->id }}">
+                        The line will simply be removed.
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-danger">Remove</button>
                 </div>
             </form>
         </div>

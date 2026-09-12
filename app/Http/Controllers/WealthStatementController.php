@@ -59,6 +59,10 @@ class WealthStatementController extends Controller
             ->orderBy('id')
             ->get();
 
+        // An asset fully disposed of still shows in the year it went, so the
+        // movement can be seen, but not in the years after.
+        $lines = $lines->reject(fn($l) => $l->disposed_in && $l->disposed_in < $taxYear)->values();
+
         // Every year this client has any figure for, so the comparative view
         // can offer them and the year picker is never empty.
         $years = $lines->pluck('values')->flatten()->pluck('tax_year')
@@ -581,6 +585,124 @@ class WealthStatementController extends Controller
         $this->rebalance($client, $year);
 
         return back()->with('success', 'Movement removed.');
+    }
+
+    /**
+     * Take an asset off the statement, and put the figure where it belongs.
+     *
+     * Removing a line is three different events wearing one button:
+     *
+     *  - entered in error, so it simply goes;
+     *  - gifted, which is an outflow on the reconciliation if the recipient is
+     *    a relative, and a disposal at fair market value if not;
+     *  - sold, which is a capital gain or loss.
+     *
+     * In the last two the asset also leaves the statement, so the cost goes out
+     * as a disposal movement rather than the row being deleted - the year it
+     * left still has to be explainable.
+     */
+    public function disposeLine(Request $request, Client $client, WealthLine $line)
+    {
+        abort_unless($line->client_id === $client->id, 404);
+
+        $validated = $request->validate([
+            'mode'          => 'required|in:error,gift,sale',
+            'tax_year'      => 'required|integer|min:2000|max:2100',
+            'occurred_on'   => 'nullable|date',
+            'share'         => 'nullable|numeric|min:0.01|max:100',
+            'consideration' => 'nullable|numeric|min:0',
+            'selling_cost'  => 'nullable|numeric|min:0',
+            'fair_value'    => 'nullable|numeric|min:0',
+            'recipient'     => 'nullable|string|max:200',
+            'recipient_id'  => 'nullable|string|max:20',
+            'relative'      => 'nullable|boolean',
+        ]);
+
+        $year = (int) $validated['tax_year'];
+
+        if ($validated['mode'] === 'error') {
+            $line->delete();
+
+            $this->rebalance($client, $year);
+
+            return back()->with('success', 'Line removed. Nothing was posted anywhere else.');
+        }
+
+        // How much of the asset is leaving, and what that share cost.
+        $share = (float) ($validated['share'] ?? 100);
+        $held  = (float) ($line->amountFor($year) ?? 0);
+        $cost  = round($held * $share / 100, 2);
+
+        WealthMovement::create([
+            'wealth_line_id' => $line->id,
+            'tax_year'       => $year,
+            'kind'           => 'disposal',
+            'occurred_on'    => $validated['occurred_on'] ?? null,
+            'note'           => $validated['mode'] === 'sale'
+                ? ($share < 100 ? "Sold {$share}%" : 'Sold')
+                : ($share < 100 ? "Gifted {$share}% to " . ($validated['recipient'] ?? 'another') : 'Gifted to ' . ($validated['recipient'] ?? 'another')),
+            'amount'         => $cost,
+        ]);
+
+        if ($share >= 100) {
+            $line->update(['disposed_in' => $year]);
+        }
+
+        $isGiftToRelative = $validated['mode'] === 'gift' && $request->boolean('relative');
+
+        if ($isGiftToRelative) {
+            // A gift to a relative is not a disposal for capital gains; it is
+            // simply wealth that left, and the reconciliation has to show it.
+            $recon = WealthReconciliation::firstOrCreate(
+                ['client_id' => $client->id, 'tax_year' => $year]
+            );
+            $recon->gift_given = (float) $recon->gift_given + $cost;
+            $recon->save();
+
+            $this->rebalance($client, $year);
+
+            return back()->with('success', 'Recorded as a gift given. The cost has gone to outflows on the reconciliation.');
+        }
+
+        // A sale, or a gift to someone who is not a relative: both are disposals,
+        // the second at fair market value.
+        $proceeds = $validated['mode'] === 'sale'
+            ? (float) ($validated['consideration'] ?? 0)
+            : (float) ($validated['fair_value'] ?? 0);
+
+        $item = new IncomeItem([
+            'client_id'      => $client->id,
+            'tax_year'       => $year,
+            'head'           => 'capital_gain',
+            'description'    => $line->description . ($share < 100 ? " — {$share}% disposed" : ''),
+            'wealth_line_id' => $line->id,
+            'treatment'      => 'taxable',
+            'details'        => array_filter([
+                'acquired_on'   => $line->detail('acquired_on'),
+                'disposed_on'   => $validated['occurred_on'] ?? null,
+                'consideration' => $proceeds,
+                'fair_value'    => $validated['mode'] === 'gift' ? $proceeds : ($validated['fair_value'] ?? null),
+                'cost'          => $cost,
+                'selling_cost'  => $validated['selling_cost'] ?? null,
+                'share'         => $share,
+            ], fn($v) => $v !== null && $v !== ''),
+            'sort_order'     => (int) IncomeItem::where('client_id', $client->id)
+                                    ->where('tax_year', $year)->where('head', 'capital_gain')->max('sort_order') + 1,
+        ]);
+        $item->amount = $item->computeAmount();
+        $item->save();
+
+        $this->rebalance($client, $year);
+
+        $gain = $item->amount;
+        $word = $gain >= 0 ? 'gain' : 'loss';
+
+        return back()->with('success', sprintf(
+            'Recorded as a %s. A capital %s of %s has gone to the income working.',
+            $validated['mode'] === 'sale' ? 'sale' : 'gift to a non-relative',
+            $word,
+            number_format(abs($gain), 0)
+        ));
     }
 
     /** Choose which line carries the balancing figure. Only one can. */
