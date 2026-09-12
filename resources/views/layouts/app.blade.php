@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>@yield('title', 'FTI Pak Tax Management')</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/images/logo.png">
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -551,7 +551,7 @@
         <div class="sidebar">
             <div class="sidebar-brand">
                 <div class="logo">
-                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 180px; height: auto; display: block; filter: drop-shadow(0 0 1px rgba(255,255,255,0.8)) brightness(1.5);">
+                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 180px; height: auto; display: block;">
                 </div>
             </div>
 
