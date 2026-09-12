@@ -53,7 +53,10 @@
 
     .st-sr   { font-size: 0.75rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
     .st-rn   { text-align: right; padding-right: 4px; font-style: italic; }
-    .st-num  { text-align: right; font-variant-numeric: tabular-nums; }
+    /* A boxed input's text sits inside a border and padding, so plain figures
+       get the same offset and the whole column lines up on one edge. */
+    .st-num  { text-align: right; font-variant-numeric: tabular-nums; padding-right: 9px; }
+    .st-cell-in { padding-right: 0; }
     .st-prior { color: var(--text-muted); }
 
     .st-head  { background: var(--surface-sunk); font-weight: 600; }
@@ -138,6 +141,9 @@
     $outflows   = (float) $recon->gift_given + (float) $recon->loss_disposal + (float) $recon->other_outflows;
     $unreconciled = $inflows - $expenseTotal - $outflows - $increase;
     $n = fn($v) => number_format((float) $v, 0);
+    // Values come back from the database as '2450000.00'; an input should show
+    // the rupees and nothing else.
+    $int = fn($v) => ($v === null || $v === '') ? '' : (string) (int) round((float) $v);
 @endphp
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -160,7 +166,8 @@
 <ul class="nav nav-tabs mb-3" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-income" type="button">Income working</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-assets" type="button">Wealth statement</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-expenses" type="button">Annex-F expenses</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-recon" type="button">Reconciliation</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-expenses" type="button">Personal Expenses</button></li>
 </ul>
 
 <div class="tab-content">
@@ -453,9 +460,13 @@
                 <div class="st-num st-prior">{{ $n($totals['prior']['liabilities']) }}</div>
             </div>
         </form>
+    </div>
+</div>
 
-        {{-- ── Reconciliation ── --}}
-        <header class="st-title st-title-sub">
+{{-- ════════ RECONCILIATION ════════ --}}
+<div class="tab-pane fade" id="t-recon">
+    <div class="st-doc">
+        <header class="st-title">
             <div>
                 <h2>Reconciliation of net assets</h2>
                 <p>Sources of the year's movement in wealth</p>
@@ -473,8 +484,8 @@
             </div>
             <div class="st-r">
                 <div class="st-sr">21</div><div>Net assets, previous year</div>
-                <div class="st-num"><input type="number" step="1" name="opening_wealth" class="st-in"
-                                           value="{{ $recon->opening_wealth }}" aria-label="Net assets previous year"></div>
+                <div class="st-num st-cell-in"><input type="number" step="1" name="opening_wealth" class="st-in"
+                                           value="{{ $int($recon->opening_wealth) }}" aria-label="Net assets previous year"></div>
                 <div class="st-num st-prior">{{ $n($totals['prior']['net']) }}</div>
             </div>
             <div class="st-r st-sub">
@@ -498,15 +509,15 @@
                 <div class="st-r st-l">
                     <div class="st-sr st-rn">{{ $rn }}</div>
                     <div>{{ FbrSchema::INFLOWS[$code] }}</div>
-                    <div class="st-num"><input type="number" step="1" name="{{ $f }}" class="st-in"
-                                               value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::INFLOWS[$code] }}"></div>
+                    <div class="st-num st-cell-in"><input type="number" step="1" name="{{ $f }}" class="st-in"
+                                               value="{{ $int($recon->{$f}) }}" aria-label="{{ FbrSchema::INFLOWS[$code] }}"></div>
                     <div class="st-num st-prior"></div>
                 </div>
             @endforeach
 
             <div class="st-r st-head">
                 <div class="st-sr">24</div>
-                <div>Personal expenses<span class="st-from">from Annex-F@if($salaryDeductions > 0), including {{ $n($salaryDeductions) }} stopped at source@endif</span></div>
+                <div>Personal expenses<span class="st-from">from the personal expenses tab@if($salaryDeductions > 0), including {{ $n($salaryDeductions) }} stopped at source@endif</span></div>
                 <div class="st-num">{{ $n($expenseTotal) }}</div><div class="st-num st-prior"></div>
             </div>
 
@@ -518,8 +529,8 @@
                 <div class="st-r st-l">
                     <div class="st-sr st-rn">{{ $rn }}</div>
                     <div>{{ FbrSchema::OUTFLOWS[$code] }}</div>
-                    <div class="st-num"><input type="number" step="1" name="{{ $f }}" class="st-in"
-                                               value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::OUTFLOWS[$code] }}"></div>
+                    <div class="st-num st-cell-in"><input type="number" step="1" name="{{ $f }}" class="st-in"
+                                               value="{{ $int($recon->{$f}) }}" aria-label="{{ FbrSchema::OUTFLOWS[$code] }}"></div>
                     <div class="st-num st-prior"></div>
                 </div>
             @endforeach
@@ -546,8 +557,8 @@
         <div class="st-doc">
             <header class="st-title">
                 <div>
-                    <h2>Annex-F — personal expenses</h2>
-                    <p>Feeds Sr. 24 of the reconciliation</p>
+                    <h2>Personal Expenses</h2>
+                    <p>Annexure-F · feeds Sr. 24 of the reconciliation</p>
                 </div>
                 <div class="st-actions"><span class="st-status" data-status></span></div>
             </header>
@@ -558,7 +569,7 @@
                      style="@if(!$shown) display: none;@endif">
                     <div>{{ $label }}</div>
                     <div><input type="number" step="1" name="expenses[{{ $code }}]" class="st-in"
-                                value="{{ $expenses[$code] ?? '' }}" aria-label="{{ $label }}" @if(!$shown) disabled @endif></div>
+                                value="{{ $int($expenses[$code] ?? null) }}" aria-label="{{ $label }}" @if(!$shown) disabled @endif></div>
                     <div></div>
                 </div>
             @endforeach
@@ -577,7 +588,7 @@
                 <div>{{ FbrSchema::EXPENSE_CONTRA_LABEL }}</div>
                 <div><input type="number" step="1" name="expenses[{{ FbrSchema::EXPENSE_CONTRA }}]"
                             class="st-in"
-                            value="{{ $expenses[FbrSchema::EXPENSE_CONTRA] ?? '' }}"
+                            value="{{ $int($expenses[FbrSchema::EXPENSE_CONTRA] ?? null) }}"
                             aria-label="{{ FbrSchema::EXPENSE_CONTRA_LABEL }}"></div>
                 <div></div>
             </div>
@@ -683,6 +694,83 @@ function revealRow(selectId) {
     var next = Array.prototype.find.call(sel.options, function (o) { return !o.hidden; });
     if (next) { sel.value = next.value; } else { sel.closest('div').style.display = 'none'; }
 }
+
+/* Open the working behind a line: opening cost, what moved, closing. */
+function toggleMoves(lineId) {
+    var el = document.getElementById('mv-' + lineId);
+    if (el) { el.classList.toggle('open'); }
+}
+
+/*
+ * Forms marked data-autosave save themselves when a field is left, and the
+ * pane is then re-read from the server so every derived figure - the totals,
+ * the balancing line, the unreconciled amount - is the server's answer rather
+ * than a guess made in the browser.
+ */
+(function () {
+    var TOKEN = '{{ csrf_token() }}';
+    var timers = {};
+
+    function status(form, text, cls) {
+        var pane = form.closest('.tab-pane') || document;
+        pane.querySelectorAll('[data-status]').forEach(function (el) {
+            el.textContent = text;
+            el.className = 'st-status ' + (cls || '');
+        });
+    }
+
+    function refreshPane(paneId) {
+        if (!paneId) { return Promise.resolve(); }
+
+        return fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+                var doc   = new DOMParser().parseFromString(html, 'text/html');
+                var fresh = doc.getElementById(paneId);
+                var live  = document.getElementById(paneId);
+                if (fresh && live) { live.innerHTML = fresh.innerHTML; }
+            });
+    }
+
+    function save(form) {
+        var pane   = form.closest('.tab-pane');
+        var paneId = pane ? pane.id : null;
+        status(form, 'Saving…', 'saving');
+
+        return fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-CSRF-TOKEN': TOKEN,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        }).then(function (r) {
+            if (!r.ok) { throw new Error(r.status); }
+            return refreshPane(paneId);
+        }).then(function () {
+            status(form, 'Saved', 'saved');
+        }).catch(function () {
+            status(form, 'Not saved', 'failed');
+        });
+    }
+
+    document.addEventListener('change', function (e) {
+        var form = e.target.closest ? e.target.closest('form[data-autosave]') : null;
+        if (!form) { return; }
+        e.target.classList.add('dirty');
+        var key = form.id || form.action;
+        clearTimeout(timers[key]);
+        timers[key] = setTimeout(function () { save(form); }, 400);
+    });
+
+    // These forms are never submitted the ordinary way; Enter saves instead.
+    document.addEventListener('submit', function (e) {
+        if (!e.target.matches || !e.target.matches('form[data-autosave]')) { return; }
+        e.preventDefault();
+        save(e.target);
+    });
+})();
 
 function setBalancing(lineId) {
     if (!confirm('Make this the balancing figure?\n\nIt will be worked out so the reconciliation comes to nil, and can no longer be typed in.')) return;

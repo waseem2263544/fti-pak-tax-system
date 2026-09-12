@@ -1,4 +1,5 @@
 {{-- The lines under one head, and the movement working behind each. --}}
+@php $int = fn($v) => ($v === null || $v === '') ? '' : (string) (int) round((float) $v); @endphp
 @foreach($group as $line)
     @php $moves = $line->movementsFor($taxYear); $worked = $moves->isNotEmpty(); @endphp
     <div class="st-r st-l">
@@ -21,12 +22,12 @@
                         onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
             </span>
         </div>
-        <div class="st-num">
+        <div class="st-num @if(!$line->balancing && !$worked) st-cell-in @endif">
             @if($line->balancing || $worked)
                 <span class="st-derived" title="{{ $line->balancing ? 'Worked out so the statement reconciles' : 'Worked out from the movements below' }}">{{ $n($line->amountFor($taxYear)) }}</span>
             @else
                 <input type="number" step="0.01" class="st-in" name="amounts[{{ $line->id }}]"
-                       value="{{ $line->amountFor($taxYear) }}" aria-label="{{ $line->description }}">
+                       value="{{ $int($line->amountFor($taxYear)) }}" aria-label="{{ $line->description }}">
             @endif
         </div>
         <div class="st-num st-prior">{{ $line->amountFor($taxYear - 1) === null ? '—' : $n($line->amountFor($taxYear - 1)) }}</div>
@@ -68,7 +69,7 @@
                    placeholder="What happened — e.g. construction of ground floor" aria-label="What happened">
             <input form="mvadd{{ $line->id }}" type="date" name="occurred_on" class="form-control form-control-sm" aria-label="Date">
             <input form="mvadd{{ $line->id }}" type="number" step="0.01" name="amount"
-                   class="form-control form-control-sm st-num" placeholder="Amount" required aria-label="Amount">
+                   class="form-control form-control-sm" style="text-align: right;" placeholder="Amount" required aria-label="Amount">
             <button form="mvadd{{ $line->id }}" class="btn btn-accent btn-sm">Add</button>
         </div>
     </div>
