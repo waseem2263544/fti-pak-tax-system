@@ -113,6 +113,26 @@ class WhtStatementFiler
         return $book;
     }
 
+    /**
+     * The taxpayer's registration number as the statement wants it: digits only,
+     * and for an NTN without the trailing check digit.
+     *
+     * A CNIC is 13 digits and goes in unchanged once the dashes are stripped.
+     * An NTN is stored as 7 digits plus a check digit (7311412-4); IRIS wants
+     * the 7 and rejects the rest.
+     */
+    public static function registrationNumber(string $raw): string
+    {
+        $digits = preg_replace('/[^0-9]/', '', $raw);
+
+        return match (strlen($digits)) {
+            13 => $digits,
+            8  => substr($digits, 0, 7),
+            0  => '',
+            default => $digits,
+        };
+    }
+
     /** One statement line per transaction, both kinds in date order. */
     private function lines($purchases, $salaries, $codes): array
     {
@@ -147,15 +167,11 @@ class WhtStatementFiler
 
     private function line($party, $date, ?string $code, float $amount, float $tax, ?string $section = null): array
     {
-        // Same split as the PSID file: 13 digits is a CNIC, shorter is an NTN.
-        $raw = (string) ($party?->cnic_ntn ?? '');
-        $digits = preg_replace('/[^0-9]/', '', $raw);
-        $isCnic = strlen($digits) === 13;
-        $formatted = WhtPsidBatcher::formatTaxNumber($digits, $raw);
-
         return [
-            'registration'   => $isCnic ? '' : $formatted,
-            'identification' => $isCnic ? $formatted : '',
+            'registration'   => self::registrationNumber((string) ($party?->cnic_ntn ?? '')),
+            // IRIS wants the taxpayer's number in REGISTRATION NO whichever kind
+            // it is, so IDENTIFICATION NO stays empty.
+            'identification' => '',
             'name'           => (string) ($party?->name ?? ''),
             'date'           => $date?->format('d/m/Y') ?? '',
             'code'           => (string) ($code ?? ''),
