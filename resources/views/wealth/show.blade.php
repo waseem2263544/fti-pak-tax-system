@@ -48,6 +48,18 @@
                display: none; gap: 4px; background: var(--n-25); padding-left: 6px; }
     .st-line:hover .st-acts { display: flex; }
     .st-save { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+
+    /* The working behind a line: opening, what moved, closing. */
+    .st-moves { display: none; background: var(--surface); border-left: 2px solid var(--accent);
+                margin: 0 18px 8px 48px; border-radius: 0 var(--radius) var(--radius) 0; }
+    .st-moves.open { display: block; }
+    .st-mv-head { padding: 7px 14px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+                  letter-spacing: 0.6px; color: var(--text-muted); border-bottom: 1px solid var(--n-100); }
+    .st-mv { display: grid; grid-template-columns: 1fr 40px 140px 46px; gap: 8px; align-items: center;
+             padding: 6px 14px; font-size: 0.82rem; border-bottom: 1px solid var(--n-100); }
+    .st-mv form { margin: 0; }
+    .st-mv-op, .st-mv-cl { color: var(--text-soft); font-weight: 600; background: var(--n-25); }
+    .st-mv-add { padding: 10px 14px; }
     /* A disclosure styled as a button: opens on click or Enter, and needs no
        script to do it. */
     details.ws-open > summary { list-style: none; padding: 14px 18px; }
@@ -341,18 +353,18 @@
                 </div>
                 <div class="st-detail" id="det-{{ $code }}">
                     @forelse($group as $line)
+                        @php $moves = $line->movementsFor($taxYear); $worked = $moves->isNotEmpty(); @endphp
                         <div class="st-row st-line">
                             <div></div>
                             <div>
                                 {{ $line->description }}
-                                @if($line->balancing)
-                                    <span class="badge bg-info" style="font-size: 0.6rem;">balancing figure</span>
-                                @endif
+                                @if($line->balancing)<span class="badge bg-info" style="font-size: 0.6rem;">balancing figure</span>@endif
+                                @if($worked)<span class="badge bg-secondary" style="font-size: 0.6rem;">worked</span>@endif
                                 @if($line->attributeSummary())<div class="ws-sub">{{ $line->attributeSummary() }}</div>@endif
                             </div>
                             <div></div>
                             <div>
-                                @if($line->balancing)
+                                @if($line->balancing || $worked)
                                     <div class="ws-money" style="font-weight: 600;">{{ $n($line->amountFor($taxYear)) }}</div>
                                 @else
                                     <input type="number" step="0.01" class="form-control form-control-sm num"
@@ -363,6 +375,8 @@
                             <div class="ws-money st-py">
                                 {{ $line->amountFor($taxYear - 1) === null ? '—' : $n($line->amountFor($taxYear - 1)) }}
                                 <div class="st-acts">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" title="Additions and disposals"
+                                            onclick="toggleMoves({{ $line->id }})"><i class="bi bi-list-ul"></i></button>
                                     @unless($line->balancing)
                                         <button type="button" class="btn btn-sm btn-outline-primary" title="Make this the balancing figure"
                                                 onclick="setBalancing({{ $line->id }})"><i class="bi bi-calculator"></i></button>
@@ -371,6 +385,65 @@
                                             onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
                                 </div>
                             </div>
+                        </div>
+
+                        {{-- The working behind the figure: what was added or taken out,
+                             when and why. This is what has to stand up if the year is queried. --}}
+                        <div class="st-moves @if($worked) open @endif" id="mv-{{ $line->id }}">
+                            <div class="st-mv-head">Movements in {{ $taxYear }}</div>
+                            <div class="st-mv st-mv-op">
+                                <div>Opening — as at 30 June {{ $taxYear - 1 }}</div><div></div>
+                                <div class="ws-money">{{ $n($line->values->firstWhere('tax_year', $taxYear - 1)?->amount ?? 0) }}</div><div></div>
+                            </div>
+                            @foreach($moves as $m)
+                                <div class="st-mv">
+                                    <div>
+                                        {{ $m->note ?: \App\Models\WealthMovement::KINDS[$m->kind] }}
+                                        <div class="ws-sub">{{ \App\Models\WealthMovement::KINDS[$m->kind] }}@if($m->occurred_on) · {{ $m->occurred_on->format('d M Y') }}@endif</div>
+                                    </div>
+                                    <div></div>
+                                    <div class="ws-money" style="color: {{ $m->kind === 'disposal' ? 'var(--danger-ink)' : 'var(--ok-ink)' }};">
+                                        {{ $m->kind === 'disposal' ? '(' . $n($m->amount) . ')' : $n($m->amount) }}
+                                    </div>
+                                    <div class="text-end">
+                                        <form method="POST" action="{{ route('wealth.movements.destroy', [$client, $line, $m]) }}"
+                                              onsubmit="return confirm('Remove this movement?')">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                            <div class="st-mv st-mv-cl">
+                                <div>Closing — as at 30 June {{ $taxYear }}</div><div></div>
+                                <div class="ws-money">{{ $n($line->amountFor($taxYear)) }}</div><div></div>
+                            </div>
+                            <form method="POST" action="{{ route('wealth.movements.store', [$client, $line]) }}" class="st-mv-add row g-2 align-items-end">
+                                @csrf
+                                <input type="hidden" name="tax_year" value="{{ $taxYear }}">
+                                <div class="col-md-2">
+                                    <label class="form-label" for="mk{{ $line->id }}">Kind</label>
+                                    <select name="kind" id="mk{{ $line->id }}" class="form-select form-select-sm">
+                                        @foreach(\App\Models\WealthMovement::KINDS as $k => $label)
+                                            <option value="{{ $k }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label" for="mn{{ $line->id }}">What happened</label>
+                                    <input type="text" name="note" id="mn{{ $line->id }}" class="form-control form-control-sm"
+                                           placeholder="e.g. Construction of ground floor">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" for="md{{ $line->id }}">Date</label>
+                                    <input type="date" name="occurred_on" id="md{{ $line->id }}" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label" for="ma{{ $line->id }}">Amount</label>
+                                    <input type="number" step="0.01" name="amount" id="ma{{ $line->id }}" class="form-control form-control-sm num" required>
+                                </div>
+                                <div class="col-md-1"><button class="btn btn-accent btn-sm w-100">Add</button></div>
+                            </form>
                         </div>
                     @empty
                         <div class="st-row st-line"><div></div><div class="text-muted">Nothing declared under this head.</div><div></div><div></div><div></div></div>
@@ -693,6 +766,11 @@ function toggleHead(code, force) {
 
 function toggleAll(open) {
     document.querySelectorAll('.st-headrow').forEach(function (r) { toggleHead(r.dataset.head, open); });
+}
+
+function toggleMoves(lineId) {
+    var el = document.getElementById('mv-' + lineId);
+    if (el) el.classList.toggle('open');
 }
 
 function setBalancing(lineId) {

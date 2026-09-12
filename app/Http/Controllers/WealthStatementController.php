@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\IncomeWorking;
 use App\Models\WealthLine;
+use App\Models\WealthMovement;
 use App\Models\WealthReconciliation;
 use App\Models\IncomeItem;
 use App\Models\SalaryWorking;
@@ -51,7 +52,7 @@ class WealthStatementController extends Controller
         // the reconciliation on screen agree.
         $this->rebalance($client, $taxYear);
 
-        $lines = WealthLine::with('values')
+        $lines = WealthLine::with('values', 'movements')
             ->where('client_id', $client->id)
             ->orderBy('code')
             ->orderBy('sort_order')
@@ -172,7 +173,7 @@ class WealthStatementController extends Controller
             return;
         }
 
-        $lines = WealthLine::with('values')->where('client_id', $client->id)->get();
+        $lines = WealthLine::with('values', 'movements')->where('client_id', $client->id)->get();
 
         $otherAssets = $lines->where('kind', 'asset')->where('id', '!=', $balancing->id)
             ->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
@@ -208,7 +209,7 @@ class WealthStatementController extends Controller
 
     public function comparative(Request $request, Client $client)
     {
-        $lines = WealthLine::with('values')
+        $lines = WealthLine::with('values', 'movements')
             ->where('client_id', $client->id)
             ->orderBy('section')->orderBy('sort_order')->orderBy('id')
             ->get();
@@ -519,6 +520,44 @@ class WealthStatementController extends Controller
         return back()->with('success', 'Annex-F saved.');
     }
 
+    public function storeMovement(Request $request, Client $client, WealthLine $line)
+    {
+        abort_unless($line->client_id === $client->id, 404);
+
+        $validated = $request->validate([
+            'tax_year'    => 'required|integer|min:2000|max:2100',
+            'kind'        => 'required|in:addition,disposal',
+            'amount'      => 'required|numeric|min:0',
+            'occurred_on' => 'nullable|date',
+            'note'        => 'nullable|string|max:500',
+        ]);
+
+        WealthMovement::create([
+            'wealth_line_id' => $line->id,
+            'tax_year'       => (int) $validated['tax_year'],
+            'kind'           => $validated['kind'],
+            'amount'         => $validated['amount'],
+            'occurred_on'    => $validated['occurred_on'] ?? null,
+            'note'           => $validated['note'] ?? null,
+        ]);
+
+        $this->rebalance($client, (int) $validated['tax_year']);
+
+        return back()->with('success', 'Movement recorded. This line is now worked out from its movements.');
+    }
+
+    public function destroyMovement(Client $client, WealthLine $line, WealthMovement $movement)
+    {
+        abort_unless($line->client_id === $client->id && $movement->wealth_line_id === $line->id, 404);
+
+        $year = $movement->tax_year;
+        $movement->delete();
+
+        $this->rebalance($client, $year);
+
+        return back()->with('success', 'Movement removed.');
+    }
+
     /** Choose which line carries the balancing figure. Only one can. */
     public function setBalancing(Request $request, Client $client, WealthLine $line)
     {
@@ -543,7 +582,7 @@ class WealthStatementController extends Controller
         $from = (int) $validated['from_year'];
         $to   = (int) $validated['to_year'];
 
-        $lines = WealthLine::with('values')->where('client_id', $client->id)->get();
+        $lines = WealthLine::with('values', 'movements')->where('client_id', $client->id)->get();
         $copied = 0;
 
         foreach ($lines as $line) {

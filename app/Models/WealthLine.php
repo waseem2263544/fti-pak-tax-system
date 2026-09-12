@@ -62,9 +62,34 @@ class WealthLine extends Model
         return $this->hasMany(WealthValue::class);
     }
 
-    /** The figure declared for this line in a given year, or null if none. */
+    public function movements()
+    {
+        return $this->hasMany(WealthMovement::class)->orderBy('occurred_on')->orderBy('id');
+    }
+
+    public function movementsFor(int $taxYear)
+    {
+        return $this->movements->where('tax_year', $taxYear);
+    }
+
+    /**
+     * The figure for a year.
+     *
+     * Where movements were recorded, the figure is the working: last year's
+     * closing plus what was added, less what went out. Otherwise it is
+     * whatever was entered directly.
+     */
     public function amountFor(int $taxYear): ?string
     {
+        $moves = $this->relationLoaded('movements') ? $this->movementsFor($taxYear) : collect();
+
+        if ($moves->isNotEmpty()) {
+            $opening = (float) ($this->values->firstWhere('tax_year', $taxYear - 1)?->amount ?? 0);
+
+            return (string) round($opening + $moves->sum(fn($m) => $m->signedAmount()), 2);
+        }
+
         return $this->values->firstWhere('tax_year', $taxYear)?->amount;
     }
+
 }
