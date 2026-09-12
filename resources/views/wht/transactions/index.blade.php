@@ -182,17 +182,23 @@
 </div>
 
 @if($rows->isNotEmpty())
-<div class="card mt-3" id="bulkBar" style="display: none; position: sticky; bottom: 12px;">
+<div class="card mt-3" id="bulkBar" style="position: sticky; bottom: 12px;">
     <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <span class="fw-bold"><span id="selCount">0</span> selected</span>
             <span class="text-muted ms-2">·</span>
             <span class="ms-2">Tax <span class="fw-bold" id="selTax">0</span></span>
             <span id="cprWarn" class="badge bg-warning text-dark ms-2 d-none"></span>
+            <span id="selHint" class="text-muted ms-2" style="font-size: 0.83rem;">
+                Tick the rows you want, or use the box in the header to take them all.
+            </span>
         </div>
-        <button class="btn btn-outline-danger">
-            <i class="bi bi-trash me-1"></i> Delete selected
-        </button>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary" onclick="selectAllRows()">Select all</button>
+            <button class="btn btn-outline-danger" id="bulkDelete" disabled>
+                <i class="bi bi-trash me-1"></i> Delete selected
+            </button>
+        </div>
     </div>
 </div>
 @endif
@@ -207,13 +213,18 @@
     const checks = () => Array.from(document.querySelectorAll('.row-check'));
 
     function refresh() {
+        // The bar only exists when there are rows to act on.
+        const bar = document.getElementById('bulkBar');
+        if (!bar) return;
+
         const sel = checks().filter(c => c.checked);
         const tax = sel.reduce((t, c) => t + parseFloat(c.dataset.tax || 0), 0);
         const cpr = sel.filter(c => c.dataset.cpr === '1').length;
 
         document.getElementById('selCount').textContent = sel.length;
         document.getElementById('selTax').textContent = tax.toLocaleString(undefined, {maximumFractionDigits: 0});
-        document.getElementById('bulkBar').style.display = sel.length ? '' : 'none';
+        document.getElementById('bulkDelete').disabled = sel.length === 0;
+        document.getElementById('selHint').classList.toggle('d-none', sel.length > 0);
 
         // Deleting an entry that has been deposited is the risky case, so say so.
         const warn = document.getElementById('cprWarn');
@@ -221,11 +232,18 @@
         warn.textContent = cpr ? cpr + ' already deposited (has a CPR)' : '';
 
         const all = document.getElementById('checkAll');
-        all.checked = sel.length > 0 && sel.length === checks().length;
-        all.indeterminate = sel.length > 0 && sel.length < checks().length;
+        if (all) {
+            all.checked = sel.length > 0 && sel.length === checks().length;
+            all.indeterminate = sel.length > 0 && sel.length < checks().length;
+        }
     }
 
-    document.getElementById('checkAll').addEventListener('change', e => {
+    window.selectAllRows = function () {
+        checks().forEach(c => c.checked = true);
+        refresh();
+    };
+
+    document.getElementById('checkAll')?.addEventListener('change', e => {
         checks().forEach(c => c.checked = e.target.checked);
         refresh();
     });
