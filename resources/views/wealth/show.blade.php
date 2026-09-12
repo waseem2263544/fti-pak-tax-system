@@ -246,6 +246,17 @@
                         @if($row->wealthLine)
                             <div class="ws-sub">Asset: {{ $row->wealthLine->description }}</div>
                         @endif
+                        @if($key === 'capital_gain')
+                            @php
+                                $totalCost = (float) $row->detail('cost', 0)
+                                           + (float) $row->detail('improvements', 0)
+                                           + (float) $row->detail('selling_cost', 0);
+                            @endphp
+                            <div class="ws-sub">
+                                Consideration {{ $n($row->detail('consideration', 0)) }}
+                                less total cost {{ $n($totalCost) }}
+                            </div>
+                        @endif
                         <div class="ws-sub">
                             @foreach($head['fields'] as $f)
                                 @php $v = $row->detail($f['key']); @endphp

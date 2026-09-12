@@ -189,6 +189,7 @@
                                 <label class="form-label" for="rsc{{ $line->id }}">Expenses of sale</label>
                                 <input type="number" step="1" name="selling_cost" id="rsc{{ $line->id }}"
                                        class="form-control form-control-sm" style="text-align: right;">
+                                <div class="form-text">Added to the cost of the asset, not netted off the price.</div>
                             </div>
                         </div>
                     </div>

@@ -244,9 +244,12 @@ class FbrSchema
                     ['key' => 'holding',       'label' => 'Holding period', 'type' => 'text'],
                     ['key' => 'consideration', 'label' => 'Sale consideration', 'type' => 'money'],
                     ['key' => 'fair_value',    'label' => 'FBR / fair value, if higher', 'type' => 'money'],
-                    ['key' => 'cost',          'label' => 'Less: cost of acquisition', 'type' => 'money'],
-                    ['key' => 'improvements',  'label' => 'Less: improvements', 'type' => 'money'],
-                    ['key' => 'selling_cost',  'label' => 'Less: expenses of sale', 'type' => 'money'],
+                    // Cost of acquisition, what was spent on it, and what it cost
+                    // to sell all build up the cost of the asset disposed of.
+                    // The gain is the consideration less that total.
+                    ['key' => 'cost',          'label' => 'Cost of acquisition', 'type' => 'money'],
+                    ['key' => 'improvements',  'label' => 'Add to cost: improvements', 'type' => 'money'],
+                    ['key' => 'selling_cost',  'label' => 'Add to cost: expenses of sale', 'type' => 'money'],
                     ['key' => 'share',         'label' => 'Share disposed %', 'type' => 'number'],
                 ],
                 'computed' => ['consideration'],
