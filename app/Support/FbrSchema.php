@@ -214,19 +214,10 @@ class FbrSchema
     public static function incomeHeads(): array
     {
         return [
-            'salary' => [
-                'label' => 'Salary', 'line' => 'employer',
-                'fields' => [
-                    ['key' => 'employer',     'label' => 'Employer', 'type' => 'text', 'wide' => true],
-                    ['key' => 'basic',        'label' => 'Basic salary', 'type' => 'money'],
-                    ['key' => 'allowances',   'label' => 'Allowances', 'type' => 'money'],
-                    ['key' => 'perquisites',  'label' => 'Perquisites / benefits', 'type' => 'money'],
-                    ['key' => 'bonus',        'label' => 'Bonus / commission', 'type' => 'money'],
-                    ['key' => 'exempt',       'label' => 'Less: exempt portion', 'type' => 'money'],
-                ],
-                'computed' => ['basic', 'allowances', 'perquisites', 'bonus'],
-                'less'     => ['exempt'],
-            ],
+            // Salary is not here: it has an income side, a deduction side and an
+            // annual-or-monthly basis, so it gets its own tables and its own
+            // page. See SalaryWorking.
+
             'property' => [
                 'label' => 'Property (rental)', 'line' => 'property',
                 'links_asset' => ['7002', '7001'],

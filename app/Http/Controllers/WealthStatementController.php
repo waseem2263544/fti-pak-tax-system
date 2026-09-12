@@ -7,6 +7,7 @@ use App\Models\IncomeWorking;
 use App\Models\WealthLine;
 use App\Models\WealthReconciliation;
 use App\Models\IncomeItem;
+use App\Models\SalaryWorking;
 use App\Models\WealthExpense;
 use App\Models\WealthValue;
 use App\Support\FbrSchema;
@@ -70,17 +71,32 @@ class WealthStatementController extends Controller
         $expenses = WealthExpense::where('client_id', $client->id)
             ->where('tax_year', $taxYear)->pluck('amount', 'code');
 
+        $salary = SalaryWorking::with('components.months')
+            ->where('client_id', $client->id)->where('tax_year', $taxYear)
+            ->orderBy('sort_order')->get();
+
         // The income working feeds the reconciliation: what was declared under
-        // each treatment is what Sr. 23(i)-(iii) has to show.
-        $declared = [
-            'taxable' => 0.0, 'exempt' => 0.0, 'final' => 0.0,
-        ];
+        // each treatment is what Sr. 23(i)-(iii) has to show. Gross salary goes
+        // in, not net - the deductions are accounted for as expenses below, and
+        // counting them on both sides would understate the year twice over.
+        $declared = ['taxable' => 0.0, 'exempt' => 0.0, 'final' => 0.0];
+
         foreach ($items->flatten() as $item) {
             $declared[$item->treatment] = ($declared[$item->treatment] ?? 0) + (float) $item->amount;
         }
 
+        $declared['taxable'] += $salary->sum(fn($w) => $w->incomeBy('taxable'));
+        $declared['exempt']  += $salary->sum(fn($w) => $w->incomeBy('exempt'));
+
+        // Salary deductions - tax withheld and everything else stopped at
+        // source - are money that left the taxpayer, so they belong in personal
+        // expenses alongside the Annex-F heads.
+        $salaryDeductions = $salary->sum(fn($w) => $w->totalDeductions());
+        $salaryTax        = $salary->sum(fn($w) => $w->taxDeducted());
+
         $expenseTotal = $expenses->except([FbrSchema::EXPENSE_CONTRA])->sum()
-                      - (float) ($expenses[FbrSchema::EXPENSE_CONTRA] ?? 0);
+                      - (float) ($expenses[FbrSchema::EXPENSE_CONTRA] ?? 0)
+                      + $salaryDeductions;
 
         $totals = [
             'current' => $this->netWealth($lines, $taxYear),
@@ -95,7 +111,8 @@ class WealthStatementController extends Controller
 
         return view('wealth.show', compact(
             'client', 'taxYear', 'years', 'lines', 'income', 'recon', 'totals',
-            'items', 'expenses', 'declared', 'expenseTotal'
+            'items', 'expenses', 'declared', 'expenseTotal',
+            'salary', 'salaryDeductions', 'salaryTax'
         ));
     }
 

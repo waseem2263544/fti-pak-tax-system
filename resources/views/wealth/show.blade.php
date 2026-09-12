@@ -76,6 +76,44 @@
 
 {{-- ════════ INCOME WORKING ════════ --}}
 <div class="tab-pane fade show active" id="t-income">
+    {{-- Salary has an income side, a deduction side and its own basis, so it
+         lives on its own page. What shows here is the result. --}}
+    <div class="ws-sheet">
+        <div class="ws-head">
+            <div>
+                <h2>Salary</h2>
+                <div class="ws-sub">
+                    @if($salary->isEmpty())
+                        No employer added for {{ $taxYear }}.
+                    @else
+                        {{ $salary->count() }} {{ Str::plural('employer', $salary->count()) }} ·
+                        gross {{ $n($salary->sum(fn($w) => $w->grossIncome())) }} ·
+                        deductions {{ $n($salaryDeductions) }} ·
+                        net {{ $n($salary->sum(fn($w) => $w->netPay())) }}
+                    @endif
+                </div>
+            </div>
+            <a href="{{ route('wealth.salary.index', ['client' => $client, 'year' => $taxYear]) }}" class="btn btn-sm btn-accent">
+                {{ $salary->isEmpty() ? 'Set up salary' : 'Open salary working' }}
+            </a>
+        </div>
+        @foreach($salary as $w)
+            <div class="ws-row" style="grid-template-columns: 1fr 150px 130px 78px;">
+                <div>
+                    <strong>{{ $w->employer }}</strong>
+                    <div class="ws-sub">
+                        {{ $w->basis === 'monthly' ? 'Worked month by month' : 'Worked annually' }} ·
+                        taxable {{ $n($w->incomeBy('taxable')) }} · exempt {{ $n($w->incomeBy('exempt')) }} ·
+                        tax withheld {{ $n($w->taxDeducted()) }}
+                    </div>
+                </div>
+                <div class="ws-money">{{ $n($w->grossIncome()) }}</div>
+                <div class="ws-sub">gross, to 7031 / 7032</div>
+                <div></div>
+            </div>
+        @endforeach
+    </div>
+
     {{-- Only heads that have something declared are shown. The rest are in the
          picker below, and reveal themselves when chosen - the same way IRIS
          only shows the heads you say apply. --}}
@@ -387,8 +425,25 @@
                             aria-label="{{ FbrSchema::EXPENSE_CONTRA_LABEL }}"></div>
                 <div class="ws-code">{{ FbrSchema::EXPENSE_CONTRA }}</div>
             </div>
+            @if($salaryDeductions > 0)
+                <div class="ws-group"><span>From the salary working</span><span class="ws-code">entered there</span></div>
+                @foreach($salary as $w)
+                    @foreach($w->deductions() as $c)
+                        @continue($c->amount() == 0)
+                        <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
+                            <div>{{ $c->label }} <span class="ws-sub">— {{ $w->employer }}</span></div>
+                            <div class="ws-money">{{ $n($c->amount()) }}</div>
+                            <div class="ws-code">{{ $c->is_tax ? 'tax' : '' }}</div>
+                        </div>
+                    @endforeach
+                @endforeach
+            @endif
             <div class="ws-total" style="grid-template-columns: 1fr 180px 90px;">
-                <div>Personal expenses</div>
+                <div>Personal expenses
+                    @if($salaryDeductions > 0)
+                        <div class="ws-sub">Includes {{ $n($salaryDeductions) }} stopped at source, of which {{ $n($salaryTax) }} is tax.</div>
+                    @endif
+                </div>
                 <div class="ws-money">{{ $n($expenseTotal) }}</div>
                 <div class="ws-code">7089</div>
             </div>
@@ -424,7 +479,7 @@
             @foreach(['taxable' => '7031', 'exempt' => '7032', 'final' => '7033'] as $t => $code)
                 <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
                     <div>{{ FbrSchema::INFLOWS[$code] }}
-                        <div class="ws-sub">From the income working — add lines there, not here.</div></div>
+                        <div class="ws-sub">From the income working and the salary working — add lines there, not here.</div></div>
                     <div class="ws-money">{{ $n($declared[$t]) }}</div><div class="ws-code">{{ $code }}</div>
                 </div>
             @endforeach

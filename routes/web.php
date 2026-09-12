@@ -75,6 +75,16 @@ Route::middleware(['auth'])->group(function () {
         Route::put('{client}/income-items/{item}', [$c, 'updateIncomeItem'])->name('income-items.update');
         Route::delete('{client}/income-items/{item}', [$c, 'destroyIncomeItem'])->name('income-items.destroy');
         Route::post('{client}/expenses', [$c, 'saveExpenses'])->name('expenses.save');
+
+        // Salary is detailed enough to warrant its own page and controller.
+        $sal = \App\Http\Controllers\SalaryWorkingController::class;
+        Route::get('{client}/salary', [$sal, 'index'])->name('salary.index');
+        Route::post('{client}/salary', [$sal, 'store'])->name('salary.store');
+        Route::put('{client}/salary/{working}', [$sal, 'update'])->name('salary.update');
+        Route::delete('{client}/salary/{working}', [$sal, 'destroy'])->name('salary.destroy');
+        Route::post('{client}/salary/{working}/save', [$sal, 'save'])->name('salary.save');
+        Route::post('{client}/salary/{working}/components', [$sal, 'addComponent'])->name('salary.components.store');
+        Route::delete('{client}/salary/{working}/components/{component}', [$sal, 'destroyComponent'])->name('salary.components.destroy');
     });
 
     // Pending Proceedings
