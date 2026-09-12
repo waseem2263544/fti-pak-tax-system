@@ -234,7 +234,7 @@ class SharePointClient
                 break;
             }
 
-            array_unshift($trail, ['id' => $item['id'], 'name' => $item['name']]);
+            array_unshift($trail, ['id' => $item['id'], 'name' => $item['name'], 'webUrl' => $item['webUrl'] ?? null]);
             $itemId = $item['parentReference']['id'] ?? null;
 
             // The drive root has a parent with no id of its own.
@@ -244,6 +244,36 @@ class SharePointClient
         }
 
         return $trail;
+    }
+
+    /**
+     * Web URL of the folder being browsed, for "open in SharePoint".
+     *
+     * Anywhere below the root this comes free from the breadcrumb. At the root
+     * there is no crumb, so it is fetched once and cached for a day - it is the
+     * same folder every time.
+     */
+    public function folderUrl(?string $itemId): ?string
+    {
+        $root = $this->rootFolder();
+
+        if ($itemId && $root && $itemId !== $root) {
+            try {
+                return $this->item($itemId)['webUrl'] ?? null;
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        return Cache::remember('sharepoint.root_url', now()->addDay(), function () use ($root) {
+            try {
+                return $root
+                    ? ($this->item($root)['webUrl'] ?? null)
+                    : ($this->request()->get(self::GRAPH . "/drives/{$this->driveId()}/root")->json('webUrl'));
+            } catch (\Throwable) {
+                return null;
+            }
+        });
     }
 
     public function createFolder(?string $parentId, string $name): array
@@ -307,6 +337,77 @@ class SharePointClient
         $this->guard($response);
 
         return $response->json();
+    }
+
+    /**
+     * Move an item into another folder.
+     *
+     * Graph moves by patching the parent reference, so this is the same verb
+     * as a rename and can do both at once when a name is supplied.
+     */
+    public function move(string $itemId, string $targetFolderId, ?string $name = null): array
+    {
+        $payload = ['parentReference' => ['id' => $targetFolderId]];
+
+        if ($name !== null && $name !== '') {
+            $payload['name'] = $name;
+        }
+
+        $response = $this->request()->patch(self::GRAPH . "/drives/{$this->driveId()}/items/{$itemId}", $payload);
+
+        $this->guard($response);
+
+        return $response->json();
+    }
+
+    /**
+     * Copy an item into another folder.
+     *
+     * Unlike every other call here this one is asynchronous: Graph answers 202
+     * with a monitor URL and does the work in the background, so a large folder
+     * will still be copying after this returns. The monitor URL is handed back
+     * for the caller to poll; null means the service accepted it but told us
+     * nothing useful to poll.
+     */
+    public function copy(string $itemId, string $targetFolderId, ?string $name = null): ?string
+    {
+        $payload = ['parentReference' => ['driveId' => $this->driveId(), 'id' => $targetFolderId]];
+
+        if ($name !== null && $name !== '') {
+            $payload['name'] = $name;
+        }
+
+        $response = $this->request()->post(self::GRAPH . "/drives/{$this->driveId()}/items/{$itemId}/copy", $payload);
+
+        $this->guard($response);
+
+        return $response->header('Location') ?: null;
+    }
+
+    /**
+     * Sub-folders of a folder, for the move and copy picker.
+     *
+     * Files are irrelevant to choosing a destination, so they are dropped here
+     * rather than in the view. $select is safe in this one place: the picker
+     * shows names only and never reads childCount.
+     */
+    public function folders(?string $itemId = null): array
+    {
+        $drive = $this->driveId();
+        $path = $itemId ? "/drives/{$drive}/items/{$itemId}/children" : "/drives/{$drive}/root/children";
+
+        $response = $this->request()->get(self::GRAPH . $path, [
+            '$top'     => 500,
+            '$orderby' => 'name',
+            '$filter'  => 'folder ne null',
+        ]);
+
+        $this->guard($response);
+
+        return array_values(array_filter(
+            $response->json('value', []),
+            fn($item) => isset($item['folder'])
+        ));
     }
 
     /**

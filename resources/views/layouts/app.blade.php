@@ -535,6 +535,55 @@
         .ts-wrapper.form-select-sm .ts-control { min-height: 32px !important; padding: 3px 9px !important; font-size: 0.8rem !important; }
         .ts-wrapper .item { font-size: 0.84rem; }
 
+        /* ── COLLAPSED SIDEBAR ──────────────────────────────────────
+           Driven entirely by --sidebar-w, since both the sidebar and the
+           content margin already read it. The labels are bare text nodes
+           inside each anchor rather than elements, so they are collapsed
+           with font-size: 0 and the icon's size is restored explicitly. */
+        body.sidebar-collapsed { --sidebar-w: 68px; }
+
+        body.sidebar-collapsed .sidebar-brand { padding: 20px 0 14px; justify-content: center; }
+        body.sidebar-collapsed .sidebar-brand .logo img.logo-word { display: none; }
+        body.sidebar-collapsed .logo-mark { display: block; }
+        .logo-mark { display: none; width: 34px; height: 34px; border-radius: var(--radius); }
+
+        body.sidebar-collapsed .sidebar-section { padding: 4px 10px 8px; }
+        body.sidebar-collapsed .sidebar-section-label,
+        body.sidebar-collapsed .sidebar-collapse-toggle { display: none; }
+
+        /* Every group is open when collapsed - there is no header left to
+           expand them with, so hiding items behind one would strand them. */
+        body.sidebar-collapsed .sidebar-collapsible { max-height: none !important; overflow: visible; }
+
+        body.sidebar-collapsed .sidebar a {
+            font-size: 0;
+            justify-content: center;
+            padding: 9px 0;
+            gap: 0;
+        }
+        body.sidebar-collapsed .sidebar a i { font-size: 1.05rem; width: auto; }
+        body.sidebar-collapsed .sidebar a.active::before { left: -10px; }
+
+        body.sidebar-collapsed .sidebar-user { justify-content: center; padding: 14px 0; }
+        body.sidebar-collapsed .sidebar-user-info { display: none; }
+
+        /* The toggle itself, sitting to the left of the page title. */
+        .sidebar-toggle {
+            width: 32px; height: 32px; flex-shrink: 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid transparent; background: transparent;
+            color: var(--text-muted); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s, color 0.15s;
+        }
+        .sidebar-toggle:hover { background: var(--n-100); color: var(--text); }
+        .sidebar-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .top-nav-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .sidebar, .main-wrapper { transition: width 0.18s ease, margin-left 0.18s ease; }
+        }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .main-wrapper { margin-left: 0; }
@@ -544,6 +593,16 @@
         }
     </style>
     @yield('styles')
+    <script>
+        // Runs before paint: reading this after the body renders would show
+        // the sidebar expanding and snapping shut on every page load.
+        try {
+            if (localStorage.getItem('fti-sidebar') === 'collapsed') {
+                document.documentElement.classList.add('pre-collapsed');
+            }
+        } catch (e) { /* private window */ }
+    </script>
+    <style>html.pre-collapsed body { --sidebar-w: 68px; }</style>
 </head>
 <body>
     @auth
@@ -551,7 +610,8 @@
         <div class="sidebar">
             <div class="sidebar-brand">
                 <div class="logo">
-                    <img src="{{ asset('images/logo.png') }}?v={{ @filemtime(public_path('images/logo.png')) ?: 1 }}" alt="FairTax International" style="max-width: 180px; height: auto; display: block;">
+                    <img class="logo-word" src="{{ asset('images/logo.png') }}?v={{ @filemtime(public_path('images/logo.png')) ?: 1 }}" alt="FairTax International" style="max-width: 180px; height: auto; display: block;">
+                    <img class="logo-mark" src="{{ asset('favicon.png') }}" alt="" aria-hidden="true">
                 </div>
             </div>
 
@@ -644,7 +704,13 @@
 
         <div class="main-wrapper">
             <div class="top-nav">
-                <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
+                <div class="top-nav-left">
+                    <button type="button" class="sidebar-toggle" id="sidebarToggle"
+                            aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
+                </div>
                 <div class="top-nav-actions">
                     <!-- Global Search -->
                     <div style="position: relative;" id="search-wrapper">
@@ -763,6 +829,46 @@
     </script>
 
     @endauth
+    <script>
+    (function () {
+        var btn  = document.getElementById('sidebarToggle');
+        var body = document.body;
+        if (!btn) return;
+
+        function apply(collapsed, persist) {
+            body.classList.toggle('sidebar-collapsed', collapsed);
+            document.documentElement.classList.remove('pre-collapsed');
+
+            btn.setAttribute('aria-expanded', String(!collapsed));
+            btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+            btn.setAttribute('aria-label', btn.title);
+
+            // Collapsed, the labels are gone, so each icon needs its name on
+            // hover to stay identifiable.
+            document.querySelectorAll('.sidebar a').forEach(function (a) {
+                if (collapsed) {
+                    if (!a.dataset.label) { a.dataset.label = a.textContent.trim(); }
+                    a.title = a.dataset.label;
+                } else {
+                    a.removeAttribute('title');
+                }
+            });
+
+            if (persist) {
+                try { localStorage.setItem('fti-sidebar', collapsed ? 'collapsed' : 'open'); } catch (e) {}
+            }
+        }
+
+        var start = false;
+        try { start = localStorage.getItem('fti-sidebar') === 'collapsed'; } catch (e) {}
+        apply(start, false);
+
+        btn.addEventListener('click', function () {
+            apply(!body.classList.contains('sidebar-collapsed'), true);
+        });
+    })();
+    </script>
+
     @yield('scripts')
 </body>
 </html>

@@ -72,6 +72,12 @@
     </form>
 
     <div class="d-flex gap-2">
+        @if(!empty($folderUrl))
+            <a href="{{ $folderUrl }}" target="_blank" class="btn btn-outline-primary btn-sm"
+               title="Open this folder in SharePoint">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Open in SharePoint
+            </a>
+        @endif
         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#folderModal">
             <i class="bi bi-folder-plus me-1"></i> New folder
         </button>
@@ -154,19 +160,27 @@
                         {{ isset($item['folder']) ? '—' : number_format(($item['size'] ?? 0) / 1024, 0) . ' KB' }}
                     </td>
                     <td class="text-end text-nowrap">
-                        @unless(isset($item['folder']))
+                        @if(isset($item['folder']))
+                            <a href="{{ $item['webUrl'] }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Open this folder in SharePoint">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        @else
                             @if($isOffice($item))
                                 <a href="{{ $item['webUrl'] }}" target="_blank" class="btn btn-sm btn-primary" title="Edit in Office for the web">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                             @else
-                                <a href="{{ $item['webUrl'] }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Open">
+                                <a href="{{ $item['webUrl'] }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Open in SharePoint">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             @endif
                             <a href="{{ route('documents.download', ['id' => $item['id'], 'name' => $item['name']]) }}"
                                class="btn btn-sm btn-outline-primary" title="Download"><i class="bi bi-download"></i></a>
-                        @endunless
+                        @endif
+                        <button class="btn btn-sm btn-outline-primary" title="Move to…"
+                                onclick='pickDestination("move", @json($item["id"]), @json($item["name"]))'><i class="bi bi-arrow-right-square"></i></button>
+                        <button class="btn btn-sm btn-outline-primary" title="Copy to…"
+                                onclick='pickDestination("copy", @json($item["id"]), @json($item["name"]))'><i class="bi bi-copy"></i></button>
                         <button class="btn btn-sm btn-outline-primary" title="Rename"
                                 onclick='renameItem(@json($item["id"]), @json($item["name"]))'><i class="bi bi-input-cursor-text"></i></button>
                         <form method="POST" action="{{ route('documents.destroy') }}" class="d-inline"
@@ -419,4 +433,135 @@ function renameItem(id, name) {
 window.open(@json(session('open_url')), '_blank');
 @endif
 </script>
+
+{{-- Move / copy destination picker. Browses folders only: files are never a
+     destination, so showing them would just be noise to scroll past. --}}
+<div class="modal fade" id="destModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="POST" id="destForm">
+            @csrf
+            <input type="hidden" name="id" id="destItemId">
+            <input type="hidden" name="target" id="destTargetId">
+            <div class="modal-header">
+                <h5 class="modal-title" id="destTitle">Move to…</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2" style="font-size: 0.84rem;">
+                    <span class="text-muted">Item:</span> <strong id="destItemName"></strong>
+                </p>
+
+                <nav id="destCrumbs" class="d-flex flex-wrap align-items-center gap-1 mb-2"
+                     style="font-size: 0.8rem;" aria-label="Destination folder path"></nav>
+
+                <div id="destList" class="border rounded" style="max-height: 300px; overflow-y: auto;"></div>
+
+                <p class="form-text mt-2 mb-0">
+                    Choosing <strong>Move here</strong> drops it into the folder shown above.
+                    Click a folder name to go deeper.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="destSubmit">Move here</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    var MOVE_URL = @json(route('documents.move'));
+    var COPY_URL = @json(route('documents.copy'));
+    var LIST_URL = @json(route('documents.folders'));
+
+    var modalEl = document.getElementById('destModal');
+    var modal   = new bootstrap.Modal(modalEl);
+    var list    = document.getElementById('destList');
+    var crumbs  = document.getElementById('destCrumbs');
+
+    var mode = 'move';
+
+    function label(n) {
+        return n === 1 ? '1 item' : n + ' items';
+    }
+
+    function render(data) {
+        document.getElementById('destTargetId').value = data.current || '';
+
+        // Path back up to the root.
+        crumbs.innerHTML = '';
+        var trail = [{ id: '', name: @json(config('services.sharepoint.root_label', 'Clients')) }]
+            .concat(data.breadcrumb || []);
+
+        trail.forEach(function (c, i) {
+            if (i) {
+                var sep = document.createElement('span');
+                sep.className = 'text-muted';
+                sep.textContent = '/';
+                crumbs.appendChild(sep);
+            }
+            var a = document.createElement('button');
+            a.type = 'button';
+            a.className = 'btn btn-sm btn-link p-0 text-decoration-none';
+            a.style.fontSize = '0.8rem';
+            a.textContent = c.name;
+            a.addEventListener('click', function () { load(c.id); });
+            crumbs.appendChild(a);
+        });
+
+        // Sub-folders.
+        list.innerHTML = '';
+        if (!(data.folders || []).length) {
+            list.innerHTML = '<div class="p-3 text-muted" style="font-size:0.84rem;">No sub-folders here. '
+                           + 'You can still drop the item into this folder.</div>';
+            return;
+        }
+        data.folders.forEach(function (f) {
+            var row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'btn btn-link d-flex justify-content-between align-items-center w-100 '
+                          + 'text-decoration-none text-start px-3 py-2 border-bottom';
+            row.style.fontSize = '0.85rem';
+            row.innerHTML = '<span><i class="bi bi-folder-fill me-2"></i></span>';
+            row.firstChild.appendChild(document.createTextNode(f.name));
+            var count = document.createElement('span');
+            count.className = 'text-muted';
+            count.style.fontSize = '0.76rem';
+            count.textContent = label(f.children);
+            row.appendChild(count);
+            row.addEventListener('click', function () { load(f.id); });
+            list.appendChild(row);
+        });
+    }
+
+    function load(id) {
+        list.innerHTML = '<div class="p-3 text-muted" style="font-size:0.84rem;">Loading…</div>';
+        fetch(LIST_URL + (id ? ('?id=' + encodeURIComponent(id)) : ''))
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.error) {
+                    list.innerHTML = '<div class="p-3" style="font-size:0.84rem;">' + d.error + '</div>';
+                    return;
+                }
+                render(d);
+            })
+            .catch(function () {
+                list.innerHTML = '<div class="p-3" style="font-size:0.84rem;">Could not reach SharePoint.</div>';
+            });
+    }
+
+    window.pickDestination = function (which, id, name) {
+        mode = which;
+        document.getElementById('destItemId').value = id;
+        document.getElementById('destItemName').textContent = name;
+        document.getElementById('destTitle').textContent = which === 'copy' ? 'Copy to…' : 'Move to…';
+        document.getElementById('destSubmit').textContent = which === 'copy' ? 'Copy here' : 'Move here';
+        document.getElementById('destForm').action = which === 'copy' ? COPY_URL : MOVE_URL;
+        modal.show();
+        load(@json($folder ?? '') || '');
+    };
+})();
+</script>
+
 @endsection

@@ -100,6 +100,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('documents/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
     Route::post('documents/delete', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::post('documents/rename', [\App\Http\Controllers\DocumentController::class, 'rename'])->name('documents.rename');
+    Route::get('documents/folders', [\App\Http\Controllers\DocumentController::class, 'folders'])->name('documents.folders');
+    Route::post('documents/move', [\App\Http\Controllers\DocumentController::class, 'move'])->name('documents.move');
+    Route::post('documents/copy', [\App\Http\Controllers\DocumentController::class, 'copy'])->name('documents.copy');
 
     // Client Documents
 

@@ -74,6 +74,7 @@ class DocumentController extends Controller
                 'search'     => '',
                 'type'       => null,
                 'typeCounts' => [],
+                'folderUrl'  => null,
             ]);
         }
 
@@ -91,6 +92,12 @@ class DocumentController extends Controller
             $breadcrumb = [];
             $error = $e->getMessage();
         }
+
+        // The breadcrumb already fetched this folder, so its URL is free below
+        // the root; only the root itself needs a lookup, and that is cached.
+        $folderUrl = $error
+            ? null
+            : (end($breadcrumb)['webUrl'] ?? $this->sharepoint->folderUrl($folder));
 
         // Folders first, then files, each alphabetically.
         $items = $items->sortBy([
@@ -135,7 +142,7 @@ class DocumentController extends Controller
             $type = null;
         }
 
-        return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search', 'type', 'typeCounts'));
+        return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search', 'type', 'typeCounts', 'folderUrl'));
     }
 
     /**
@@ -301,5 +308,72 @@ class DocumentController extends Controller
         }
 
         return back()->with('success', 'Renamed.');
+    }
+
+    /**
+     * Sub-folders of a folder, for the move and copy picker to browse.
+     *
+     * Returns the destination's own id and name too, so the dialog can show
+     * where you currently are and offer it as the target.
+     */
+    public function folders(Request $request)
+    {
+        $id = $request->get('id') ?: $this->sharepoint->rootFolder();
+
+        try {
+            $folders = collect($this->sharepoint->folders($id))
+                ->map(fn($f) => [
+                    'id'       => $f['id'],
+                    'name'     => $f['name'],
+                    'children' => $f['folder']['childCount'] ?? 0,
+                ])
+                ->values();
+
+            return response()->json([
+                'current'    => $id,
+                'breadcrumb' => $this->sharepoint->breadcrumb($id),
+                'folders'    => $folders,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function move(Request $request)
+    {
+        $validated = $request->validate([
+            'id'     => 'required|string',
+            'target' => 'required|string',
+        ]);
+
+        if ($validated['id'] === $validated['target']) {
+            return back()->with('error', 'A folder cannot be moved into itself.');
+        }
+
+        try {
+            $this->sharepoint->move($validated['id'], $validated['target']);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Moved.');
+    }
+
+    public function copy(Request $request)
+    {
+        $validated = $request->validate([
+            'id'     => 'required|string',
+            'target' => 'required|string',
+            'name'   => 'nullable|string|max:200',
+        ]);
+
+        try {
+            $this->sharepoint->copy($validated['id'], $validated['target'], $validated['name'] ?? null);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        // Graph copies in the background, so the new item may not be listed yet.
+        return back()->with('success', 'Copy started. Large folders can take a moment to appear.');
     }
 }
