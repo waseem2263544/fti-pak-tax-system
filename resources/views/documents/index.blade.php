@@ -157,7 +157,7 @@
                         @unless(isset($item['folder']))
                             @if($isOffice($item))
                                 <a href="{{ $item['webUrl'] }}" target="_blank" class="btn btn-sm btn-primary" title="Edit in Office for the web">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit
+                                    <i class="bi bi-pencil-square"></i>
                                 </a>
                             @else
                                 <a href="{{ $item['webUrl'] }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Open">
