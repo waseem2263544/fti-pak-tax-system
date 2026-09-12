@@ -58,7 +58,8 @@ class WhtStatementFiler
 
         // Agent details. The office reference is not something the app holds, so
         // the template's placeholder is cleared rather than left to look real.
-        $sheet->setCellValueExplicit(self::CELL_AGENT_REG, (string) ($company->ntn_cnic ?? ''), DataType::TYPE_STRING);
+        // The agent's own number follows the same rule as the payees'.
+        $sheet->setCellValueExplicit(self::CELL_AGENT_REG, self::registrationNumber((string) ($company->ntn_cnic ?? '')), DataType::TYPE_STRING);
         $sheet->setCellValue(self::CELL_OFFICE_REF, null);
 
         // The template ships with its macro's last verdict still in row 2, which
