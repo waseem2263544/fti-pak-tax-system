@@ -626,6 +626,9 @@
                 <a href="{{ route('income-tax-returns.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'income-tax-returns')) active @endif">
                     <i class="bi bi-file-earmark-text"></i> Income Tax Returns
                 </a>
+                <a href="{{ route('wealth.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'wealth.')) active @endif">
+                    <i class="bi bi-clipboard-data"></i> Wealth Statement
+                </a>
                 <a href="{{ route('tasks.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'tasks.')) active @endif">
                     <i class="bi bi-check2-square"></i> Tasks
                 </a>

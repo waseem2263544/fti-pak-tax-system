@@ -135,6 +135,16 @@ class Client extends Model
         return null;
     }
 
+    public function wealthLines()
+    {
+        return $this->hasMany(WealthLine::class);
+    }
+
+    public function incomeWorkings()
+    {
+        return $this->hasMany(IncomeWorking::class);
+    }
+
     public function getSharePointUrlAttribute()
     {
         $link = $this->folder_link;

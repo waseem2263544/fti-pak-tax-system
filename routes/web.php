@@ -58,6 +58,21 @@ Route::middleware(['auth'])->group(function () {
     Route::get('income-tax-returns', [\App\Http\Controllers\IncomeTaxReturnController::class, 'index'])->name('income-tax-returns.index');
     Route::post('income-tax-returns/{client}', [\App\Http\Controllers\IncomeTaxReturnController::class, 'update'])->name('income-tax-returns.update');
 
+    // ── WEALTH STATEMENT & INCOME TAX WORKING ──
+    Route::prefix('wealth')->name('wealth.')->group(function () {
+        $c = \App\Http\Controllers\WealthStatementController::class;
+        Route::get('/', [$c, 'index'])->name('index');
+        Route::get('{client}', [$c, 'show'])->name('show');
+        Route::get('{client}/comparative', [$c, 'comparative'])->name('comparative');
+        Route::post('{client}/lines', [$c, 'storeLine'])->name('lines.store');
+        Route::put('{client}/lines/{line}', [$c, 'updateLine'])->name('lines.update');
+        Route::delete('{client}/lines/{line}', [$c, 'destroyLine'])->name('lines.destroy');
+        Route::post('{client}/values', [$c, 'saveValues'])->name('values.save');
+        Route::post('{client}/income', [$c, 'saveIncome'])->name('income.save');
+        Route::post('{client}/reconciliation', [$c, 'saveReconciliation'])->name('reconciliation.save');
+        Route::post('{client}/carry-forward', [$c, 'carryForward'])->name('carry-forward');
+    });
+
     // Pending Proceedings
     Route::resource('proceedings', ProceedingController::class)->parameters(['proceedings' => 'proceeding']);
 
