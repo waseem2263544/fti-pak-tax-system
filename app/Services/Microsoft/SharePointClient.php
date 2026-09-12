@@ -114,9 +114,11 @@ class SharePointClient
         $drive = $this->driveId();
         $path = $itemId ? "/drives/{$drive}/items/{$itemId}/children" : "/drives/{$drive}/root/children";
 
+        // No $select here on purpose: projecting fields makes Graph return the
+        // folder facet without childCount, so every folder reported "0 items".
+        // The default response carries everything this page uses.
         $response = $this->request()->get(self::GRAPH . $path, [
-            '$select' => 'id,name,size,webUrl,folder,file,lastModifiedDateTime,lastModifiedBy,createdBy,parentReference',
-            '$top'    => 500,
+            '$top'     => 500,
             '$orderby' => 'name',
         ]);
 
@@ -140,10 +142,7 @@ class SharePointClient
 
         $response = $this->request()->get(
             self::GRAPH . $base . "/search(q='" . rawurlencode($q) . "')",
-            [
-                '$select' => 'id,name,size,webUrl,folder,file,lastModifiedDateTime,lastModifiedBy,parentReference',
-                '$top'    => 200,
-            ]
+            ['$top' => 200]
         );
 
         $this->guard($response);
@@ -153,9 +152,7 @@ class SharePointClient
 
     public function item(string $itemId): array
     {
-        $response = $this->request()->get(self::GRAPH . "/drives/{$this->driveId()}/items/{$itemId}", [
-            '$select' => 'id,name,size,webUrl,folder,file,parentReference,lastModifiedDateTime',
-        ]);
+        $response = $this->request()->get(self::GRAPH . "/drives/{$this->driveId()}/items/{$itemId}");
 
         $this->guard($response);
 

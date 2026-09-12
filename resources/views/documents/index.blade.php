@@ -96,9 +96,11 @@
                             <a href="{{ route('documents.index', ['folder' => $item['id']]) }}" class="text-decoration-none fw-semibold">
                                 {{ $item['name'] }}
                             </a>
-                            <span class="text-muted ms-1" style="font-size: 0.76rem;">
-                                {{ $item['folder']['childCount'] ?? 0 }} items
-                            </span>
+                            @isset($item['folder']['childCount'])
+                                <span class="text-muted ms-1" style="font-size: 0.76rem;">
+                                    {{ $item['folder']['childCount'] }} {{ $item['folder']['childCount'] === 1 ? 'item' : 'items' }}
+                                </span>
+                            @endisset
                         @else
                             <a href="{{ $item['webUrl'] }}" target="_blank" class="text-decoration-none">{{ $item['name'] }}</a>
                         @endif
