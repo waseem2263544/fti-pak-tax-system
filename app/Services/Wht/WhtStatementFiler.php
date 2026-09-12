@@ -60,7 +60,18 @@ class WhtStatementFiler
         // the template's placeholder is cleared rather than left to look real.
         // The agent's own number follows the same rule as the payees'.
         $sheet->setCellValueExplicit(self::CELL_AGENT_REG, self::registrationNumber((string) ($company->ntn_cnic ?? '')), DataType::TYPE_STRING);
-        $sheet->setCellValue(self::CELL_OFFICE_REF, null);
+        // IRIS rejects the file without it, and the app is the only place it
+        // can come from, so refuse rather than ship a blank cell.
+        $office = trim((string) ($company->office_reference ?? ''));
+
+        if ($office === '') {
+            throw new \RuntimeException(
+                'This agent has no Office Reference, which IRIS requires on the statement. '
+                . 'Add it under Setup → Withholding Agents.'
+            );
+        }
+
+        $sheet->setCellValueExplicit(self::CELL_OFFICE_REF, $office, DataType::TYPE_STRING);
 
         // The template ships with its macro's last verdict still in row 2, which
         // would otherwise read "Invalid Records 1" on a file nobody has validated.

@@ -132,6 +132,7 @@ class WhtCompanyController extends Controller
         $data = $request->validate([
             'name'      => 'required|string|max:150',
             'ntn_cnic'  => 'nullable|string|max:20',
+            'office_reference' => 'nullable|string|max:50',
             'address'   => 'nullable|string',
             'client_id' => 'nullable|exists:clients,id',
             'is_active' => 'boolean',

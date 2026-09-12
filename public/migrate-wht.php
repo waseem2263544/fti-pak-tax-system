@@ -44,6 +44,7 @@ $tables = [
   `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(150) NOT NULL,
   `ntn_cnic` VARCHAR(20) NULL,
+  `office_reference` VARCHAR(50) NULL,
   `address` TEXT NULL,
   `logo_path` VARCHAR(255) NULL,
   `client_id` BIGINT UNSIGNED NULL,

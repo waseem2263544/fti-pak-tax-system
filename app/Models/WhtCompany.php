@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class WhtCompany extends Model
 {
     protected $table = 'wht_companies';
-    protected $fillable = ['name', 'ntn_cnic', 'address', 'logo_path', 'client_id', 'is_active', 'legacy_id'];
+    protected $fillable = ['name', 'ntn_cnic', 'office_reference', 'address', 'logo_path', 'client_id', 'is_active', 'legacy_id'];
     protected $casts = ['is_active' => 'boolean'];
 
     public function parties() { return $this->hasMany(WhtParty::class, 'wht_company_id'); }
