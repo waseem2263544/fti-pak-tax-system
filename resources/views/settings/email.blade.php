@@ -7,7 +7,7 @@
     <div class="col-md-8">
         <!-- Microsoft Email Connection -->
         <div class="card section-card mb-4">
-            <div class="card-header" style="background: rgba(48,58,80,0.02);">
+            <div class="card-header" style="background: var(--n-25);">
                 <i class="bi bi-microsoft" style="color: var(--info-ink);"></i>
                 <span style="font-weight: 700;">Microsoft Email Integration</span>
             </div>

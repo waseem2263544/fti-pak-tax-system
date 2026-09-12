@@ -186,8 +186,8 @@
             $isStTribunalStay = in_array($process->template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
             $isItTribunalAppeal = $process->template === 'it-tribunal-appeal';
             $docCards = [
-                ['key' => 'index',             'name' => 'Index',             'desc' => $isStTribunalStay ? 'Index of all documents' : 'Print 4× and tick the copy type', 'icon' => 'bi-list-columns-reverse', 'color' => '#303a50', 'bg' => 'rgba(48,58,80,0.06)'],
-                ['key' => 'appeal-memo',       'name' => 'Appeal Memo',       'desc' => 'Memorandum of appeal (Form B)',                              'icon' => 'bi-file-earmark-ruled',   'color' => '#dc2626', 'bg' => 'rgba(220,38,38,0.08)'],
+                ['key' => 'index',             'name' => 'Index',             'desc' => $isStTribunalStay ? 'Index of all documents' : 'Print 4× and tick the copy type', 'icon' => 'bi-list-columns-reverse', 'color' => '#22262e', 'bg' => '#eef0f4'],
+                ['key' => 'appeal-memo',       'name' => 'Appeal Memo',       'desc' => 'Memorandum of appeal (Form B)',                              'icon' => 'bi-file-earmark-ruled',   'color' => '#dc2626', 'bg' => 'var(--danger-tint)'],
                 ['key' => 'stay-application',  'name' => 'Stay Application',  'desc' => 'Application for interim relief',                             'icon' => 'bi-file-earmark-text',    'color' => '#7c3aed', 'bg' => 'rgba(139,92,246,0.08)', 'hideForItAppeal' => true],
                 ['key' => 'grounds-of-appeal', 'name' => 'Grounds of Appeal', 'desc' => 'Brief facts, grounds, and prayer',                           'icon' => 'bi-list-ol',              'color' => '#f59e0b', 'bg' => 'rgba(245,158,11,0.08)'],
                 ['key' => 'intimation',        'name' => 'Intimation Letter', 'desc' => 'To Commissioner regarding filing',                           'icon' => 'bi-envelope',             'color' => '#3b82f6', 'bg' => 'rgba(59,130,246,0.08)'],

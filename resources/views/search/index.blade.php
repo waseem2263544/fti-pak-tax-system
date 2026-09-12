@@ -23,7 +23,7 @@
     <div class="p-0">
         @foreach($results['clients'] as $client)
         <a href="{{ route('clients.show', $client) }}" class="d-flex align-items-center gap-3 px-4 py-3 text-decoration-none" style="border-bottom: 1px solid var(--n-50); color: var(--primary);">
-            <div style="width: 36px; height: 36px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; flex-shrink: 0;">{{ strtoupper(substr($client->name, 0, 2)) }}</div>
+            <div style="width: 36px; height: 36px; background: var(--n-100); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; flex-shrink: 0;">{{ strtoupper(substr($client->name, 0, 2)) }}</div>
             <div>
                 <div style="font-weight: 600;">{{ $client->name }}</div>
                 <div style="font-size: 0.75rem; color: var(--n-400);">{{ $client->email ?: $client->contact_no ?: $client->status }}</div>
@@ -78,7 +78,7 @@
                 <div style="font-weight: 600;">{{ $proc->title }}</div>
                 <div style="font-size: 0.75rem; color: var(--n-400);">{{ $proc->client->name ?? '' }} · {{ $proc->service->display_name ?? '' }}</div>
             </div>
-            <span class="badge" style="background: var(--accent-glow); color: #5c6300;">{{ ucfirst(str_replace('_', ' ', $proc->stage)) }}</span>
+            <span class="badge" style="background: var(--accent-glow); color: var(--accent-dark);">{{ ucfirst(str_replace('_', ' ', $proc->stage)) }}</span>
         </a>
         @endforeach
     </div>

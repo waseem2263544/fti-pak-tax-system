@@ -15,7 +15,7 @@
     <div class="col-md-3">
         <div class="card stat-card">
             <div class="d-flex align-items-center gap-3">
-                <div class="stat-icon" style="background: rgba(48,58,80,0.06);">
+                <div class="stat-icon" style="background: var(--n-100);">
                     <i class="bi bi-people-fill" style="color: var(--primary);"></i>
                 </div>
                 <div>
@@ -90,7 +90,7 @@
                     @if($task->status == 'pending')
                         <span class="badge" style="background: var(--warn-tint); color: var(--warn-ink);">Pending</span>
                     @elseif($task->status == 'in_progress')
-                        <span class="badge" style="background: var(--accent-glow); color: #5c6300;">Active</span>
+                        <span class="badge" style="background: var(--accent-glow); color: var(--accent-dark);">Active</span>
                     @else
                         <span class="badge" style="background: var(--danger-tint); color: var(--danger);">Overdue</span>
                     @endif
@@ -172,7 +172,7 @@
                     </td>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div style="width: 28px; height: 28px; background: rgba(48,58,80,0.06); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6rem; color: var(--primary);">{{ strtoupper(substr($proc->client->name, 0, 2)) }}</div>
+                            <div style="width: 28px; height: 28px; background: var(--n-100); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6rem; color: var(--primary);">{{ strtoupper(substr($proc->client->name, 0, 2)) }}</div>
                             <span style="font-size: 0.85rem;">{{ Str::limit($proc->client->name, 20) }}</span>
                         </div>
                     </td>

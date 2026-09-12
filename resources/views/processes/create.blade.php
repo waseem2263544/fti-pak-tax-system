@@ -44,7 +44,7 @@ $isStay = str_contains($template, 'stay');
     <div class="card mb-4">
         <div class="card-header d-flex align-items-center gap-2">
             @if($isStay)
-                <i class="bi bi-shield-check" style="color: #8b9a00;"></i>
+                <i class="bi bi-shield-check" style="color: var(--accent-dark);"></i>
             @elseif($isTribunal)
                 <i class="bi bi-bank2" style="color: #7c3aed;"></i>
             @else

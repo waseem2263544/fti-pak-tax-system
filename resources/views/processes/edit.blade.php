@@ -29,7 +29,7 @@ $templateNames = [
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
-                @if($isStay) <i class="bi bi-shield-check" style="color: #8b9a00;"></i>
+                @if($isStay) <i class="bi bi-shield-check" style="color: var(--accent-dark);"></i>
                 @elseif($isTribunal) <i class="bi bi-bank2" style="color: #7c3aed;"></i>
                 @elseif($isAppeal) <i class="bi bi-building" style="color: var(--info);"></i>
                 @else <i class="bi bi-arrow-repeat" style="color: var(--accent);"></i>
@@ -37,7 +37,7 @@ $templateNames = [
                 <span style="font-weight: 700;">{{ $templateNames[$template] ?? 'Edit Process' }}</span>
             </div>
             @if($template)
-            <span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $template }}</span>
+            <span class="badge" style="background: var(--n-100); color: var(--primary);">{{ $template }}</span>
             @endif
         </div>
         <div class="card-body" style="padding: 24px;">

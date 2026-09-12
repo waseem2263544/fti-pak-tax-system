@@ -20,7 +20,7 @@
     .st-{{ $key }} { color: {{ $c[0] }}; background-color: {{ $c[1] }}; }
     @endforeach
     .itr-remarks { border: 1px solid transparent; border-radius: 6px; padding: 5px 8px; width: 100%; font-size: 0.82rem; background: var(--n-25); transition: border-color .15s; }
-    .itr-remarks:focus { border-color: var(--accent, #8b9a00); background: #fff; outline: none; }
+    .itr-remarks:focus { border-color: var(--accent, #2F6FEB); background: #fff; outline: none; }
     .saved-tick { color: var(--ok); opacity: 0; transition: opacity .2s; font-size: 0.9rem; }
     .saved-tick.show { opacity: 1; }
     .dist-seg { height: 100%; float: left; }
@@ -30,7 +30,7 @@
     /* toolbar polish */
     .itr-toolbar .input-group-text { border-right: 0; padding-right: 4px; }
     .itr-toolbar .input-group .form-control { border-left: 0; padding-left: 4px; box-shadow: none; }
-    .itr-toolbar .input-group:focus-within { border-radius: 6px; box-shadow: 0 0 0 .2rem rgba(48,58,80,.08); }
+    .itr-toolbar .input-group:focus-within { border-radius: 6px; box-shadow: 0 0 0 .2rem var(--accent-glow); }
     #itrFilterForm .ts-wrapper { margin: 0; }
     #itrFilterForm .ts-control { min-height: 31px; padding: 2px 8px; border-radius: 6px; font-size: 0.85rem; border-color: var(--n-200); box-shadow: none; }
     #itrFilterForm .ts-control .item { background: var(--n-100); color: var(--primary); border-radius: 12px; font-size: 0.78rem; padding: 1px 8px; }

@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>@yield('title', 'FTI Pak Tax Management')</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/images/logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <style>
         /*
@@ -21,20 +23,20 @@
          * then a matter of editing this block alone.
          */
         :root {
-            /* Neutral ramp */
+            /* Neutral ramp - cool, slightly blue-biased to sit under the accent */
             --n-0:   #ffffff;
             --n-25:  #fafbfc;
-            --n-50:  #f5f7f9;
-            --n-100: #eef1f4;
-            --n-150: #e8ebef;
-            --n-200: #dfe3e8;
-            --n-300: #c7ced7;
-            --n-400: #a2abb8;
-            --n-500: #77828f;
-            --n-600: #55606f;
-            --n-700: #3b4553;
-            --n-800: #252d3a;
-            --n-900: #161d2b;
+            --n-50:  #f6f7f9;
+            --n-100: #eef0f4;
+            --n-150: #e5e8ec;
+            --n-200: #d5dae1;
+            --n-300: #bcc3cd;
+            --n-400: #a3abb7;
+            --n-500: #737d8c;
+            --n-600: #4e5663;
+            --n-700: #363d48;
+            --n-800: #22262e;
+            --n-900: #14181f;
 
             /* Surfaces and text */
             --bg:          var(--n-50);
@@ -47,34 +49,39 @@
             --text-muted:  var(--n-500);
             --text-faint:  var(--n-400);
 
-            /* Brand */
-            --primary:       #303a50;
-            --primary-dark:  #232b3c;
-            --primary-light: #44506b;
-            --accent:        #D7DF27;
-            --accent-dark:   #bcc41f;
-            --accent-ink:    #5c6108;
-            --accent-glow:   rgba(215,223,39,0.14);
+            /* Brand. The accent is a single saturated blue doing every job
+               the old lime did: current page, primary action, focus ring.
+               --accent-ink is what sits on top of it; --accent-bright is the
+               lighter step used against the near-black sidebar, where the
+               base blue does not carry enough contrast. */
+            --primary:       #22262e;
+            --primary-dark:  #16181d;
+            --primary-light: #343a45;
+            --accent:        #2F6FEB;
+            --accent-dark:   #1F58C9;
+            --accent-bright: #4C86F0;
+            --accent-ink:    #ffffff;
+            --accent-glow:   rgba(47,111,235,0.16);
 
             /* Semantic pairs: tint background, ink foreground */
-            --ok:        #10b981;  --ok-tint:     #e7f8f1;  --ok-ink:     #0a6b4d;
-            --danger:    #ef4444;  --danger-tint: #fdecec;  --danger-ink: #9b1c1c;
-            --warn:      #f59e0b;  --warn-tint:   #fef4e2;  --warn-ink:   #8a5200;
-            --info:      #3b82f6;  --info-tint:   #e8f1fe;  --info-ink:   #1a4fa8;
+            --ok:        #10b981;  --ok-tint:     #e6f6ee;  --ok-ink:     #0b6640;
+            --danger:    #ef4444;  --danger-tint: #fdeceb;  --danger-ink: #a01f1a;
+            --warn:      #f59e0b;  --warn-tint:   #fdf2e3;  --warn-ink:   #8a5100;
+            --info:      #3b82f6;  --info-tint:   #e9f0fd;  --info-ink:   #1a4bb8;
 
             --sidebar-w: 262px;
-            --radius-sm: 6px;
-            --radius:    9px;
-            --radius-lg: 12px;
+            --radius-sm: 4px;
+            --radius:    6px;
+            --radius-lg: 8px;
 
             /* Shadows are for things that float. Flat surfaces use a border. */
-            --shadow-sm:      0 1px 2px rgba(22,29,43,0.04);
-            --shadow-md:      0 4px 12px rgba(22,29,43,0.07);
-            --shadow-lg:      0 8px 30px rgba(22,29,43,0.10);
-            --shadow-overlay: 0 12px 32px rgba(22,29,43,0.12);
+            --shadow-sm:      0 1px 2px rgba(20,24,31,0.04);
+            --shadow-md:      0 4px 12px rgba(20,24,31,0.07);
+            --shadow-lg:      0 8px 30px rgba(20,24,31,0.10);
+            --shadow-overlay: 0 12px 32px rgba(20,24,31,0.12);
         }
 
-        *, *::before, *::after { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; }
+        *, *::before, *::after { font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; box-sizing: border-box; }
 
         body {
             background: var(--bg);
@@ -108,7 +115,7 @@
             background: var(--accent);
             border-radius: var(--radius);
             display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.95rem; color: var(--primary-dark);
+            font-weight: 700; font-size: 0.95rem; color: var(--accent-ink);
             letter-spacing: -0.5px;
         }
 
@@ -167,14 +174,14 @@
             background: rgba(255,255,255,0.08);
             font-weight: 600;
         }
-        .sidebar a.active i { color: var(--accent); opacity: 1; }
+        .sidebar a.active i { color: var(--accent-bright); opacity: 1; }
 
         /* A single quiet rule marks the current page. */
         .sidebar a.active::before {
             content: '';
             position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
             width: 2px; height: 18px;
-            background: var(--accent);
+            background: var(--accent-bright);
             border-radius: 0 2px 2px 0;
         }
 
@@ -190,7 +197,7 @@
             background: var(--accent);
             border-radius: var(--radius-sm);
             display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.78rem; color: var(--primary-dark);
+            font-weight: 700; font-size: 0.78rem; color: var(--accent-ink);
             flex-shrink: 0;
         }
 
@@ -380,10 +387,10 @@
 
         .btn-accent {
             background: var(--accent); border: 1px solid var(--accent);
-            color: var(--primary-dark); font-weight: 600; box-shadow: none;
+            color: var(--accent-ink); font-weight: 600; box-shadow: none;
         }
         .btn-accent:hover, .btn-accent:focus {
-            background: var(--accent-dark); border-color: var(--accent-dark); color: var(--primary-dark);
+            background: var(--accent-dark); border-color: var(--accent-dark); color: var(--accent-ink);
         }
 
         .btn-outline-primary {
@@ -506,7 +513,7 @@
         .guest-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
 
         /* ── TOM SELECT ─────────────────────────────────────────────── */
-        .ts-wrapper { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .ts-wrapper { font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; }
         .ts-wrapper .ts-control {
             border: 1px solid var(--border-strong) !important;
             border-radius: var(--radius) !important;

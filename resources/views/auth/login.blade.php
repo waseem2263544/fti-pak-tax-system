@@ -12,13 +12,13 @@
         content: '';
         position: absolute; top: -30%; right: -10%;
         width: 800px; height: 800px;
-        background: radial-gradient(circle, rgba(215,223,39,0.07) 0%, transparent 60%);
+        background: radial-gradient(circle, rgba(47,111,235,0.07) 0%, transparent 60%);
     }
     .guest-wrapper::after {
         content: '';
         position: absolute; bottom: -20%; left: -5%;
         width: 500px; height: 500px;
-        background: radial-gradient(circle, rgba(215,223,39,0.04) 0%, transparent 60%);
+        background: radial-gradient(circle, rgba(47,111,235,0.04) 0%, transparent 60%);
     }
     .login-box {
         width: 100%; max-width: 440px;

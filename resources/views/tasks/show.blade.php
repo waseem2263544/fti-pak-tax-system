@@ -60,7 +60,7 @@
         <div>
             <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Assigned To</div>
             @forelse($task->assignedUsers as $u)
-                <span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $u->name }}</span>
+                <span class="badge" style="background: var(--n-100); color: var(--primary);">{{ $u->name }}</span>
             @empty
                 <span style="color: var(--n-300);">No one assigned</span>
             @endforelse
@@ -94,7 +94,7 @@
         <!-- Comments List -->
         @forelse($task->comments as $comment)
         <div class="d-flex gap-3 mb-3 pb-3" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
-            <div style="width: 36px; height: 36px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($comment->user->name, 0, 2)) }}</div>
+            <div style="width: 36px; height: 36px; background: var(--n-100); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($comment->user->name, 0, 2)) }}</div>
             <div style="flex: 1;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>

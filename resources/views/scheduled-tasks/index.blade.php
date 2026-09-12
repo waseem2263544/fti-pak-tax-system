@@ -15,7 +15,7 @@
             <div class="d-flex align-items-start gap-3">
                 <div style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
                     background: {{ $auto->is_active ? 'var(--accent-glow)' : 'rgba(156,163,175,0.1)' }};">
-                    <i class="bi bi-clock-history" style="font-size: 1.2rem; color: {{ $auto->is_active ? '#8b9a00' : 'var(--n-400)' }};"></i>
+                    <i class="bi bi-clock-history" style="font-size: 1.2rem; color: {{ $auto->is_active ? 'var(--accent-dark)' : 'var(--n-400)' }};"></i>
                 </div>
                 <div>
                     <div style="font-weight: 700; color: var(--primary); font-size: 0.95rem;">{{ $auto->name }}</div>

@@ -55,7 +55,7 @@
             </div>
 
             <!-- Info box -->
-            <div class="mb-3" style="background: var(--accent-glow); border-radius: 10px; padding: 14px 18px; border: 1px solid rgba(215,223,39,0.2);">
+            <div class="mb-3" style="background: var(--accent-glow); border-radius: 10px; padding: 14px 18px; border: 1px solid rgba(47,111,235,0.25);">
                 <div style="font-size: 0.85rem; color: var(--primary);"><i class="bi bi-info-circle me-1"></i> <strong>How it works:</strong> On the scheduled day, the system will find <strong>all clients</strong> that have the selected service as an <strong>active service</strong>, then auto-create a task for each client and assign it to the selected employee.</div>
             </div>
 

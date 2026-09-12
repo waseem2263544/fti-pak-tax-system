@@ -19,7 +19,7 @@
     <div class="task-avatar" title="{{ $u->name }}">{{ strtoupper(substr($u->name, 0, 2)) }}</div>
     @endforeach
     @if($task->assignedUsers->count() > 3)
-    <div class="task-avatar" style="background: var(--accent-glow); color: #5c6300;">+{{ $task->assignedUsers->count() - 3 }}</div>
+    <div class="task-avatar" style="background: var(--accent-glow); color: var(--accent-dark);">+{{ $task->assignedUsers->count() - 3 }}</div>
     @endif
 </div>
 @endif

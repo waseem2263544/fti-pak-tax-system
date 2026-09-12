@@ -91,7 +91,7 @@
                     <td>
                         <div class="notice-subject" style="font-size: 0.88rem; color: var(--primary);">{{ Str::limit($notice->subject, 55) }}</div>
                     </td>
-                    <td><span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $notice->notice_section ?? 'General' }}</span></td>
+                    <td><span class="badge" style="background: var(--n-100); color: var(--primary);">{{ $notice->notice_section ?? 'General' }}</span></td>
                     <td style="font-size: 0.85rem; color: var(--n-500);">{{ $notice->tax_year ?? '-' }}</td>
                     <td>
                         @if($notice->client)

@@ -46,7 +46,7 @@
                 <div>
                     <h4 style="font-weight: 800; color: var(--primary); margin: 0; font-size: 1.3rem;">{{ $client->name }}</h4>
                     <div class="d-flex align-items-center gap-2 mt-1">
-                        <span class="badge" style="background: {{ $client->status == 'Company' ? 'var(--info-tint)' : ($client->status == 'AOP' ? 'var(--accent-glow)' : 'rgba(48,58,80,0.06)') }}; color: {{ $client->status == 'Company' ? 'var(--info-ink)' : ($client->status == 'AOP' ? '#5c6300' : 'var(--primary)') }};">{{ $client->status }}</span>
+                        <span class="badge" style="background: {{ $client->status == 'Company' ? 'var(--info-tint)' : ($client->status == 'AOP' ? 'var(--accent-glow)' : 'var(--n-100)') }}; color: {{ $client->status == 'Company' ? 'var(--info-ink)' : ($client->status == 'AOP' ? 'var(--accent-dark)' : 'var(--primary)') }};">{{ $client->status }}</span>
                         <span style="color: var(--n-300);">&middot;</span>
                         <span style="font-size: 0.82rem; color: var(--n-500);">{{ $client->activeServices->count() }} active service{{ $client->activeServices->count() !== 1 ? 's' : '' }}</span>
                     </div>
@@ -126,7 +126,7 @@
     <!-- FBR -->
     <div class="col-md-4">
         <div class="card section-card h-100">
-            <div class="card-header" style="background: rgba(48,58,80,0.02);">
+            <div class="card-header" style="background: var(--n-25);">
                 <i class="bi bi-shield-lock-fill" style="color: var(--info);"></i>
                 <span style="font-weight: 700;">FBR Credentials</span>
             </div>
@@ -172,7 +172,7 @@
     <!-- KPRA -->
     <div class="col-md-4">
         <div class="card section-card h-100">
-            <div class="card-header" style="background: rgba(48,58,80,0.02);">
+            <div class="card-header" style="background: var(--n-25);">
                 <i class="bi bi-building-fill-lock" style="color: var(--ok-ink);"></i>
                 <span style="font-weight: 700;">KPRA Credentials</span>
             </div>
@@ -218,7 +218,7 @@
     <!-- SECP Directors -->
     <div class="col-md-4">
         <div class="card section-card h-100">
-            <div class="card-header" style="background: rgba(48,58,80,0.02);">
+            <div class="card-header" style="background: var(--n-25);">
                 <i class="bi bi-safe" style="color: var(--warn);"></i>
                 <span style="font-weight: 700;">SECP Directors ({{ $client->secpDirectors->count() }})</span>
             </div>
@@ -291,7 +291,7 @@
                 @forelse($client->shareholders as $sh)
                 <div class="d-flex justify-content-between align-items-center px-4 py-2" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
                     <a href="{{ route('clients.show', $sh) }}" style="color: var(--primary); font-weight: 500; text-decoration: none; font-size: 0.88rem;">{{ $sh->name }}</a>
-                    @if($sh->pivot->share_percentage)<span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $sh->pivot->share_percentage }}%</span>@endif
+                    @if($sh->pivot->share_percentage)<span class="badge" style="background: var(--n-100); color: var(--primary);">{{ $sh->pivot->share_percentage }}%</span>@endif
                 </div>
                 @empty
                 <div class="text-center py-4" style="color: var(--n-400); font-size: 0.85rem;">No shareholders</div>

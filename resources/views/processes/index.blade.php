@@ -13,7 +13,7 @@
     .process-card::after {
         content: ''; position: absolute; top: 0; right: 0;
         width: 120px; height: 120px;
-        background: radial-gradient(circle at top right, rgba(215,223,39,0.08) 0%, transparent 70%);
+        background: radial-gradient(circle at top right, rgba(47,111,235,0.08) 0%, transparent 70%);
     }
     .process-card .icon-box {
         width: 56px; height: 56px; border-radius: 14px;
@@ -105,7 +105,7 @@
 <div class="row g-4">
     <div class="col-md-6">
         <div class="card process-card" onclick="location.href='{{ route('processes.index', ['step' => 'appeal-income-tax']) }}'">
-            <div class="icon-box" style="background: rgba(48,58,80,0.06);">
+            <div class="icon-box" style="background: var(--n-100);">
                 <i class="bi bi-cash-stack" style="color: var(--primary);"></i>
             </div>
             <h5>Income Tax Appeal</h5>
@@ -161,7 +161,7 @@
     </div>
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'it-tribunal-stay']) }}" class="sub-option text-decoration-none" style="border-color: var(--accent);">
-            <div class="sub-icon" style="background: var(--accent-glow);"><i class="bi bi-shield-check" style="color: #8b9a00;"></i></div>
+            <div class="sub-icon" style="background: var(--accent-glow);"><i class="bi bi-shield-check" style="color: var(--accent-dark);"></i></div>
             <div>
                 <h6>Stay Application to ATIR</h6>
                 <small>Stay of demand pending appeal at Tribunal</small>
@@ -215,7 +215,7 @@
     </div>
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'st-tribunal-stay']) }}" class="sub-option text-decoration-none">
-            <div class="sub-icon" style="background: var(--accent-glow);"><i class="bi bi-shield-check" style="color: #8b9a00;"></i></div>
+            <div class="sub-icon" style="background: var(--accent-glow);"><i class="bi bi-shield-check" style="color: var(--accent-dark);"></i></div>
             <div>
                 <h6>Stay Application to ATIR</h6>
                 <small>Stay of demand pending Sales Tax appeal at Tribunal</small>

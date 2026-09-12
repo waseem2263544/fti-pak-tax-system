@@ -40,12 +40,12 @@
     .kanban-card .task-assignees { display: flex; margin-top: 8px; }
     .kanban-card .task-avatar {
         width: 22px; height: 22px; border-radius: 6px;
-        background: rgba(48,58,80,0.08); display: flex; align-items: center; justify-content: center;
+        background: var(--n-100); display: flex; align-items: center; justify-content: center;
         font-size: 0.5rem; font-weight: 700; color: var(--primary); margin-right: 3px;
     }
     .kanban-empty { text-align: center; padding: 32px 16px; color: var(--n-300); font-size: 0.82rem; }
     .kanban-empty i { font-size: 1.5rem; display: block; margin-bottom: 8px; }
-    .kanban-body.drag-over { background: rgba(215,223,39,0.06); border: 2px dashed var(--accent); border-radius: 0 0 12px 12px; }
+    .kanban-body.drag-over { background: var(--accent-glow); border: 2px dashed var(--accent); border-radius: 0 0 12px 12px; }
 
     .col-overdue .kanban-header { background: linear-gradient(135deg, var(--danger-tint) 0%, var(--danger-tint) 100%); color: var(--danger-ink); }
     .col-overdue .kanban-header .count { background: var(--danger-tint); color: var(--danger); }

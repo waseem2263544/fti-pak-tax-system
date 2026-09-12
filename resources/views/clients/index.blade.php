@@ -70,7 +70,7 @@
                 <tr>
                     <td>
                         <div class="d-flex align-items-center gap-2">
-                            <div style="width: 36px; height: 36px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($client->name, 0, 2)) }}</div>
+                            <div style="width: 36px; height: 36px; background: var(--n-100); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($client->name, 0, 2)) }}</div>
                             <div>
                                 <a href="{{ route('clients.show', $client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 0.88rem;">{{ $client->name }}</a>
                                 @if($client->email)<div style="font-size: 0.75rem; color: var(--n-400);">{{ $client->email }}</div>@endif
@@ -80,9 +80,9 @@
                     <td style="font-size: 0.85rem; color: var(--n-500);">{{ $client->contact_no ?: '-' }}</td>
                     <td>
                         @if($client->status == 'Individual')
-                            <span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">Individual</span>
+                            <span class="badge" style="background: var(--n-100); color: var(--primary);">Individual</span>
                         @elseif($client->status == 'AOP')
-                            <span class="badge" style="background: var(--accent-glow); color: #5c6300;">AOP</span>
+                            <span class="badge" style="background: var(--accent-glow); color: var(--accent-dark);">AOP</span>
                         @else
                             <span class="badge" style="background: var(--info-tint); color: var(--info-ink);">Company</span>
                         @endif

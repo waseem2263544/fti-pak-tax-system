@@ -8,7 +8,7 @@
         <div class="card">
             <div class="card-body" style="padding: 32px;">
                 <div class="d-flex align-items-center gap-3 mb-4">
-                    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent) 0%, #a8b01a 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--primary);">FT</div>
+                    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; color: var(--accent-ink);">FT</div>
                     <div>
                         <h4 style="font-weight: 800; color: var(--primary); margin: 0;">FairTax Credential Manager</h4>
                         <p style="color: var(--n-500); font-size: 0.85rem; margin: 0;">Chrome Extension v1.0</p>

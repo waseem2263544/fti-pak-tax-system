@@ -17,11 +17,11 @@
     <div class="d-flex" style="border-bottom: 1px solid var(--n-100); padding: 0 20px;">
         <a href="{{ route('files.index', ['tab' => 'files']) }}" class="fm-tab {{ $tab == 'files' ? 'active' : '' }}">
             <i class="bi bi-folder2 me-1"></i> File Numbers
-            <span class="fm-count" style="background: {{ $tab == 'files' ? 'var(--accent-glow)' : 'var(--n-50)' }}; color: {{ $tab == 'files' ? '#5c6300' : 'var(--n-400)' }};">{{ $fileNumbers->total() }}</span>
+            <span class="fm-count" style="background: {{ $tab == 'files' ? 'var(--accent-glow)' : 'var(--n-50)' }}; color: {{ $tab == 'files' ? 'var(--accent-dark)' : 'var(--n-400)' }};">{{ $fileNumbers->total() }}</span>
         </a>
         <a href="{{ route('files.index', ['tab' => 'letters']) }}" class="fm-tab {{ $tab == 'letters' ? 'active' : '' }}">
             <i class="bi bi-envelope-paper me-1"></i> Letter Numbers
-            <span class="fm-count" style="background: {{ $tab == 'letters' ? 'var(--accent-glow)' : 'var(--n-50)' }}; color: {{ $tab == 'letters' ? '#5c6300' : 'var(--n-400)' }};">{{ $letterNumbers->total() }}</span>
+            <span class="fm-count" style="background: {{ $tab == 'letters' ? 'var(--accent-glow)' : 'var(--n-50)' }}; color: {{ $tab == 'letters' ? 'var(--accent-dark)' : 'var(--n-400)' }};">{{ $letterNumbers->total() }}</span>
         </a>
     </div>
 </div>
@@ -78,7 +78,7 @@
                 @forelse($fileNumbers as $file)
                 <tr>
                     <td>
-                        <span style="font-weight: 800; font-size: 1rem; color: var(--primary); background: rgba(48,58,80,0.06); padding: 4px 12px; border-radius: 6px;">{{ $file->file_no }}</span>
+                        <span style="font-weight: 800; font-size: 1rem; color: var(--primary); background: var(--n-100); padding: 4px 12px; border-radius: 6px;">{{ $file->file_no }}</span>
                     </td>
                     <td>
                         <a href="{{ route('clients.show', $file->client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">{{ $file->client->name }}</a>

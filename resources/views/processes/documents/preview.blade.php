@@ -47,7 +47,7 @@
         /* Print toolbar */
         .toolbar {
             position: fixed; top: 0; left: 0; right: 0;
-            background: #303a50; padding: 12px 24px; z-index: 1000;
+            background: #22262e; padding: 12px 24px; z-index: 1000;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
@@ -58,8 +58,8 @@
             font-size: 13px; font-weight: 600; cursor: pointer;
             font-family: sans-serif; text-decoration: none;
         }
-        .toolbar .btn-print { background: #D7DF27; color: #303a50; }
-        .toolbar .btn-download { background: #fff; color: #303a50; }
+        .toolbar .btn-print { background: #2F6FEB; color: #fff; }
+        .toolbar .btn-download { background: #fff; color: #22262e; }
         .toolbar .btn-back { background: none; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
         body { padding-top: 80px; }
         @media print { .toolbar { display: none; } body { padding-top: 0; } }
