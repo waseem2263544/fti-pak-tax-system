@@ -116,7 +116,7 @@
                     <!-- Folder Link -->
                     <div class="mb-3">
                         <label class="form-label">Document Folder Link (Optional)</label>
-                        <input type="url" class="form-control" name="folder_link" placeholder="https://drive.google.com/...">
+                        <input type="text" class="form-control" name="folder_link" placeholder="SharePoint folder path...">
                     </div>
 
                     <!-- Shareholders -->

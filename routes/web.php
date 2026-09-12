@@ -12,7 +12,6 @@ use App\Http\Controllers\ProceedingController;
 use App\Http\Controllers\AutomatedTaskController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\ClientDocumentController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\MicrosoftAuthController;
@@ -103,9 +102,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('documents/rename', [\App\Http\Controllers\DocumentController::class, 'rename'])->name('documents.rename');
 
     // Client Documents
-    Route::get('client-documents', [ClientDocumentController::class, 'index'])->name('client-documents.index');
-    Route::post('client-documents/{client}/update-link', [ClientDocumentController::class, 'updateLink'])->name('client-documents.update-link');
-    Route::post('client-documents/link-folder', [ClientDocumentController::class, 'linkFolder'])->name('client-documents.link-folder');
 
     // Comments
     Route::post('comments', [CommentController::class, 'store'])->name('comments.store');
