@@ -30,6 +30,10 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <nav style="font-size: 0.9rem;">
+        @if(($search ?? '') !== '')
+            <span class="fw-semibold">{{ $items->count() }} result{{ $items->count() === 1 ? '' : 's' }}</span>
+            <span class="text-muted">for &ldquo;{{ $search }}&rdquo;</span>
+        @else
         <a href="{{ route('documents.index') }}" class="text-decoration-none">
             <i class="bi bi-folder2-open me-1"></i> {{ config('services.sharepoint.root_label', 'Documents') }}
         </a>
@@ -41,7 +45,18 @@
                 <a href="{{ route('documents.index', ['folder' => $crumb['id']]) }}" class="text-decoration-none">{{ $crumb['name'] }}</a>
             @endif
         @endforeach
+        @endif
     </nav>
+
+    <form method="GET" class="d-flex gap-2" style="flex: 1; max-width: 420px; margin: 0 16px;">
+        <input type="hidden" name="folder" value="{{ $folder }}">
+        <input type="search" name="q" class="form-control form-control-sm" value="{{ $search ?? '' }}"
+               placeholder="Search files and folders…">
+        <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
+        @if(($search ?? '') !== '')
+            <a href="{{ route('documents.index') }}" class="btn btn-outline-primary btn-sm" title="Clear"><i class="bi bi-x-lg"></i></a>
+        @endif
+    </form>
 
     <div class="d-flex gap-2">
         <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#folderModal">
@@ -87,6 +102,11 @@
                         @else
                             <a href="{{ $item['webUrl'] }}" target="_blank" class="text-decoration-none">{{ $item['name'] }}</a>
                         @endif
+                        @if(($search ?? '') !== '' && !empty($item['parentReference']['path']))
+                            <div class="text-muted" style="font-size: 0.74rem;">
+                                <i class="bi bi-folder me-1"></i>{{ \Illuminate\Support\Str::after($item['parentReference']['path'], 'root:') ?: '/' }}
+                            </div>
+                        @endif
                     </td>
                     <td style="font-size: 0.82rem;">
                         {{ isset($item['lastModifiedDateTime']) ? \Illuminate\Support\Carbon::parse($item['lastModifiedDateTime'])->format('d M Y, H:i') : '—' }}
@@ -124,7 +144,13 @@
                 </tr>
                 @empty
                 <tr><td colspan="5" class="text-center text-muted py-5">
-                    {{ $error ? 'Could not read this folder.' : 'This folder is empty.' }}
+                    @if($error)
+                        Could not read this folder.
+                    @elseif(($search ?? '') !== '')
+                        Nothing matched &ldquo;{{ $search }}&rdquo;.
+                    @else
+                        This folder is empty.
+                    @endif
                 </td></tr>
                 @endforelse
             </tbody>

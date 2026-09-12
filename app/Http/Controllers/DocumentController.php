@@ -33,12 +33,18 @@ class DocumentController extends Controller
                 'items'      => collect(),
                 'breadcrumb' => [],
                 'folder'     => null,
+                'search'     => '',
             ]);
         }
 
+        $search = trim((string) $request->get('q', ''));
+
         try {
-            $items = collect($this->sharepoint->children($folder));
-            $breadcrumb = $this->sharepoint->breadcrumb($folder);
+            $items = $search !== ''
+                ? collect($this->sharepoint->search($search, $this->sharepoint->rootFolder()))
+                : collect($this->sharepoint->children($folder));
+
+            $breadcrumb = $search !== '' ? [] : $this->sharepoint->breadcrumb($folder);
             $error = null;
         } catch (\Throwable $e) {
             $items = collect();
@@ -52,7 +58,7 @@ class DocumentController extends Controller
             fn($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''),
         ])->values();
 
-        return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error'));
+        return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search'));
     }
 
     /** New blank Word or Excel document, created then opened for editing. */

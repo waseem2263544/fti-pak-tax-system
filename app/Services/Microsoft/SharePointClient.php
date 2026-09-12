@@ -125,6 +125,32 @@ class SharePointClient
         return $response->json('value', []);
     }
 
+    /**
+     * Search names and content, scoped to a folder when one is given.
+     *
+     * Graph's search is fuzzy and covers file contents as well as names, so a
+     * hit may not have the term in its title — results carry their parent path
+     * so the user can see where each one actually lives.
+     */
+    public function search(string $query, ?string $scopeId = null): array
+    {
+        $drive = $this->driveId();
+        $q = str_replace("'", "''", $query);
+        $base = $scopeId ? "/drives/{$drive}/items/{$scopeId}" : "/drives/{$drive}/root";
+
+        $response = $this->request()->get(
+            self::GRAPH . $base . "/search(q='" . rawurlencode($q) . "')",
+            [
+                '$select' => 'id,name,size,webUrl,folder,file,lastModifiedDateTime,lastModifiedBy,parentReference',
+                '$top'    => 200,
+            ]
+        );
+
+        $this->guard($response);
+
+        return $response->json('value', []);
+    }
+
     public function item(string $itemId): array
     {
         $response = $this->request()->get(self::GRAPH . "/drives/{$this->driveId()}/items/{$itemId}", [
