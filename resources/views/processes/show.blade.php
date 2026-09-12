@@ -23,22 +23,22 @@
         <div class="d-flex gap-2 mb-4">
             @foreach(['intake' => 'Intake', 'in_progress' => 'In Progress', 'review' => 'Review', 'completed' => 'Completed'] as $key => $label)
             <div style="flex: 1; padding: 12px; border-radius: 10px; text-align: center; font-size: 0.8rem; font-weight: 600;
-                background: {{ $process->stage == $key ? 'var(--accent)' : '#f3f4f6' }};
-                color: {{ $process->stage == $key ? 'var(--primary)' : '#9ca3af' }};">
+                background: {{ $process->stage == $key ? 'var(--accent)' : 'var(--n-50)' }};
+                color: {{ $process->stage == $key ? 'var(--primary)' : 'var(--n-400)' }};">
                 {{ $label }}
             </div>
             @endforeach
         </div>
 
         <div class="row">
-            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: #9ca3af;">ASSIGNED TO</strong><br>{{ $process->assignedTo->name ?? 'Unassigned' }}</div>
-            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: #9ca3af;">START DATE</strong><br>{{ $process->start_date?->format('M d, Y') ?? '-' }}</div>
-            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: #9ca3af;">DUE DATE</strong><br>{{ $process->due_date?->format('M d, Y') ?? '-' }}</div>
-            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: #9ca3af;">COMPLETED</strong><br>{{ $process->completed_date?->format('M d, Y') ?? '-' }}</div>
+            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: var(--n-400);">ASSIGNED TO</strong><br>{{ $process->assignedTo->name ?? 'Unassigned' }}</div>
+            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: var(--n-400);">START DATE</strong><br>{{ $process->start_date?->format('M d, Y') ?? '-' }}</div>
+            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: var(--n-400);">DUE DATE</strong><br>{{ $process->due_date?->format('M d, Y') ?? '-' }}</div>
+            <div class="col-md-3 mb-3"><strong style="font-size: 0.78rem; color: var(--n-400);">COMPLETED</strong><br>{{ $process->completed_date?->format('M d, Y') ?? '-' }}</div>
         </div>
 
         @if($process->description)
-        <div class="mb-3"><strong style="font-size: 0.78rem; color: #9ca3af;">DESCRIPTION</strong><p class="mt-1">{{ $process->description }}</p></div>
+        <div class="mb-3"><strong style="font-size: 0.78rem; color: var(--n-400);">DESCRIPTION</strong><p class="mt-1">{{ $process->description }}</p></div>
         @endif
     </div>
 </div>
@@ -76,7 +76,7 @@
             ] as $key => $label)
                 @if(!empty($meta[$key]))
                 <div class="col-md-3 mb-3">
-                    <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">{{ $label }}</div>
+                    <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">{{ $label }}</div>
                     <div style="color: var(--primary); font-weight: 500;">
                         @if(in_array($key, ['demand_amount', 'amount_paid', 'balance_demand']))
                             PKR {{ number_format($meta[$key], 2) }}
@@ -91,22 +91,22 @@
 
         @if(!empty($meta['grounds']))
         <div class="mb-3">
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Grounds of Appeal</div>
-            <div style="margin: 8px 0 0; color: #4b5563; line-height: 1.7; background: #fafbfc; padding: 16px; border-radius: 8px; border: 1px solid #f0f2f5;">{!! $meta['grounds'] !!}</div>
+            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Grounds of Appeal</div>
+            <div style="margin: 8px 0 0; color: var(--n-600); line-height: 1.7; background: var(--n-25); padding: 16px; border-radius: 8px; border: 1px solid var(--n-100);">{!! $meta['grounds'] !!}</div>
         </div>
         @endif
 
         @if(!empty($meta['prayer']))
         <div class="mb-3">
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Prayer / Relief Sought</div>
-            <div style="margin: 8px 0 0; color: #4b5563; line-height: 1.7; background: #fafbfc; padding: 16px; border-radius: 8px; border: 1px solid #f0f2f5;">{!! $meta['prayer'] !!}</div>
+            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Prayer / Relief Sought</div>
+            <div style="margin: 8px 0 0; color: var(--n-600); line-height: 1.7; background: var(--n-25); padding: 16px; border-radius: 8px; border: 1px solid var(--n-100);">{!! $meta['prayer'] !!}</div>
         </div>
         @endif
 
         @if(!empty($meta['stay_reasons']))
         <div class="mb-3">
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Brief Facts of the Case</div>
-            <div style="margin: 8px 0 0; color: #4b5563; line-height: 1.7; background: #fafbfc; padding: 16px; border-radius: 8px; border: 1px solid #f0f2f5;">{!! $meta['stay_reasons'] !!}</div>
+            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Brief Facts of the Case</div>
+            <div style="margin: 8px 0 0; color: var(--n-600); line-height: 1.7; background: var(--n-25); padding: 16px; border-radius: 8px; border: 1px solid var(--n-100);">{!! $meta['stay_reasons'] !!}</div>
         </div>
         @endif
     </div>
@@ -129,7 +129,7 @@
     <div class="card-body" style="padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
         <div>
             <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;"><i class="bi bi-collection me-1"></i>Combined Package</div>
-            <div style="font-size: 0.82rem; color: #6b7280;">All documents merged with running page numbers (Index page stays unnumbered).</div>
+            <div style="font-size: 0.82rem; color: var(--n-500);">All documents merged with running page numbers (Index page stays unnumbered).</div>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('processes.document.combined-pdf', $process) }}" target="_blank" class="btn btn-outline-primary"><i class="bi bi-eye me-1"></i>Open Combined PDF</a>
@@ -148,12 +148,12 @@
         <div class="row g-3">
             @foreach($attachedFiles as $field => $label)
             <div class="col-md-4">
-                <div class="card" style="padding: 14px; border: 1.5px solid #e8eaed;">
+                <div class="card" style="padding: 14px; border: 1.5px solid var(--n-150);">
                     <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem; margin-bottom: 6px;">{{ $label }}</div>
                     @if(!empty($meta[$field]))
-                        <a href="{{ asset($meta[$field]) }}" target="_blank" style="font-size: 0.78rem; color: #2A8AB8;"><i class="bi bi-file-earmark me-1"></i>View / Download</a>
+                        <a href="{{ asset($meta[$field]) }}" target="_blank" style="font-size: 0.78rem; color: var(--info);"><i class="bi bi-file-earmark me-1"></i>View / Download</a>
                     @else
-                        <span style="font-size: 0.78rem; color: #9ca3af;">Not attached yet</span>
+                        <span style="font-size: 0.78rem; color: var(--n-400);">Not attached yet</span>
                     @endif
                 </div>
             </div>
@@ -161,9 +161,9 @@
             @if($process->template === 'st-tribunal-stay-extension')
                 @foreach(($meta['stay_order_files'] ?? []) as $i => $so)
                 <div class="col-md-4">
-                    <div class="card" style="padding: 14px; border: 1.5px solid #e8eaed;">
+                    <div class="card" style="padding: 14px; border: 1.5px solid var(--n-150);">
                         <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem; margin-bottom: 6px;">Previous Stay Order {{ $i + 1 }}</div>
-                        <a href="{{ asset(is_array($so) ? ($so['path'] ?? '') : $so) }}" target="_blank" style="font-size: 0.78rem; color: #2A8AB8;"><i class="bi bi-file-earmark me-1"></i>View / Download</a>
+                        <a href="{{ asset(is_array($so) ? ($so['path'] ?? '') : $so) }}" target="_blank" style="font-size: 0.78rem; color: var(--info);"><i class="bi bi-file-earmark me-1"></i>View / Download</a>
                     </div>
                 </div>
                 @endforeach
@@ -181,7 +181,7 @@
         <span style="font-weight: 700;">Generate Documents</span>
     </div>
     <div class="card-body" style="padding: 20px;">
-        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;">Documents are listed in the same order they appear in the Combined Package.</p>
+        <p style="font-size: 0.85rem; color: var(--n-500); margin-bottom: 16px;">Documents are listed in the same order they appear in the Combined Package.</p>
         @php
             $isStTribunalStay = in_array($process->template, ['st-tribunal-stay', 'st-tribunal-stay-extension'], true);
             $isItTribunalAppeal = $process->template === 'it-tribunal-appeal';
@@ -199,14 +199,14 @@
             @foreach($docCards as $doc)
                 @if((empty($doc['onlyStTribunalStay']) || $isStTribunalStay) && !(($doc['hideForItAppeal'] ?? false) && $isItTribunalAppeal))
                 <div class="col-md-4">
-                    <a href="{{ route('processes.document.preview', [$process, $doc['key']]) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid #e8eaed;">
+                    <a href="{{ route('processes.document.preview', [$process, $doc['key']]) }}" target="_blank" class="card text-decoration-none" style="padding: 16px; transition: all 0.2s; border: 1.5px solid var(--n-150);">
                         <div class="d-flex align-items-center gap-3">
                             <div style="width: 40px; height: 40px; border-radius: 10px; background: {{ $doc['bg'] }}; display: flex; align-items: center; justify-content: center;">
                                 <i class="bi {{ $doc['icon'] }}" style="color: {{ $doc['color'] }}; font-size: 1.1rem;"></i>
                             </div>
                             <div>
                                 <div style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">{{ $doc['name'] }}</div>
-                                <div style="font-size: 0.72rem; color: #9ca3af;">{{ $doc['desc'] }}</div>
+                                <div style="font-size: 0.72rem; color: var(--n-400);">{{ $doc['desc'] }}</div>
                             </div>
                         </div>
                     </a>

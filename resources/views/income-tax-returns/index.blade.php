@@ -19,30 +19,30 @@
     @foreach($colors as $key => $c)
     .st-{{ $key }} { color: {{ $c[0] }}; background-color: {{ $c[1] }}; }
     @endforeach
-    .itr-remarks { border: 1px solid transparent; border-radius: 6px; padding: 5px 8px; width: 100%; font-size: 0.82rem; background: #f8f9fb; transition: border-color .15s; }
+    .itr-remarks { border: 1px solid transparent; border-radius: 6px; padding: 5px 8px; width: 100%; font-size: 0.82rem; background: var(--n-25); transition: border-color .15s; }
     .itr-remarks:focus { border-color: var(--accent, #8b9a00); background: #fff; outline: none; }
-    .saved-tick { color: #10b981; opacity: 0; transition: opacity .2s; font-size: 0.9rem; }
+    .saved-tick { color: var(--ok); opacity: 0; transition: opacity .2s; font-size: 0.9rem; }
     .saved-tick.show { opacity: 1; }
     .dist-seg { height: 100%; float: left; }
     .stat-mini .num { font-size: 1.5rem; font-weight: 700; color: var(--primary); line-height: 1; }
     .stat-mini .pct { font-size: 0.85rem; font-weight: 600; }
-    .stat-mini .lbl { font-size: 0.72rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
+    .stat-mini .lbl { font-size: 0.72rem; color: var(--n-400); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
     /* toolbar polish */
     .itr-toolbar .input-group-text { border-right: 0; padding-right: 4px; }
     .itr-toolbar .input-group .form-control { border-left: 0; padding-left: 4px; box-shadow: none; }
     .itr-toolbar .input-group:focus-within { border-radius: 6px; box-shadow: 0 0 0 .2rem rgba(48,58,80,.08); }
     #itrFilterForm .ts-wrapper { margin: 0; }
-    #itrFilterForm .ts-control { min-height: 31px; padding: 2px 8px; border-radius: 6px; font-size: 0.85rem; border-color: #dee2e6; box-shadow: none; }
-    #itrFilterForm .ts-control .item { background: #eef0f3; color: var(--primary); border-radius: 12px; font-size: 0.78rem; padding: 1px 8px; }
+    #itrFilterForm .ts-control { min-height: 31px; padding: 2px 8px; border-radius: 6px; font-size: 0.85rem; border-color: var(--n-200); box-shadow: none; }
+    #itrFilterForm .ts-control .item { background: var(--n-100); color: var(--primary); border-radius: 12px; font-size: 0.78rem; padding: 1px 8px; }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <div style="color:#6b7280; font-size:0.88rem;">Clients whose active service is <strong>Income Tax Return</strong>. New such clients appear here automatically as <em>Not yet contacted</em>.</div>
-    <div style="font-size:0.85rem; color:#6b7280;">Filed: <strong id="filedPctText" style="color:#10b981;">{{ $filedPct }}%</strong> of {{ $total }}</div>
+    <div style="color:var(--n-500); font-size:0.88rem;">Clients whose active service is <strong>Income Tax Return</strong>. New such clients appear here automatically as <em>Not yet contacted</em>.</div>
+    <div style="font-size:0.85rem; color:var(--n-500);">Filed: <strong id="filedPctText" style="color:var(--ok);">{{ $filedPct }}%</strong> of {{ $total }}</div>
 </div>
 
 <!-- Distribution bar -->
-<div style="height:12px; border-radius:6px; overflow:hidden; background:#eef0f3; margin-bottom:18px;">
+<div style="height:12px; border-radius:6px; overflow:hidden; background:var(--n-100); margin-bottom:18px;">
     <div style="height:100%; width:100%;">
         @foreach($statuses as $key => $label)
         <div class="dist-seg" id="seg-{{ $key }}" style="width: {{ $counts[$key]['pct'] }}%; background: {{ $colors[$key][2] }};" title="{{ $label }}: {{ $counts[$key]['count'] }}"></div>
@@ -145,7 +145,7 @@
             <tbody>
                 @forelse($clients as $i => $client)
                 <tr data-client="{{ $client->id }}">
-                    <td style="color:#9ca3af;">{{ $i + 1 }}</td>
+                    <td style="color:var(--n-400);">{{ $i + 1 }}</td>
                     <td>
                         <a href="{{ route('clients.show', $client) }}" style="font-weight:600; color:var(--primary); text-decoration:none;">{{ $client->name }}</a>
                     </td>
@@ -187,7 +187,7 @@
                             <i class="bi bi-check-circle-fill saved-tick" data-client="{{ $client->id }}"></i>
                         </div>
                     </td>
-                    <td style="font-size:0.8rem; color:#6b7280;" data-updated="{{ $client->id }}">{{ $client->tracker_updated ? $client->tracker_updated->format('d M Y H:i') : '—' }}</td>
+                    <td style="font-size:0.8rem; color:var(--n-500);" data-updated="{{ $client->id }}">{{ $client->tracker_updated ? $client->tracker_updated->format('d M Y H:i') : '—' }}</td>
                     <td class="text-end">
                         @if($showSkipped)
                         <button type="button" class="itr-skip btn btn-sm btn-link text-muted p-0" data-client="{{ $client->id }}" data-skip="0" title="Restore to active list"><i class="bi bi-arrow-counterclockwise"></i></button>
@@ -197,7 +197,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" class="text-center py-5" style="color:#9ca3af;">
+                <tr><td colspan="9" class="text-center py-5" style="color:var(--n-400);">
                     <i class="bi bi-inbox" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i>
                     No clients have Income Tax Return as an active service.
                 </td></tr>

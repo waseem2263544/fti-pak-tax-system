@@ -10,7 +10,7 @@
             <div class="row g-2 align-items-end">
                 <div class="col-md-5">
                     <div style="position: relative;">
-                        <i class="bi bi-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                        <i class="bi bi-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--n-400);"></i>
                         <input type="text" name="search" class="form-control" placeholder="Search by name, email, phone, or FBR username..." value="{{ request('search') }}" style="padding-left: 40px;">
                     </div>
                 </div>
@@ -43,7 +43,7 @@
 
 <!-- Results header -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <div style="font-size: 0.85rem; color: #6b7280;">
+    <div style="font-size: 0.85rem; color: var(--n-500);">
         Showing <strong>{{ $clients->total() }}</strong> client{{ $clients->total() !== 1 ? 's' : '' }}
         @if(request('search')) for "<strong>{{ request('search') }}</strong>" @endif
         @if(request('status')) &middot; Type: <strong>{{ request('status') }}</strong> @endif
@@ -73,33 +73,33 @@
                             <div style="width: 36px; height: 36px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($client->name, 0, 2)) }}</div>
                             <div>
                                 <a href="{{ route('clients.show', $client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 0.88rem;">{{ $client->name }}</a>
-                                @if($client->email)<div style="font-size: 0.75rem; color: #9ca3af;">{{ $client->email }}</div>@endif
+                                @if($client->email)<div style="font-size: 0.75rem; color: var(--n-400);">{{ $client->email }}</div>@endif
                             </div>
                         </div>
                     </td>
-                    <td style="font-size: 0.85rem; color: #6b7280;">{{ $client->contact_no ?: '-' }}</td>
+                    <td style="font-size: 0.85rem; color: var(--n-500);">{{ $client->contact_no ?: '-' }}</td>
                     <td>
                         @if($client->status == 'Individual')
                             <span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">Individual</span>
                         @elseif($client->status == 'AOP')
                             <span class="badge" style="background: var(--accent-glow); color: #5c6300;">AOP</span>
                         @else
-                            <span class="badge" style="background: #dbeafe; color: #1e40af;">Company</span>
+                            <span class="badge" style="background: var(--info-tint); color: var(--info-ink);">Company</span>
                         @endif
                     </td>
                     <td>
                         @if($client->fbr_username)
-                            <span style="font-family: monospace; font-size: 0.78rem; color: #6b7280;">{{ $client->fbr_username }}</span>
+                            <span style="font-family: monospace; font-size: 0.78rem; color: var(--n-500);">{{ $client->fbr_username }}</span>
                         @else
-                            <span style="color: #d1d5db;">-</span>
+                            <span style="color: var(--n-300);">-</span>
                         @endif
                     </td>
                     <td>
                         @php $svcCount = $client->activeServices()->count(); @endphp
                         @if($svcCount > 0)
-                            <span class="badge" style="background: #d1fae5; color: #065f46;">{{ $svcCount }} active</span>
+                            <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">{{ $svcCount }} active</span>
                         @else
-                            <span style="color: #d1d5db; font-size: 0.82rem;">None</span>
+                            <span style="color: var(--n-300); font-size: 0.82rem;">None</span>
                         @endif
                     </td>
                     <td class="text-end">
@@ -115,7 +115,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center py-5" style="color: #9ca3af;">
+                    <td colspan="6" class="text-center py-5" style="color: var(--n-400);">
                         @if(request()->hasAny(['search', 'status', 'service']))
                             <i class="bi bi-search" style="font-size: 2rem; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
                             No clients match your search. <a href="{{ route('clients.index') }}" style="color: var(--primary); font-weight: 600;">Clear filters</a>

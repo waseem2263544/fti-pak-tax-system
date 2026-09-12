@@ -21,24 +21,24 @@
         font-size: 1.5rem; margin-bottom: 16px;
     }
     .process-card h5 { font-weight: 700; color: var(--primary); margin: 0 0 6px; font-size: 1rem; }
-    .process-card p { font-size: 0.82rem; color: #6b7280; margin: 0; line-height: 1.5; }
-    .process-card .arrow { position: absolute; bottom: 20px; right: 20px; color: #d1d5db; font-size: 1.2rem; transition: all 0.2s; }
+    .process-card p { font-size: 0.82rem; color: var(--n-500); margin: 0; line-height: 1.5; }
+    .process-card .arrow { position: absolute; bottom: 20px; right: 20px; color: var(--n-300); font-size: 1.2rem; transition: all 0.2s; }
     .process-card:hover .arrow { color: var(--accent); transform: translateX(4px); }
 
     .sub-option {
         padding: 16px 20px; border-radius: 12px; cursor: pointer;
-        transition: all 0.2s; border: 1.5px solid #e8eaed; background: #fff;
+        transition: all 0.2s; border: 1.5px solid var(--n-150); background: #fff;
         display: flex; align-items: center; gap: 12px;
     }
     .sub-option:hover { border-color: var(--accent); background: var(--accent-glow); }
     .sub-option .sub-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .sub-option h6 { font-weight: 600; color: var(--primary); margin: 0; font-size: 0.88rem; }
-    .sub-option small { color: #9ca3af; font-size: 0.75rem; }
+    .sub-option small { color: var(--n-400); font-size: 0.75rem; }
 
     .breadcrumb-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; }
-    .breadcrumb-nav a { color: #9ca3af; text-decoration: none; }
+    .breadcrumb-nav a { color: var(--n-400); text-decoration: none; }
     .breadcrumb-nav a:hover { color: var(--primary); }
-    .breadcrumb-nav .sep { color: #d1d5db; }
+    .breadcrumb-nav .sep { color: var(--n-300); }
     .breadcrumb-nav .current { color: var(--primary); font-weight: 600; }
 </style>
 @endsection
@@ -49,7 +49,7 @@
 @if($step === 'home')
 <!-- Process Templates -->
 <div class="mb-4">
-    <p style="color: #6b7280; font-size: 0.88rem;">Select a process to automate document generation and workflows.</p>
+    <p style="color: var(--n-500); font-size: 0.88rem;">Select a process to automate document generation and workflows.</p>
 </div>
 
 <div class="row g-4">
@@ -69,22 +69,22 @@
     <div class="col-md-4">
         <div class="card process-card" style="opacity: 0.5; cursor: default;" onclick="">
             <div class="icon-box" style="background: rgba(59,130,246,0.08);">
-                <i class="bi bi-file-earmark-text" style="color: #3b82f6;"></i>
+                <i class="bi bi-file-earmark-text" style="color: var(--info);"></i>
             </div>
             <h5>Reply to Notice</h5>
             <p>Generate reply documents for FBR notices under various sections of the Income Tax Ordinance.</p>
-            <span class="badge" style="background: #f3f4f6; color: #9ca3af; position: absolute; top: 16px; right: 16px;">Coming Soon</span>
+            <span class="badge" style="background: var(--n-50); color: var(--n-400); position: absolute; top: 16px; right: 16px;">Coming Soon</span>
         </div>
     </div>
 
     <div class="col-md-4">
         <div class="card process-card" style="opacity: 0.5; cursor: default;" onclick="">
             <div class="icon-box" style="background: rgba(245,158,11,0.08);">
-                <i class="bi bi-building" style="color: #f59e0b;"></i>
+                <i class="bi bi-building" style="color: var(--warn);"></i>
             </div>
             <h5>Company Registration</h5>
             <p>SECP company incorporation and registration documents with automatic form filling.</p>
-            <span class="badge" style="background: #f3f4f6; color: #9ca3af; position: absolute; top: 16px; right: 16px;">Coming Soon</span>
+            <span class="badge" style="background: var(--n-50); color: var(--n-400); position: absolute; top: 16px; right: 16px;">Coming Soon</span>
         </div>
     </div>
 </div>
@@ -99,7 +99,7 @@
 
 <div class="mb-4">
     <h4 style="font-weight: 700; color: var(--primary);">Filing of Appeal</h4>
-    <p style="color: #6b7280; font-size: 0.88rem;">Select the type of appeal to file.</p>
+    <p style="color: var(--n-500); font-size: 0.88rem;">Select the type of appeal to file.</p>
 </div>
 
 <div class="row g-4">
@@ -116,7 +116,7 @@
     <div class="col-md-6">
         <div class="card process-card" onclick="location.href='{{ route('processes.index', ['step' => 'appeal-sales-tax']) }}'">
             <div class="icon-box" style="background: rgba(16,185,129,0.08);">
-                <i class="bi bi-receipt" style="color: #10b981;"></i>
+                <i class="bi bi-receipt" style="color: var(--ok);"></i>
             </div>
             <h5>Sales Tax / FED Appeal</h5>
             <p>File appeals under the Sales Tax Act, 1990 or Federal Excise Duty at Commissioner Appeals or Appellate Tribunal.</p>
@@ -137,13 +137,13 @@
 
 <div class="mb-4">
     <h4 style="font-weight: 700; color: var(--primary);">Income Tax Appeal</h4>
-    <p style="color: #6b7280; font-size: 0.88rem;">Select the appellate level.</p>
+    <p style="color: var(--n-500); font-size: 0.88rem;">Select the appellate level.</p>
 </div>
 
 <div class="row g-3">
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'it-commissioner-appeal']) }}" class="sub-option text-decoration-none">
-            <div class="sub-icon" style="background: rgba(59,130,246,0.08);"><i class="bi bi-building" style="color: #3b82f6;"></i></div>
+            <div class="sub-icon" style="background: rgba(59,130,246,0.08);"><i class="bi bi-building" style="color: var(--info);"></i></div>
             <div>
                 <h6>Commissioner Inland Revenue (Appeals)</h6>
                 <small>First appeal under Section 127 of ITO 2001</small>
@@ -170,7 +170,7 @@
     </div>
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'it-commissioner-stay']) }}" class="sub-option text-decoration-none">
-            <div class="sub-icon" style="background: rgba(245,158,11,0.08);"><i class="bi bi-pause-circle" style="color: #f59e0b;"></i></div>
+            <div class="sub-icon" style="background: rgba(245,158,11,0.08);"><i class="bi bi-pause-circle" style="color: var(--warn);"></i></div>
             <div>
                 <h6>Stay Application to CIR(A)</h6>
                 <small>Stay of demand pending appeal at Commissioner level</small>
@@ -191,13 +191,13 @@
 
 <div class="mb-4">
     <h4 style="font-weight: 700; color: var(--primary);">Sales Tax / FED Appeal</h4>
-    <p style="color: #6b7280; font-size: 0.88rem;">Select the appellate level.</p>
+    <p style="color: var(--n-500); font-size: 0.88rem;">Select the appellate level.</p>
 </div>
 
 <div class="row g-3">
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'st-commissioner-appeal']) }}" class="sub-option text-decoration-none">
-            <div class="sub-icon" style="background: rgba(59,130,246,0.08);"><i class="bi bi-building" style="color: #3b82f6;"></i></div>
+            <div class="sub-icon" style="background: rgba(59,130,246,0.08);"><i class="bi bi-building" style="color: var(--info);"></i></div>
             <div>
                 <h6>Commissioner Inland Revenue (Appeals)</h6>
                 <small>First appeal under Section 45B of Sales Tax Act 1990</small>
@@ -224,7 +224,7 @@
     </div>
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'st-tribunal-stay-extension']) }}" class="sub-option text-decoration-none">
-            <div class="sub-icon" style="background: rgba(16,185,129,0.08);"><i class="bi bi-arrow-clockwise" style="color: #10b981;"></i></div>
+            <div class="sub-icon" style="background: rgba(16,185,129,0.08);"><i class="bi bi-arrow-clockwise" style="color: var(--ok);"></i></div>
             <div>
                 <h6>Extension of Stay Application to ATIR</h6>
                 <small>Extend an existing stay — pulls all data from the original stay application</small>
@@ -233,7 +233,7 @@
     </div>
     <div class="col-md-6">
         <a href="{{ route('processes.create', ['template' => 'st-commissioner-stay']) }}" class="sub-option text-decoration-none">
-            <div class="sub-icon" style="background: rgba(245,158,11,0.08);"><i class="bi bi-pause-circle" style="color: #f59e0b;"></i></div>
+            <div class="sub-icon" style="background: rgba(245,158,11,0.08);"><i class="bi bi-pause-circle" style="color: var(--warn);"></i></div>
             <div>
                 <h6>Stay Application to CIR(A)</h6>
                 <small>Stay of demand pending Sales Tax appeal at Commissioner level</small>
@@ -270,13 +270,13 @@
                     <td style="font-weight: 600; color: var(--primary);">{{ $process->title }}</td>
                     <td>{{ $process->client->name ?? '-' }}</td>
                     <td>
-                        @if($process->stage == 'intake') <span class="badge" style="background: #f3f4f6; color: #6b7280;">Intake</span>
-                        @elseif($process->stage == 'in_progress') <span class="badge" style="background: #dbeafe; color: #1e40af;">In Progress</span>
-                        @elseif($process->stage == 'review') <span class="badge" style="background: #fef3c7; color: #92400e;">Review</span>
-                        @else <span class="badge" style="background: #d1fae5; color: #065f46;">Completed</span>
+                        @if($process->stage == 'intake') <span class="badge" style="background: var(--n-50); color: var(--n-500);">Intake</span>
+                        @elseif($process->stage == 'in_progress') <span class="badge" style="background: var(--info-tint); color: var(--info-ink);">In Progress</span>
+                        @elseif($process->stage == 'review') <span class="badge" style="background: var(--warn-tint); color: var(--warn-ink);">Review</span>
+                        @else <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">Completed</span>
                         @endif
                     </td>
-                    <td style="font-size: 0.82rem; color: #6b7280;">{{ $process->created_at->format('M d, Y') }}</td>
+                    <td style="font-size: 0.82rem; color: var(--n-500);">{{ $process->created_at->format('M d, Y') }}</td>
                     <td class="text-end">
                         <a href="{{ route('processes.show', $process) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                     </td>

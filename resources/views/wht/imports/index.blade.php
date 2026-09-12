@@ -8,7 +8,7 @@
 @if(!$analysis)
 <div class="card" style="max-width: 780px;">
     <div class="card-body">
-        <p style="color: #9ca3af; font-size: 0.85rem;">
+        <p style="color: var(--n-400); font-size: 0.85rem;">
             Upload a client's payment sheet. Columns are matched by name, so most sheets work as they
             arrive — anything missing is worked out from the payee's defaults.
         </p>

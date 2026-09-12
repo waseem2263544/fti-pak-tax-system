@@ -4,31 +4,31 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Track cases across Department, Commissioner Appeals, and Tribunal stages.</p>
+    <p style="color: var(--n-400); font-size: 0.85rem; margin: 0;">Track cases across Department, Commissioner Appeals, and Tribunal stages.</p>
     <a href="{{ route('proceedings.create') }}" class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> New Proceeding</a>
 </div>
 
 <!-- Tabs -->
-<ul class="nav nav-tabs mb-0" style="border-bottom: 2px solid #e8eaed;">
+<ul class="nav nav-tabs mb-0" style="border-bottom: 2px solid var(--n-150);">
     <li class="nav-item">
         <a class="nav-link {{ $tab == 'department' ? 'active' : '' }}" href="{{ route('proceedings.index', ['tab' => 'department']) }}"
-           style="{{ $tab == 'department' ? 'color: var(--primary); font-weight: 700; border-bottom: 3px solid var(--accent);' : 'color: #9ca3af;' }} font-size: 0.9rem; padding: 12px 24px;">
+           style="{{ $tab == 'department' ? 'color: var(--primary); font-weight: 700; border-bottom: 3px solid var(--accent);' : 'color: var(--n-400);' }} font-size: 0.9rem; padding: 12px 24px;">
             <i class="bi bi-building me-1"></i> Department
-            <span class="badge" style="background: {{ $tab == 'department' ? 'var(--accent)' : '#e5e7eb' }}; color: {{ $tab == 'department' ? 'var(--primary)' : '#6b7280' }}; margin-left: 6px;">{{ $department->count() }}</span>
+            <span class="badge" style="background: {{ $tab == 'department' ? 'var(--accent)' : 'var(--n-150)' }}; color: {{ $tab == 'department' ? 'var(--primary)' : 'var(--n-500)' }}; margin-left: 6px;">{{ $department->count() }}</span>
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link {{ $tab == 'commissioner_appeals' ? 'active' : '' }}" href="{{ route('proceedings.index', ['tab' => 'commissioner_appeals']) }}"
-           style="{{ $tab == 'commissioner_appeals' ? 'color: var(--primary); font-weight: 700; border-bottom: 3px solid var(--accent);' : 'color: #9ca3af;' }} font-size: 0.9rem; padding: 12px 24px;">
+           style="{{ $tab == 'commissioner_appeals' ? 'color: var(--primary); font-weight: 700; border-bottom: 3px solid var(--accent);' : 'color: var(--n-400);' }} font-size: 0.9rem; padding: 12px 24px;">
             <i class="bi bi-bank me-1"></i> Commissioner Appeals
-            <span class="badge" style="background: {{ $tab == 'commissioner_appeals' ? 'var(--accent)' : '#e5e7eb' }}; color: {{ $tab == 'commissioner_appeals' ? 'var(--primary)' : '#6b7280' }}; margin-left: 6px;">{{ $commissioner->count() }}</span>
+            <span class="badge" style="background: {{ $tab == 'commissioner_appeals' ? 'var(--accent)' : 'var(--n-150)' }}; color: {{ $tab == 'commissioner_appeals' ? 'var(--primary)' : 'var(--n-500)' }}; margin-left: 6px;">{{ $commissioner->count() }}</span>
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link {{ $tab == 'tribunal' ? 'active' : '' }}" href="{{ route('proceedings.index', ['tab' => 'tribunal']) }}"
-           style="{{ $tab == 'tribunal' ? 'color: var(--primary); font-weight: 700; border-bottom: 3px solid var(--accent);' : 'color: #9ca3af;' }} font-size: 0.9rem; padding: 12px 24px;">
+           style="{{ $tab == 'tribunal' ? 'color: var(--primary); font-weight: 700; border-bottom: 3px solid var(--accent);' : 'color: var(--n-400);' }} font-size: 0.9rem; padding: 12px 24px;">
             <i class="bi bi-bank2 me-1"></i> Tribunal
-            <span class="badge" style="background: {{ $tab == 'tribunal' ? 'var(--accent)' : '#e5e7eb' }}; color: {{ $tab == 'tribunal' ? 'var(--primary)' : '#6b7280' }}; margin-left: 6px;">{{ $tribunal->count() }}</span>
+            <span class="badge" style="background: {{ $tab == 'tribunal' ? 'var(--accent)' : 'var(--n-150)' }}; color: {{ $tab == 'tribunal' ? 'var(--primary)' : 'var(--n-500)' }}; margin-left: 6px;">{{ $tribunal->count() }}</span>
         </a>
     </li>
 </ul>
@@ -65,7 +65,7 @@
                     <td>{{ $proceeding->section ?? '-' }}</td>
                     <td>
                         @if($proceeding->hearing_date)
-                            <span style="{{ $proceeding->hearing_date->isPast() ? 'color: #ef4444;' : '' }}">
+                            <span style="{{ $proceeding->hearing_date->isPast() ? 'color: var(--danger);' : '' }}">
                                 {{ $proceeding->hearing_date->format('M d, Y') }}
                             </span>
                         @else
@@ -74,13 +74,13 @@
                     </td>
                     <td>
                         @if($proceeding->status == 'pending')
-                            <span class="badge" style="background: #fef3c7; color: #92400e;">Pending</span>
+                            <span class="badge" style="background: var(--warn-tint); color: var(--warn-ink);">Pending</span>
                         @elseif($proceeding->status == 'adjourned')
-                            <span class="badge" style="background: #dbeafe; color: #1e40af;">Adjourned</span>
+                            <span class="badge" style="background: var(--info-tint); color: var(--info-ink);">Adjourned</span>
                         @elseif($proceeding->status == 'decided')
-                            <span class="badge" style="background: #d1fae5; color: #065f46;">Decided</span>
+                            <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">Decided</span>
                         @else
-                            <span class="badge" style="background: #fef2f2; color: #dc2626;">Appealed</span>
+                            <span class="badge" style="background: var(--danger-tint); color: var(--danger);">Appealed</span>
                         @endif
                     </td>
                     <td>{{ $proceeding->assignedTo->name ?? '-' }}</td>
@@ -95,7 +95,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" class="text-center py-5" style="color: #9ca3af;">No proceedings at this stage.</td></tr>
+                <tr><td colspan="9" class="text-center py-5" style="color: var(--n-400);">No proceedings at this stage.</td></tr>
                 @endforelse
             </tbody>
         </table>

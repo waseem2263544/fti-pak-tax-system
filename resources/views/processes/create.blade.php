@@ -25,14 +25,14 @@ $isStay = str_contains($template, 'stay');
 @section('content')
 <!-- Breadcrumb -->
 <div class="d-flex align-items-center gap-2 mb-4" style="font-size: 0.85rem;">
-    <a href="{{ route('processes.index') }}" style="color: #9ca3af; text-decoration: none;"><i class="bi bi-house me-1"></i>Processes</a>
+    <a href="{{ route('processes.index') }}" style="color: var(--n-400); text-decoration: none;"><i class="bi bi-house me-1"></i>Processes</a>
     @if($isAppeal)
-    <span style="color: #d1d5db;"><i class="bi bi-chevron-right"></i></span>
-    <a href="{{ route('processes.index', ['step' => 'appeal']) }}" style="color: #9ca3af; text-decoration: none;">Filing of Appeal</a>
-    <span style="color: #d1d5db;"><i class="bi bi-chevron-right"></i></span>
-    <a href="{{ route('processes.index', ['step' => $isIncomeTax ? 'appeal-income-tax' : 'appeal-sales-tax']) }}" style="color: #9ca3af; text-decoration: none;">{{ $isIncomeTax ? 'Income Tax' : 'Sales Tax/FED' }}</a>
+    <span style="color: var(--n-300);"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ route('processes.index', ['step' => 'appeal']) }}" style="color: var(--n-400); text-decoration: none;">Filing of Appeal</a>
+    <span style="color: var(--n-300);"><i class="bi bi-chevron-right"></i></span>
+    <a href="{{ route('processes.index', ['step' => $isIncomeTax ? 'appeal-income-tax' : 'appeal-sales-tax']) }}" style="color: var(--n-400); text-decoration: none;">{{ $isIncomeTax ? 'Income Tax' : 'Sales Tax/FED' }}</a>
     @endif
-    <span style="color: #d1d5db;"><i class="bi bi-chevron-right"></i></span>
+    <span style="color: var(--n-300);"><i class="bi bi-chevron-right"></i></span>
     <span style="color: var(--primary); font-weight: 600;">{{ $templateTitle }}</span>
 </div>
 
@@ -48,7 +48,7 @@ $isStay = str_contains($template, 'stay');
             @elseif($isTribunal)
                 <i class="bi bi-bank2" style="color: #7c3aed;"></i>
             @else
-                <i class="bi bi-building" style="color: #3b82f6;"></i>
+                <i class="bi bi-building" style="color: var(--info);"></i>
             @endif
             <span style="font-weight: 700;">{{ $templateTitle }}</span>
         </div>
@@ -348,7 +348,7 @@ $isStay = str_contains($template, 'stay');
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Balance Demand (PKR)</label>
-                    <input type="number" name="balance_demand" class="form-control" value="{{ old('balance_demand') }}" step="0.01" readonly style="background: #f8f9fb;">
+                    <input type="number" name="balance_demand" class="form-control" value="{{ old('balance_demand') }}" step="0.01" readonly style="background: var(--n-25);">
                 </div>
             </div>
             @endif
@@ -428,10 +428,10 @@ $isStay = str_contains($template, 'stay');
 </style>
 @else
 <style>
-.editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid #ced4da; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 8px; background: #f8f9fb; }
-.ed-btn { background: #fff; border: 1px solid #e2e6ea; border-radius: 4px; font-size: 0.85rem; padding: 3px 9px; cursor: pointer; color: #303a50; line-height: 1.2; min-width: 30px; }
-.ed-btn:hover { background: #eef0f3; }
-.ed-sep { display: inline-block; border-left: 1px solid #d1d5db; height: 18px; margin: 0 4px; }
+.editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid var(--n-300); border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 8px; background: var(--n-25); }
+.ed-btn { background: #fff; border: 1px solid var(--n-200); border-radius: 4px; font-size: 0.85rem; padding: 3px 9px; cursor: pointer; color: var(--primary); line-height: 1.2; min-width: 30px; }
+.ed-btn:hover { background: var(--n-100); }
+.ed-sep { display: inline-block; border-left: 1px solid var(--n-300); height: 18px; margin: 0 4px; }
 [contenteditable="true"].form-control { border-top-left-radius: 0; border-top-right-radius: 0; }
 [contenteditable="true"] ul { list-style: disc; padding-left: 2em; margin: 0.5em 0; }
 [contenteditable="true"] ol { list-style: decimal; padding-left: 2em; margin: 0.5em 0; }

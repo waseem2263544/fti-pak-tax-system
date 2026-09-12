@@ -14,7 +14,7 @@
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Section × category × ATL status, versioned by month.</p>
+    <p style="color: var(--n-400); font-size: 0.85rem; margin: 0;">Section × category × ATL status, versioned by month.</p>
     <a href="{{ route('wht.rates.create') }}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i> Add Rate</a>
 </div>
 

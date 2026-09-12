@@ -4,13 +4,13 @@
     @endif
     @if($task->due_date)
         @php $days = now()->startOfDay()->diffInDays($task->due_date, false); @endphp
-        <span style="{{ $days < 0 ? 'color: #dc2626; font-weight: 600;' : ($days <= 3 ? 'color: #d97706;' : '') }}">
+        <span style="{{ $days < 0 ? 'color: var(--danger); font-weight: 600;' : ($days <= 3 ? 'color: var(--warn);' : '') }}">
             <i class="bi bi-calendar me-1"></i>{{ $task->due_date->format('M d') }}
             @if($days < 0) ({{ abs($days) }}d late) @elseif($days == 0) (Today) @elseif($days <= 3) ({{ $days }}d) @endif
         </span>
     @endif
     @if($task->priority == 2)
-        <span style="color: #dc2626; font-weight: 600;"><i class="bi bi-flag-fill"></i></span>
+        <span style="color: var(--danger); font-weight: 600;"><i class="bi bi-flag-fill"></i></span>
     @endif
 </div>
 @if($task->assignedUsers->count())

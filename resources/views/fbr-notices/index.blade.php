@@ -5,14 +5,14 @@
 @section('styles')
 <style>
     .notice-row { cursor: pointer; transition: all 0.15s; }
-    .notice-row:hover { background: #fafbfc !important; }
+    .notice-row:hover { background: var(--n-25) !important; }
     .notice-row.unread td:first-child { border-left: 3px solid var(--accent); }
     .notice-row.unread .notice-subject { font-weight: 700; }
-    .notice-expanded { background: #fafbfc !important; }
-    .notice-detail { display: none; background: #f8f9fb; }
+    .notice-expanded { background: var(--n-25) !important; }
+    .notice-detail { display: none; background: var(--n-25); }
     .notice-detail.show { display: table-row; }
-    .notice-body { padding: 20px 24px; font-size: 0.85rem; color: #4b5563; line-height: 1.7; max-height: 300px; overflow-y: auto; }
-    .tab-btn { padding: 10px 20px; font-size: 0.85rem; font-weight: 600; border: none; background: none; color: #9ca3af; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .notice-body { padding: 20px 24px; font-size: 0.85rem; color: var(--n-600); line-height: 1.7; max-height: 300px; overflow-y: auto; }
+    .tab-btn { padding: 10px 20px; font-size: 0.85rem; font-weight: 600; border: none; background: none; color: var(--n-400); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
     .tab-btn:hover { color: var(--primary); }
     .tab-btn.active { color: var(--primary); border-bottom-color: var(--accent); }
     .tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; margin-left: 6px; padding: 0 6px; }
@@ -22,15 +22,15 @@
 @section('content')
 <!-- Tabs -->
 <div class="card mb-4">
-    <div class="d-flex align-items-center justify-content-between" style="padding: 0 20px; border-bottom: 1px solid #f0f2f5;">
+    <div class="d-flex align-items-center justify-content-between" style="padding: 0 20px; border-bottom: 1px solid var(--n-100);">
         <div class="d-flex">
             <a href="{{ route('fbr-notices.index', array_merge(request()->except('filter'), ['filter' => 'pending'])) }}" class="tab-btn {{ $filter == 'pending' ? 'active' : '' }}">
                 <i class="bi bi-inbox me-1"></i> Needs Attention
-                <span class="tab-count" style="background: {{ $pendingCount > 0 ? '#fef2f2' : '#f3f4f6' }}; color: {{ $pendingCount > 0 ? '#dc2626' : '#9ca3af' }};">{{ $pendingCount }}</span>
+                <span class="tab-count" style="background: {{ $pendingCount > 0 ? 'var(--danger-tint)' : 'var(--n-50)' }}; color: {{ $pendingCount > 0 ? 'var(--danger)' : 'var(--n-400)' }};">{{ $pendingCount }}</span>
             </a>
             <a href="{{ route('fbr-notices.index', array_merge(request()->except('filter'), ['filter' => 'actioned'])) }}" class="tab-btn {{ $filter == 'actioned' ? 'active' : '' }}">
                 <i class="bi bi-check-circle me-1"></i> Actioned
-                <span class="tab-count" style="background: #d1fae5; color: #065f46;">{{ $actionedCount }}</span>
+                <span class="tab-count" style="background: var(--ok-tint); color: var(--ok-ink);">{{ $actionedCount }}</span>
             </a>
             <a href="{{ route('fbr-notices.index', array_merge(request()->except('filter'), ['filter' => 'all'])) }}" class="tab-btn {{ $filter == 'all' ? 'active' : '' }}">
                 <i class="bi bi-list me-1"></i> All
@@ -92,24 +92,24 @@
                         <div class="notice-subject" style="font-size: 0.88rem; color: var(--primary);">{{ Str::limit($notice->subject, 55) }}</div>
                     </td>
                     <td><span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $notice->notice_section ?? 'General' }}</span></td>
-                    <td style="font-size: 0.85rem; color: #6b7280;">{{ $notice->tax_year ?? '-' }}</td>
+                    <td style="font-size: 0.85rem; color: var(--n-500);">{{ $notice->tax_year ?? '-' }}</td>
                     <td>
                         @if($notice->client)
                             <a href="{{ route('clients.show', $notice->client) }}" style="color: var(--primary); font-weight: 500; text-decoration: none;" onclick="event.stopPropagation();">{{ Str::limit($notice->client->name, 25) }}</a>
                         @else
-                            <span style="color: #d1d5db;">Unassigned</span>
+                            <span style="color: var(--n-300);">Unassigned</span>
                         @endif
                     </td>
                     <td>
                         @if($notice->status == 'new')
                             <span class="badge" style="background: var(--accent); color: var(--primary); font-weight: 700;">Unread</span>
                         @elseif($notice->status == 'reviewed')
-                            <span class="badge" style="background: #fef3c7; color: #92400e;">Read</span>
+                            <span class="badge" style="background: var(--warn-tint); color: var(--warn-ink);">Read</span>
                         @else
-                            <span class="badge" style="background: #d1fae5; color: #065f46;">Actioned</span>
+                            <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">Actioned</span>
                         @endif
                     </td>
-                    <td style="font-size: 0.82rem; color: #6b7280;">{{ $notice->email_received_at instanceof \Carbon\Carbon ? $notice->email_received_at->format('M d') : $notice->email_received_at }}</td>
+                    <td style="font-size: 0.82rem; color: var(--n-500);">{{ $notice->email_received_at instanceof \Carbon\Carbon ? $notice->email_received_at->format('M d') : $notice->email_received_at }}</td>
                     <td class="text-end" onclick="event.stopPropagation();">
                         <div class="d-flex gap-1 justify-content-end">
                             <button class="btn btn-sm btn-outline-primary" onclick="toggleNotice({{ $notice->id }})" title="Read"><i class="bi bi-book"></i></button>
@@ -130,7 +130,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
                                     <h6 style="font-weight: 700; color: var(--primary); margin: 0;">{{ $notice->subject }}</h6>
-                                    <div style="font-size: 0.78rem; color: #9ca3af; margin-top: 4px;">
+                                    <div style="font-size: 0.78rem; color: var(--n-400); margin-top: 4px;">
                                         From: {{ $notice->sender_email }} &middot;
                                         {{ $notice->email_received_at instanceof \Carbon\Carbon ? $notice->email_received_at->format('M d, Y H:i') : $notice->email_received_at }}
                                     </div>
@@ -147,7 +147,7 @@
                                 </div>
                                 @endif
                             </div>
-                            <div style="background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #e8eaed;">
+                            <div style="background: #fff; border-radius: 8px; padding: 16px; border: 1px solid var(--n-150);">
                                 {!! nl2br(e($notice->body ?: 'No preview available.')) !!}
                             </div>
                             @if(!$notice->client)
@@ -170,7 +170,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5" style="color: #9ca3af;">
+                    <td colspan="7" class="text-center py-5" style="color: var(--n-400);">
                         @if($filter == 'pending')
                             <i class="bi bi-check-circle" style="font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
                             All caught up! No notices need attention.
@@ -195,7 +195,7 @@
 <div class="modal fade" id="proceedingsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
-            <div class="modal-header" style="border-bottom: 1px solid #f0f2f5; padding: 20px 24px;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--n-100); padding: 20px 24px;">
                 <h5 style="font-weight: 700; color: var(--primary); margin: 0; font-size: 1rem;"><i class="bi bi-bank2 me-2" style="color: var(--accent);"></i>Add to Proceedings</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -263,7 +263,7 @@
                         <textarea name="notes" class="form-control" rows="2" placeholder="Any additional notes..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top: 1px solid #f0f2f5; padding: 16px 24px;">
+                <div class="modal-footer" style="border-top: 1px solid var(--n-100); padding: 16px 24px;">
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-accent btn-sm"><i class="bi bi-bank2 me-1"></i>Add Proceeding</button>
                 </div>

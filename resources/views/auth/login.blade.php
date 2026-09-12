@@ -46,7 +46,7 @@
     </div>
     <div class="login-body">
         <h5 style="font-weight: 700; color: var(--primary); margin: 0 0 4px;">Welcome back</h5>
-        <p style="color: #9ca3af; font-size: 0.85rem; margin: 0 0 28px;">Sign in to your account</p>
+        <p style="color: var(--n-400); font-size: 0.85rem; margin: 0 0 28px;">Sign in to your account</p>
 
         @if($errors->any())
         <div class="alert alert-danger py-2 mb-3" style="font-size: 0.82rem;">
@@ -61,26 +61,26 @@
             <div class="mb-3">
                 <label for="email" class="form-label">Email address</label>
                 <div style="position: relative;">
-                    <i class="bi bi-envelope" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                    <i class="bi bi-envelope" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--n-400);"></i>
                     <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required autofocus placeholder="you@company.com" style="padding-left: 40px;">
                 </div>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <div style="position: relative;">
-                    <i class="bi bi-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                    <i class="bi bi-lock" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--n-400);"></i>
                     <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password" style="padding-left: 40px;">
                 </div>
             </div>
             <div class="form-check mb-4">
                 <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                <label class="form-check-label small" for="remember" style="color: #6b7280;">Remember me</label>
+                <label class="form-check-label small" for="remember" style="color: var(--n-500);">Remember me</label>
             </div>
             <button type="submit" class="btn btn-accent w-100" style="padding: 12px; font-size: 0.95rem;">
                 Sign In <i class="bi bi-arrow-right ms-1"></i>
             </button>
         </form>
-        <p style="text-align: center; margin: 28px 0 0; color: #d1d5db; font-size: 0.72rem;">&copy; {{ date('Y') }} FTI Pak. All rights reserved.</p>
+        <p style="text-align: center; margin: 28px 0 0; color: var(--n-300); font-size: 0.72rem;">&copy; {{ date('Y') }} FTI Pak. All rights reserved.</p>
     </div>
 </div>
 @endsection

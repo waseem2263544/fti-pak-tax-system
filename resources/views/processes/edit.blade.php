@@ -31,7 +31,7 @@ $templateNames = [
             <div class="d-flex align-items-center gap-2">
                 @if($isStay) <i class="bi bi-shield-check" style="color: #8b9a00;"></i>
                 @elseif($isTribunal) <i class="bi bi-bank2" style="color: #7c3aed;"></i>
-                @elseif($isAppeal) <i class="bi bi-building" style="color: #3b82f6;"></i>
+                @elseif($isAppeal) <i class="bi bi-building" style="color: var(--info);"></i>
                 @else <i class="bi bi-arrow-repeat" style="color: var(--accent);"></i>
                 @endif
                 <span style="font-weight: 700;">{{ $templateNames[$template] ?? 'Edit Process' }}</span>
@@ -318,7 +318,7 @@ $templateNames = [
                 </div>
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Balance Demand (PKR)</label>
-                    <input type="number" name="balance_demand" class="form-control" value="{{ old('balance_demand', $meta['balance_demand'] ?? '') }}" readonly style="background: #f8f9fb;">
+                    <input type="number" name="balance_demand" class="form-control" value="{{ old('balance_demand', $meta['balance_demand'] ?? '') }}" readonly style="background: var(--n-25);">
                 </div>
             </div>
             @endif
@@ -396,10 +396,10 @@ $templateNames = [
 </style>
 @else
 <style>
-.editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid #ced4da; border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 8px; background: #f8f9fb; }
-.ed-btn { background: #fff; border: 1px solid #e2e6ea; border-radius: 4px; font-size: 0.85rem; padding: 3px 9px; cursor: pointer; color: #303a50; line-height: 1.2; min-width: 30px; }
-.ed-btn:hover { background: #eef0f3; }
-.ed-sep { display: inline-block; border-left: 1px solid #d1d5db; height: 18px; margin: 0 4px; }
+.editor-toolbar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; border: 1px solid var(--n-300); border-bottom: none; border-radius: 6px 6px 0 0; padding: 6px 8px; background: var(--n-25); }
+.ed-btn { background: #fff; border: 1px solid var(--n-200); border-radius: 4px; font-size: 0.85rem; padding: 3px 9px; cursor: pointer; color: var(--primary); line-height: 1.2; min-width: 30px; }
+.ed-btn:hover { background: var(--n-100); }
+.ed-sep { display: inline-block; border-left: 1px solid var(--n-300); height: 18px; margin: 0 4px; }
 [contenteditable="true"].form-control { border-top-left-radius: 0; border-top-right-radius: 0; }
 [contenteditable="true"] ul { list-style: disc; padding-left: 2em; margin: 0.5em 0; }
 [contenteditable="true"] ol { list-style: decimal; padding-left: 2em; margin: 0.5em 0; }

@@ -8,7 +8,7 @@
         <div class="d-flex justify-content-between align-items-start mb-4">
             <div>
                 <h4 style="font-weight: 700; color: var(--primary); margin: 0;">{{ $task->title }}</h4>
-                <div style="font-size: 0.82rem; color: #9ca3af; margin-top: 4px;">
+                <div style="font-size: 0.82rem; color: var(--n-400); margin-top: 4px;">
                     Created by {{ $task->createdBy->name ?? 'Unknown' }} · {{ $task->created_at->format('M d, Y H:i') }}
                 </div>
             </div>
@@ -24,26 +24,26 @@
 
         <div class="row mb-3">
             <div class="col-md-3 mb-2">
-                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Status</div>
-                @if($task->status == 'pending') <span class="badge" style="background: #fef3c7; color: #92400e;">Pending</span>
-                @elseif($task->status == 'in_progress') <span class="badge" style="background: #dbeafe; color: #1e40af;">In Progress</span>
-                @elseif($task->status == 'completed') <span class="badge" style="background: #d1fae5; color: #065f46;">Completed</span>
-                @else <span class="badge" style="background: #fef2f2; color: #dc2626;">Overdue</span>
+                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Status</div>
+                @if($task->status == 'pending') <span class="badge" style="background: var(--warn-tint); color: var(--warn-ink);">Pending</span>
+                @elseif($task->status == 'in_progress') <span class="badge" style="background: var(--info-tint); color: var(--info-ink);">In Progress</span>
+                @elseif($task->status == 'completed') <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">Completed</span>
+                @else <span class="badge" style="background: var(--danger-tint); color: var(--danger);">Overdue</span>
                 @endif
             </div>
             <div class="col-md-3 mb-2">
-                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Priority</div>
-                @if($task->priority == 0) <span style="color: #6b7280;">Low</span>
-                @elseif($task->priority == 1) <span style="color: #d97706; font-weight: 600;">Medium</span>
-                @else <span style="color: #dc2626; font-weight: 600;">High</span>
+                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Priority</div>
+                @if($task->priority == 0) <span style="color: var(--n-500);">Low</span>
+                @elseif($task->priority == 1) <span style="color: var(--warn); font-weight: 600;">Medium</span>
+                @else <span style="color: var(--danger); font-weight: 600;">High</span>
                 @endif
             </div>
             <div class="col-md-3 mb-2">
-                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Due Date</div>
+                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Due Date</div>
                 <span>{{ $task->due_date ? $task->due_date->format('M d, Y') : 'Not set' }}</span>
             </div>
             <div class="col-md-3 mb-2">
-                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Client</div>
+                <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Client</div>
                 @if($task->client)
                     <a href="{{ route('clients.show', $task->client) }}" style="color: var(--primary); font-weight: 500; text-decoration: none;">{{ $task->client->name }}</a>
                 @else None @endif
@@ -52,17 +52,17 @@
 
         @if($task->description)
         <div class="mb-3">
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Description</div>
-            <p style="margin: 4px 0 0; color: #4b5563;">{{ $task->description }}</p>
+            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Description</div>
+            <p style="margin: 4px 0 0; color: var(--n-600);">{{ $task->description }}</p>
         </div>
         @endif
 
         <div>
-            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px;">Assigned To</div>
+            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.5px;">Assigned To</div>
             @forelse($task->assignedUsers as $u)
                 <span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $u->name }}</span>
             @empty
-                <span style="color: #d1d5db;">No one assigned</span>
+                <span style="color: var(--n-300);">No one assigned</span>
             @endforelse
         </div>
     </div>
@@ -93,26 +93,26 @@
 
         <!-- Comments List -->
         @forelse($task->comments as $comment)
-        <div class="d-flex gap-3 mb-3 pb-3" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+        <div class="d-flex gap-3 mb-3 pb-3" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
             <div style="width: 36px; height: 36px; background: rgba(48,58,80,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.7rem; color: var(--primary); flex-shrink: 0;">{{ strtoupper(substr($comment->user->name, 0, 2)) }}</div>
             <div style="flex: 1;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <span style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">{{ $comment->user->name }}</span>
-                        <span style="font-size: 0.75rem; color: #9ca3af; margin-left: 8px;">{{ $comment->created_at->diffForHumans() }}</span>
+                        <span style="font-size: 0.75rem; color: var(--n-400); margin-left: 8px;">{{ $comment->created_at->diffForHumans() }}</span>
                     </div>
                     @if($comment->user_id === auth()->id())
                     <form method="POST" action="{{ route('comments.destroy', $comment) }}" class="d-inline" onsubmit="return confirm('Delete comment?')">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm" style="color: #d1d5db; padding: 2px 6px;" title="Delete"><i class="bi bi-trash" style="font-size: 0.75rem;"></i></button>
+                        <button class="btn btn-sm" style="color: var(--n-300); padding: 2px 6px;" title="Delete"><i class="bi bi-trash" style="font-size: 0.75rem;"></i></button>
                     </form>
                     @endif
                 </div>
-                <p style="margin: 4px 0 0; font-size: 0.85rem; color: #4b5563; line-height: 1.6;">{{ $comment->body }}</p>
+                <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--n-600); line-height: 1.6;">{{ $comment->body }}</p>
             </div>
         </div>
         @empty
-        <div class="text-center py-3" style="color: #d1d5db; font-size: 0.85rem;">No comments yet. Be the first to add one.</div>
+        <div class="text-center py-3" style="color: var(--n-300); font-size: 0.85rem;">No comments yet. Be the first to add one.</div>
         @endforelse
     </div>
 </div>

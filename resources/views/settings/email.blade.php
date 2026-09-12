@@ -8,36 +8,36 @@
         <!-- Microsoft Email Connection -->
         <div class="card section-card mb-4">
             <div class="card-header" style="background: rgba(48,58,80,0.02);">
-                <i class="bi bi-microsoft" style="color: #0078d4;"></i>
+                <i class="bi bi-microsoft" style="color: var(--info-ink);"></i>
                 <span style="font-weight: 700;">Microsoft Email Integration</span>
             </div>
             <div class="card-body" style="padding: 24px;">
                 @if($settings)
                     <!-- Connected -->
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        <div style="width: 48px; height: 48px; border-radius: 12px; background: #d1fae5; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-check-circle-fill" style="color: #065f46; font-size: 1.4rem;"></i>
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--ok-tint); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-check-circle-fill" style="color: var(--ok-ink); font-size: 1.4rem;"></i>
                         </div>
                         <div>
                             <div style="font-weight: 700; color: var(--primary); font-size: 1rem;">Connected</div>
-                            <div style="font-size: 0.85rem; color: #6b7280;">{{ $settings->email_address }}</div>
+                            <div style="font-size: 0.85rem; color: var(--n-500);">{{ $settings->email_address }}</div>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.8px;">FBR Sender Email</div>
+                            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.8px;">FBR Sender Email</div>
                             <div style="font-size: 0.88rem; color: var(--primary); font-family: monospace;">{{ $settings->fbr_sender_email }}</div>
                         </div>
                         <div class="col-md-4">
-                            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.8px;">Token Expires</div>
+                            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.8px;">Token Expires</div>
                             <div style="font-size: 0.88rem; color: var(--primary);">
                                 @if($settings->token_expires_at)
                                     {{ $settings->token_expires_at->format('M d, Y H:i') }}
                                     @if($settings->token_expires_at->isPast())
-                                        <span class="badge" style="background: #fef2f2; color: #dc2626;">Expired</span>
+                                        <span class="badge" style="background: var(--danger-tint); color: var(--danger);">Expired</span>
                                     @else
-                                        <span class="badge" style="background: #d1fae5; color: #065f46;">Active</span>
+                                        <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">Active</span>
                                     @endif
                                 @else
                                     Unknown
@@ -45,7 +45,7 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.8px;">Last Synced</div>
+                            <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--n-400); letter-spacing: 0.8px;">Last Synced</div>
                             <div style="font-size: 0.88rem; color: var(--primary);">{{ $settings->last_synced_at ? $settings->last_synced_at->diffForHumans() : 'Never' }}</div>
                         </div>
                     </div>
@@ -77,10 +77,10 @@
                     <!-- Not Connected -->
                     <div class="text-center py-4">
                         <div style="width: 64px; height: 64px; border-radius: 16px; background: rgba(0,120,212,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                            <i class="bi bi-microsoft" style="color: #0078d4; font-size: 1.8rem;"></i>
+                            <i class="bi bi-microsoft" style="color: var(--info-ink); font-size: 1.8rem;"></i>
                         </div>
                         <h5 style="font-weight: 700; color: var(--primary);">Connect Microsoft Email</h5>
-                        <p style="color: #6b7280; font-size: 0.85rem; max-width: 400px; margin: 0 auto 20px;">
+                        <p style="color: var(--n-500); font-size: 0.85rem; max-width: 400px; margin: 0 auto 20px;">
                             Connect your Outlook/Office 365 email to automatically fetch FBR notices. The system will scan incoming emails from FBR every hour.
                         </p>
                         <a href="{{ route('auth.microsoft.redirect') }}" class="btn btn-accent">
@@ -104,28 +104,28 @@
                     <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; color: var(--primary); flex-shrink: 0;">1</div>
                     <div>
                         <div style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">Connect Email</div>
-                        <div style="font-size: 0.78rem; color: #9ca3af;">Sign in with your Microsoft account that receives FBR emails</div>
+                        <div style="font-size: 0.78rem; color: var(--n-400);">Sign in with your Microsoft account that receives FBR emails</div>
                     </div>
                 </div>
                 <div class="d-flex gap-3 mb-3">
                     <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; color: var(--primary); flex-shrink: 0;">2</div>
                     <div>
                         <div style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">Auto-Scan</div>
-                        <div style="font-size: 0.78rem; color: #9ca3af;">System checks for FBR emails every hour automatically</div>
+                        <div style="font-size: 0.78rem; color: var(--n-400);">System checks for FBR emails every hour automatically</div>
                     </div>
                 </div>
                 <div class="d-flex gap-3 mb-3">
                     <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; color: var(--primary); flex-shrink: 0;">3</div>
                     <div>
                         <div style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">Categorize</div>
-                        <div style="font-size: 0.78rem; color: #9ca3af;">Notices are auto-categorized by section and tax year</div>
+                        <div style="font-size: 0.78rem; color: var(--n-400);">Notices are auto-categorized by section and tax year</div>
                     </div>
                 </div>
                 <div class="d-flex gap-3">
                     <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.75rem; color: var(--primary); flex-shrink: 0;">4</div>
                     <div>
                         <div style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">Get Notified</div>
-                        <div style="font-size: 0.78rem; color: #9ca3af;">All admins receive in-app notifications for new notices</div>
+                        <div style="font-size: 0.78rem; color: var(--n-400);">All admins receive in-app notifications for new notices</div>
                     </div>
                 </div>
             </div>

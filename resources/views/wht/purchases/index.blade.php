@@ -6,7 +6,7 @@
 @include('wht.partials.agent-switch', ['company' => $company])
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Payments to vendors, contractors and service providers.</p>
+    <p style="color: var(--n-400); font-size: 0.85rem; margin: 0;">Payments to vendors, contractors and service providers.</p>
     <a href="{{ route('wht.purchases.create') }}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i> Record Payment</a>
 </div>
 

@@ -6,7 +6,7 @@
 @include('wht.partials.agent-switch', ['company' => $company])
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Parties this agent withholds tax from.</p>
+    <p style="color: var(--n-400); font-size: 0.85rem; margin: 0;">Parties this agent withholds tax from.</p>
     <div class="d-flex gap-2">
         <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="bi bi-upload me-1"></i> Import CSV

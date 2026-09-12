@@ -6,7 +6,7 @@
 @include('wht.partials.agent-switch', ['company' => $company])
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Salary payments and tax deducted under section 149.</p>
+    <p style="color: var(--n-400); font-size: 0.85rem; margin: 0;">Salary payments and tax deducted under section 149.</p>
     <a href="{{ route('wht.salaries.create') }}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i> Record Salary</a>
 </div>
 

@@ -6,12 +6,12 @@
 <style>
     .cred-row {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 10px 16px; border-bottom: 1px solid #f5f6f8;
+        padding: 10px 16px; border-bottom: 1px solid var(--n-50);
     }
     .cred-row:last-child { border-bottom: none; }
     .cred-label {
         font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-        letter-spacing: 0.8px; color: #9ca3af; margin-bottom: 2px;
+        letter-spacing: 0.8px; color: var(--n-400); margin-bottom: 2px;
     }
     .cred-value {
         font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -19,14 +19,14 @@
     }
     .cred-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: 12px; }
     .cred-btn {
-        width: 30px; height: 30px; border-radius: 8px; border: 1px solid #e8eaed;
+        width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--n-150);
         background: #fff; display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: all 0.15s; color: #9ca3af; font-size: 0.82rem;
+        cursor: pointer; transition: all 0.15s; color: var(--n-400); font-size: 0.82rem;
     }
-    .cred-btn:hover { background: #f8f9fb; color: var(--primary); border-color: #d1d5db; }
-    .cred-btn.copied { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+    .cred-btn:hover { background: var(--n-25); color: var(--primary); border-color: var(--n-300); }
+    .cred-btn.copied { background: var(--ok-tint); color: var(--ok-ink); border-color: var(--ok); }
     .info-item { margin-bottom: 16px; }
-    .info-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #9ca3af; margin-bottom: 4px; }
+    .info-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--n-400); margin-bottom: 4px; }
     .info-value { font-size: 0.88rem; color: var(--primary); }
     .section-card .card-header {
         display: flex; align-items: center; gap: 8px;
@@ -46,9 +46,9 @@
                 <div>
                     <h4 style="font-weight: 800; color: var(--primary); margin: 0; font-size: 1.3rem;">{{ $client->name }}</h4>
                     <div class="d-flex align-items-center gap-2 mt-1">
-                        <span class="badge" style="background: {{ $client->status == 'Company' ? '#dbeafe' : ($client->status == 'AOP' ? 'var(--accent-glow)' : 'rgba(48,58,80,0.06)') }}; color: {{ $client->status == 'Company' ? '#1e40af' : ($client->status == 'AOP' ? '#5c6300' : 'var(--primary)') }};">{{ $client->status }}</span>
-                        <span style="color: #d1d5db;">&middot;</span>
-                        <span style="font-size: 0.82rem; color: #6b7280;">{{ $client->activeServices->count() }} active service{{ $client->activeServices->count() !== 1 ? 's' : '' }}</span>
+                        <span class="badge" style="background: {{ $client->status == 'Company' ? 'var(--info-tint)' : ($client->status == 'AOP' ? 'var(--accent-glow)' : 'rgba(48,58,80,0.06)') }}; color: {{ $client->status == 'Company' ? 'var(--info-ink)' : ($client->status == 'AOP' ? '#5c6300' : 'var(--primary)') }};">{{ $client->status }}</span>
+                        <span style="color: var(--n-300);">&middot;</span>
+                        <span style="font-size: 0.82rem; color: var(--n-500);">{{ $client->activeServices->count() }} active service{{ $client->activeServices->count() !== 1 ? 's' : '' }}</span>
                     </div>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                             <div class="info-value">
                                 @if($client->email)
                                     <a href="mailto:{{ $client->email }}" style="color: var(--primary); text-decoration: none;">{{ $client->email }}</a>
-                                @else <span style="color: #d1d5db;">Not set</span> @endif
+                                @else <span style="color: var(--n-300);">Not set</span> @endif
                             </div>
                         </div>
                     </div>
@@ -112,9 +112,9 @@
             </div>
             <div class="card-body" style="padding: 20px;">
                 @if($client->notes)
-                    <p style="font-size: 0.85rem; color: #4b5563; margin: 0; line-height: 1.6;">{{ $client->notes }}</p>
+                    <p style="font-size: 0.85rem; color: var(--n-600); margin: 0; line-height: 1.6;">{{ $client->notes }}</p>
                 @else
-                    <p style="color: #d1d5db; font-size: 0.85rem; margin: 0;">No notes added</p>
+                    <p style="color: var(--n-300); font-size: 0.85rem; margin: 0;">No notes added</p>
                 @endif
             </div>
         </div>
@@ -127,7 +127,7 @@
     <div class="col-md-4">
         <div class="card section-card h-100">
             <div class="card-header" style="background: rgba(48,58,80,0.02);">
-                <i class="bi bi-shield-lock-fill" style="color: #2563eb;"></i>
+                <i class="bi bi-shield-lock-fill" style="color: var(--info);"></i>
                 <span style="font-weight: 700;">FBR Credentials</span>
             </div>
             <div class="p-0">
@@ -173,7 +173,7 @@
     <div class="col-md-4">
         <div class="card section-card h-100">
             <div class="card-header" style="background: rgba(48,58,80,0.02);">
-                <i class="bi bi-building-fill-lock" style="color: #059669;"></i>
+                <i class="bi bi-building-fill-lock" style="color: var(--ok-ink);"></i>
                 <span style="font-weight: 700;">KPRA Credentials</span>
             </div>
             <div class="p-0">
@@ -219,15 +219,15 @@
     <div class="col-md-4">
         <div class="card section-card h-100">
             <div class="card-header" style="background: rgba(48,58,80,0.02);">
-                <i class="bi bi-safe" style="color: #d97706;"></i>
+                <i class="bi bi-safe" style="color: var(--warn);"></i>
                 <span style="font-weight: 700;">SECP Directors ({{ $client->secpDirectors->count() }})</span>
             </div>
             <div class="p-0">
                 @forelse($client->secpDirectors as $director)
-                <div style="padding: 12px 16px; {{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+                <div style="padding: 12px 16px; {{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
                     <div class="mb-2">
                         <div style="font-weight: 700; font-size: 0.88rem; color: var(--primary);">{{ $director->director_name }}</div>
-                        <div style="font-size: 0.75rem; color: #9ca3af; font-family: monospace;">{{ $director->cnic ?: 'No CNIC' }}</div>
+                        <div style="font-size: 0.75rem; color: var(--n-400); font-family: monospace;">{{ $director->cnic ?: 'No CNIC' }}</div>
                     </div>
                     <div class="d-flex gap-2">
                         <div style="flex: 1;">
@@ -252,7 +252,7 @@
                     </div>
                 </div>
                 @empty
-                <div class="text-center py-4" style="color: #d1d5db; font-size: 0.82rem;">No directors added</div>
+                <div class="text-center py-4" style="color: var(--n-300); font-size: 0.82rem;">No directors added</div>
                 @endforelse
             </div>
         </div>
@@ -269,12 +269,12 @@
     </div>
     <div class="p-0">
         @forelse($client->activeServices as $service)
-        <div class="d-flex align-items-center gap-3 px-4 py-3" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+        <div class="d-flex align-items-center gap-3 px-4 py-3" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
             <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></div>
             <div style="font-weight: 600; font-size: 0.88rem; color: var(--primary);">{{ $service->display_name }}</div>
         </div>
         @empty
-        <div class="text-center py-4" style="color: #9ca3af;">No active services</div>
+        <div class="text-center py-4" style="color: var(--n-400);">No active services</div>
         @endforelse
     </div>
 </div>
@@ -289,12 +289,12 @@
             </div>
             <div class="p-0">
                 @forelse($client->shareholders as $sh)
-                <div class="d-flex justify-content-between align-items-center px-4 py-2" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+                <div class="d-flex justify-content-between align-items-center px-4 py-2" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
                     <a href="{{ route('clients.show', $sh) }}" style="color: var(--primary); font-weight: 500; text-decoration: none; font-size: 0.88rem;">{{ $sh->name }}</a>
                     @if($sh->pivot->share_percentage)<span class="badge" style="background: rgba(48,58,80,0.06); color: var(--primary);">{{ $sh->pivot->share_percentage }}%</span>@endif
                 </div>
                 @empty
-                <div class="text-center py-4" style="color: #9ca3af; font-size: 0.85rem;">No shareholders</div>
+                <div class="text-center py-4" style="color: var(--n-400); font-size: 0.85rem;">No shareholders</div>
                 @endforelse
             </div>
         </div>
@@ -310,16 +310,16 @@
             </div>
             <div class="p-0">
                 @forelse($client->tasks->take(5) as $task)
-                <div class="d-flex justify-content-between align-items-center px-4 py-2" style="{{ !$loop->last ? 'border-bottom: 1px solid #f5f6f8;' : '' }}">
+                <div class="d-flex justify-content-between align-items-center px-4 py-2" style="{{ !$loop->last ? 'border-bottom: 1px solid var(--n-50);' : '' }}">
                     <a href="{{ route('tasks.show', $task) }}" style="color: var(--primary); font-weight: 500; text-decoration: none; font-size: 0.88rem;">{{ $task->title }}</a>
-                    @if($task->status == 'pending') <span class="badge" style="background: #fef3c7; color: #92400e;">Pending</span>
-                    @elseif($task->status == 'in_progress') <span class="badge" style="background: #dbeafe; color: #1e40af;">In Progress</span>
-                    @elseif($task->status == 'completed') <span class="badge" style="background: #d1fae5; color: #065f46;">Done</span>
-                    @else <span class="badge" style="background: #fef2f2; color: #dc2626;">Overdue</span>
+                    @if($task->status == 'pending') <span class="badge" style="background: var(--warn-tint); color: var(--warn-ink);">Pending</span>
+                    @elseif($task->status == 'in_progress') <span class="badge" style="background: var(--info-tint); color: var(--info-ink);">In Progress</span>
+                    @elseif($task->status == 'completed') <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">Done</span>
+                    @else <span class="badge" style="background: var(--danger-tint); color: var(--danger);">Overdue</span>
                     @endif
                 </div>
                 @empty
-                <div class="text-center py-4" style="color: #9ca3af; font-size: 0.85rem;">No tasks</div>
+                <div class="text-center py-4" style="color: var(--n-400); font-size: 0.85rem;">No tasks</div>
                 @endforelse
             </div>
         </div>
@@ -342,15 +342,15 @@
                     <td>{{ $notice->notice_section ?? '-' }}</td>
                     <td>{{ $notice->tax_year ?? '-' }}</td>
                     <td>
-                        @if($notice->is_escalated) <span class="badge" style="background: #fef2f2; color: #dc2626;">Escalated</span>
+                        @if($notice->is_escalated) <span class="badge" style="background: var(--danger-tint); color: var(--danger);">Escalated</span>
                         @elseif($notice->status == 'new') <span class="badge" style="background: var(--accent); color: var(--primary);">New</span>
-                        @else <span class="badge" style="background: #f3f4f6; color: #6b7280;">{{ ucfirst($notice->status) }}</span>
+                        @else <span class="badge" style="background: var(--n-50); color: var(--n-500);">{{ ucfirst($notice->status) }}</span>
                         @endif
                     </td>
-                    <td style="color: #6b7280;">{{ $notice->email_received_at instanceof \Carbon\Carbon ? $notice->email_received_at->format('M d, Y') : $notice->email_received_at }}</td>
+                    <td style="color: var(--n-500);">{{ $notice->email_received_at instanceof \Carbon\Carbon ? $notice->email_received_at->format('M d, Y') : $notice->email_received_at }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="5" class="text-center py-4" style="color: #9ca3af;">No notices</td></tr>
+                <tr><td colspan="5" class="text-center py-4" style="color: var(--n-400);">No notices</td></tr>
                 @endforelse
             </tbody>
         </table>

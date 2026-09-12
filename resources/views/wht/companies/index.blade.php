@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <p style="color: #9ca3af; font-size: 0.85rem; margin: 0;">Choose the company whose withholding you want to work on.</p>
+    <p style="color: var(--n-400); font-size: 0.85rem; margin: 0;">Choose the company whose withholding you want to work on.</p>
     @if(Auth::user()->hasRole('admin'))
         <a href="{{ route('wht.companies.create') }}" class="btn btn-accent"><i class="bi bi-plus-lg me-1"></i> New Agent</a>
     @endif
@@ -12,7 +12,7 @@
 
 @if($companies->isEmpty())
     <div class="card"><div class="card-body text-center" style="padding: 48px 20px;">
-        <i class="bi bi-building" style="font-size: 2rem; color: #d1d5db;"></i>
+        <i class="bi bi-building" style="font-size: 2rem; color: var(--n-300);"></i>
         <p class="mt-3 mb-0 text-muted">No withholding agents are available to you yet.</p>
     </div></div>
 @else
@@ -38,7 +38,7 @@
                         <span class="badge bg-warning text-dark">not set</span>
                     @endif
                 </div>
-                <div class="d-flex gap-3 mb-3" style="font-size: 0.8rem; color: #6b7280;">
+                <div class="d-flex gap-3 mb-3" style="font-size: 0.8rem; color: var(--n-500);">
                     <span><i class="bi bi-people me-1"></i>{{ $c->parties_count }} parties</span>
                     <span><i class="bi bi-file-earmark-text me-1"></i>{{ $c->purchases_count }} payments</span>
                     <span><i class="bi bi-cash-stack me-1"></i>{{ $c->salaries_count }} salaries</span>

@@ -107,7 +107,7 @@
                         </div>
                         <div class="card-body" id="directors-container">
                             @forelse($client->secpDirectors as $i => $director)
-                            <div class="director-row mb-3 pb-3" style="border-bottom: 1px solid #f0f2f5;">
+                            <div class="director-row mb-3 pb-3" style="border-bottom: 1px solid var(--n-100);">
                                 <input type="hidden" name="directors[{{ $i }}][id]" value="{{ $director->id }}">
                                 <div class="row">
                                     <div class="col-md-3 mb-2">
@@ -209,7 +209,7 @@ function addDirector() {
     if (msg) msg.remove();
     var container = document.getElementById('directors-container');
     directorIndex++;
-    var html = '<div class="director-row mb-3 pb-3" style="border-bottom: 1px solid #f0f2f5;"><div class="row">'
+    var html = '<div class="director-row mb-3 pb-3" style="border-bottom: 1px solid var(--n-100);"><div class="row">'
         + '<div class="col-md-3 mb-2"><label class="form-label">Director Name</label><input type="text" class="form-control" name="directors[' + directorIndex + '][director_name]" required></div>'
         + '<div class="col-md-3 mb-2"><label class="form-label">CNIC</label><input type="text" class="form-control" name="directors[' + directorIndex + '][cnic]"></div>'
         + '<div class="col-md-2 mb-2"><label class="form-label">Password</label><input type="text" class="form-control" name="directors[' + directorIndex + '][secp_password]"></div>'

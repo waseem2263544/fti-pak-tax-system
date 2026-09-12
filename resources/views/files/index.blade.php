@@ -4,7 +4,7 @@
 
 @section('styles')
 <style>
-    .fm-tab { padding: 12px 24px; font-size: 0.88rem; font-weight: 600; border: none; background: none; color: #9ca3af; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; text-decoration: none; display: inline-block; }
+    .fm-tab { padding: 12px 24px; font-size: 0.88rem; font-weight: 600; border: none; background: none; color: var(--n-400); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; text-decoration: none; display: inline-block; }
     .fm-tab:hover { color: var(--primary); }
     .fm-tab.active { color: var(--primary); border-bottom-color: var(--accent); }
     .fm-count { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 22px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; margin-left: 6px; padding: 0 6px; }
@@ -14,14 +14,14 @@
 @section('content')
 <!-- Tabs -->
 <div class="card mb-4">
-    <div class="d-flex" style="border-bottom: 1px solid #f0f2f5; padding: 0 20px;">
+    <div class="d-flex" style="border-bottom: 1px solid var(--n-100); padding: 0 20px;">
         <a href="{{ route('files.index', ['tab' => 'files']) }}" class="fm-tab {{ $tab == 'files' ? 'active' : '' }}">
             <i class="bi bi-folder2 me-1"></i> File Numbers
-            <span class="fm-count" style="background: {{ $tab == 'files' ? 'var(--accent-glow)' : '#f3f4f6' }}; color: {{ $tab == 'files' ? '#5c6300' : '#9ca3af' }};">{{ $fileNumbers->total() }}</span>
+            <span class="fm-count" style="background: {{ $tab == 'files' ? 'var(--accent-glow)' : 'var(--n-50)' }}; color: {{ $tab == 'files' ? '#5c6300' : 'var(--n-400)' }};">{{ $fileNumbers->total() }}</span>
         </a>
         <a href="{{ route('files.index', ['tab' => 'letters']) }}" class="fm-tab {{ $tab == 'letters' ? 'active' : '' }}">
             <i class="bi bi-envelope-paper me-1"></i> Letter Numbers
-            <span class="fm-count" style="background: {{ $tab == 'letters' ? 'var(--accent-glow)' : '#f3f4f6' }}; color: {{ $tab == 'letters' ? '#5c6300' : '#9ca3af' }};">{{ $letterNumbers->total() }}</span>
+            <span class="fm-count" style="background: {{ $tab == 'letters' ? 'var(--accent-glow)' : 'var(--n-50)' }}; color: {{ $tab == 'letters' ? '#5c6300' : 'var(--n-400)' }};">{{ $letterNumbers->total() }}</span>
         </a>
     </div>
 </div>
@@ -83,8 +83,8 @@
                     <td>
                         <a href="{{ route('clients.show', $file->client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">{{ $file->client->name }}</a>
                     </td>
-                    <td style="color: #6b7280; font-size: 0.85rem;">{{ $file->description ?: '-' }}</td>
-                    <td style="color: #9ca3af; font-size: 0.82rem;">{{ $file->created_at->format('M d, Y') }}</td>
+                    <td style="color: var(--n-500); font-size: 0.85rem;">{{ $file->description ?: '-' }}</td>
+                    <td style="color: var(--n-400); font-size: 0.82rem;">{{ $file->created_at->format('M d, Y') }}</td>
                     <td class="text-end">
                         <form action="{{ route('files.destroy-file', $file) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this file number?')">
                             @csrf @method('DELETE')
@@ -94,7 +94,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-5" style="color: #9ca3af;">
+                    <td colspan="5" class="text-center py-5" style="color: var(--n-400);">
                         <i class="bi bi-folder2" style="font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
                         No file numbers yet. Add your first one above.
                     </td>
@@ -161,14 +161,14 @@
             <tbody>
                 @forelse($letterNumbers as $letter)
                 <tr>
-                    <td style="font-size: 0.85rem; color: #6b7280;">{{ $letter->date->format('M d, Y') }}</td>
+                    <td style="font-size: 0.85rem; color: var(--n-500);">{{ $letter->date->format('M d, Y') }}</td>
                     <td>
                         <span style="font-weight: 700; font-family: monospace; font-size: 0.9rem; color: var(--primary); background: var(--accent-glow); padding: 4px 12px; border-radius: 6px;">{{ $letter->reference }}</span>
                     </td>
                     <td>
                         <a href="{{ route('clients.show', $letter->client) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">{{ $letter->client->name }}</a>
                     </td>
-                    <td style="font-size: 0.85rem; color: #4b5563;">{{ $letter->description }}</td>
+                    <td style="font-size: 0.85rem; color: var(--n-600);">{{ $letter->description }}</td>
                     <td class="text-end">
                         <form action="{{ route('files.destroy-letter', $letter) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this letter number?')">
                             @csrf @method('DELETE')
@@ -178,7 +178,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center py-5" style="color: #9ca3af;">
+                    <td colspan="5" class="text-center py-5" style="color: var(--n-400);">
                         <i class="bi bi-envelope-paper" style="font-size: 2.5rem; display: block; margin-bottom: 8px; opacity: 0.3;"></i>
                         No letter numbers yet. Add your first one above.
                     </td>

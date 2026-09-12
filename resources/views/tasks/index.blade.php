@@ -32,29 +32,29 @@
     .kanban-card:active { cursor: grabbing; }
     .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); color: inherit; }
     .kanban-card.dragging { opacity: 0.5; transform: rotate(2deg); }
-    .kanban-card.priority-high { border-left-color: #ef4444; }
-    .kanban-card.priority-medium { border-left-color: #f59e0b; }
-    .kanban-card.priority-low { border-left-color: #d1d5db; }
+    .kanban-card.priority-high { border-left-color: var(--danger); }
+    .kanban-card.priority-medium { border-left-color: var(--warn); }
+    .kanban-card.priority-low { border-left-color: var(--n-300); }
     .kanban-card .task-title { font-weight: 600; font-size: 0.82rem; color: var(--primary); margin-bottom: 6px; line-height: 1.3; }
-    .kanban-card .task-meta { font-size: 0.7rem; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .kanban-card .task-meta { font-size: 0.7rem; color: var(--n-400); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
     .kanban-card .task-assignees { display: flex; margin-top: 8px; }
     .kanban-card .task-avatar {
         width: 22px; height: 22px; border-radius: 6px;
         background: rgba(48,58,80,0.08); display: flex; align-items: center; justify-content: center;
         font-size: 0.5rem; font-weight: 700; color: var(--primary); margin-right: 3px;
     }
-    .kanban-empty { text-align: center; padding: 32px 16px; color: #d1d5db; font-size: 0.82rem; }
+    .kanban-empty { text-align: center; padding: 32px 16px; color: var(--n-300); font-size: 0.82rem; }
     .kanban-empty i { font-size: 1.5rem; display: block; margin-bottom: 8px; }
     .kanban-body.drag-over { background: rgba(215,223,39,0.06); border: 2px dashed var(--accent); border-radius: 0 0 12px 12px; }
 
-    .col-overdue .kanban-header { background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); color: #991b1b; }
-    .col-overdue .kanban-header .count { background: #fee2e2; color: #dc2626; }
-    .col-pending .kanban-header { background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); color: #854d0e; }
-    .col-pending .kanban-header .count { background: #fef9c3; color: #a16207; }
-    .col-progress .kanban-header { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); color: #1e40af; }
-    .col-progress .kanban-header .count { background: #dbeafe; color: #2563eb; }
-    .col-done .kanban-header { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #065f46; }
-    .col-done .kanban-header .count { background: #d1fae5; color: #059669; }
+    .col-overdue .kanban-header { background: linear-gradient(135deg, var(--danger-tint) 0%, var(--danger-tint) 100%); color: var(--danger-ink); }
+    .col-overdue .kanban-header .count { background: var(--danger-tint); color: var(--danger); }
+    .col-pending .kanban-header { background: linear-gradient(135deg, #fefce8 0%, var(--warn-tint) 100%); color: var(--warn-ink); }
+    .col-pending .kanban-header .count { background: #fef9c3; color: var(--warn-ink); }
+    .col-progress .kanban-header { background: linear-gradient(135deg, var(--info-tint) 0%, var(--info-tint) 100%); color: var(--info-ink); }
+    .col-progress .kanban-header .count { background: var(--info-tint); color: var(--info); }
+    .col-done .kanban-header { background: linear-gradient(135deg, var(--ok-tint) 0%, var(--ok-tint) 100%); color: var(--ok-ink); }
+    .col-done .kanban-header .count { background: var(--ok-tint); color: var(--ok-ink); }
 </style>
 @endsection
 
