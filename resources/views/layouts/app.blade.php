@@ -551,7 +551,7 @@
         <div class="sidebar">
             <div class="sidebar-brand">
                 <div class="logo">
-                    <img src="/images/logo.png" alt="FairTax International" style="max-width: 180px; height: auto; display: block;">
+                    <img src="{{ asset('images/logo.png') }}?v={{ @filemtime(public_path('images/logo.png')) ?: 1 }}" alt="FairTax International" style="max-width: 180px; height: auto; display: block;">
                 </div>
             </div>
 
