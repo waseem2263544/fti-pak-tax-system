@@ -95,7 +95,7 @@
                         @endif
                     </td>
                     <td>
-                        @php $svcCount = $client->activeServices()->count(); @endphp
+                        @php $svcCount = $client->active_services_count; @endphp
                         @if($svcCount > 0)
                             <span class="badge" style="background: var(--ok-tint); color: var(--ok-ink);">{{ $svcCount }} active</span>
                         @else

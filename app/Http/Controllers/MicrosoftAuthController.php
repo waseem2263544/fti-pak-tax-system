@@ -12,9 +12,9 @@ class MicrosoftAuthController extends Controller
     private function getConfig()
     {
         return [
-            'client_id' => env('MICROSOFT_CLIENT_ID', ''),
-            'client_secret' => env('MICROSOFT_CLIENT_SECRET', ''),
-            'redirect_uri' => env('MICROSOFT_REDIRECT_URI', 'https://app.fairtaxint.com/auth/microsoft/callback'),
+            'client_id' => config('services.microsoft.client_id'),
+            'client_secret' => config('services.microsoft.client_secret'),
+            'redirect_uri' => config('services.microsoft.redirect_uri'),
             'tenant' => 'common',
         ];
     }

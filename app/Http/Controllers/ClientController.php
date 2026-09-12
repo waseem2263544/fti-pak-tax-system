@@ -13,7 +13,8 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Client::query();
+        // withCount avoids a COUNT query per row in the services column.
+        $query = Client::query()->withCount('activeServices');
 
         if ($request->filled('search')) {
             $search = $request->search;

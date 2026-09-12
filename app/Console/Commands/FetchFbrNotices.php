@@ -48,8 +48,8 @@ class FetchFbrNotices extends Command
     {
         try {
             $response = Http::asForm()->post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
-                'client_id' => env('MICROSOFT_CLIENT_ID', ''),
-                'client_secret' => env('MICROSOFT_CLIENT_SECRET', ''),
+                'client_id' => config('services.microsoft.client_id'),
+                'client_secret' => config('services.microsoft.client_secret'),
                 'refresh_token' => $settings->refresh_token,
                 'grant_type' => 'refresh_token',
                 'scope' => 'openid profile email Mail.Read Sites.Read.All offline_access',

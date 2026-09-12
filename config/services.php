@@ -2,6 +2,16 @@
 
 return [
 
+    // Azure app registration behind SharePoint, Graph mail and the FBR notice
+    // fetcher. These must be read through config() rather than env(): once
+    // config is cached, env() returns null outside of config files, which
+    // would blank the credentials and break token refresh silently.
+    'microsoft' => [
+        'client_id'     => env('MICROSOFT_CLIENT_ID', ''),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET', ''),
+        'redirect_uri'  => env('MICROSOFT_REDIRECT_URI', 'https://app.fairtaxint.com/auth/microsoft/callback'),
+    ],
+
     'sharepoint' => [
         // The SharePoint site whose default document library the browser opens.
         'site' => env('SHAREPOINT_SITE', 'FairTaxInternational723'),

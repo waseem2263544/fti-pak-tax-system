@@ -72,4 +72,46 @@ if (is_dir($viewCachePath)) {
     echo "Cleared " . count($cached) . " cached views.\n";
 }
 
-echo "Synced $count files.\n\nDEPLOY COMPLETE!\n</pre>";
+echo "Synced $count files.\n";
+ob_flush(); flush();
+
+// Drop stale bytecode. Without this the host can keep serving the previous
+// version of a file it has already compiled - the same behaviour that keeps
+// deleted scripts alive here.
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+    echo "Opcache reset.\n";
+}
+
+/*
+ * Build the framework caches.
+ *
+ * Without these every request re-parses ~125 route definitions and the whole
+ * config tree, and compiles each Blade template on first hit. On shared
+ * hosting that is the bulk of the time-to-first-byte.
+ *
+ * config:cache is only safe because no env() call remains outside config/ -
+ * env() returns null once the config is cached, so a stray call would blank
+ * the value silently. If anything fails, the caches are cleared rather than
+ * left half-built, since a stale route cache is worse than none.
+ */
+try {
+    require $basePath . '/vendor/autoload.php';
+    $app = require_once $basePath . '/bootstrap/app.php';
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+
+    foreach (['config:cache', 'route:cache', 'view:cache'] as $cmd) {
+        $status = $kernel->call($cmd);
+        echo ($status === 0 ? "OK   " : "FAIL ") . $cmd . "\n";
+        ob_flush(); flush();
+    }
+} catch (Throwable $e) {
+    echo "Cache build failed: " . $e->getMessage() . "\n";
+    echo "Clearing caches so the app runs uncached.\n";
+    foreach (['bootstrap/cache/config.php', 'bootstrap/cache/routes-v7.php'] as $f) {
+        if (file_exists($basePath . '/' . $f)) { unlink($basePath . '/' . $f); }
+    }
+}
+
+echo "\nDEPLOY COMPLETE!\n</pre>";
