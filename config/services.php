@@ -2,6 +2,12 @@
 
 return [
 
+    'sharepoint' => [
+        // The SharePoint site whose default document library the browser opens.
+        'site' => env('SHAREPOINT_SITE', 'FairTaxInternational723'),
+    ],
+
+
     'wht_mcp' => [
         // Secret embedded in the MCP connector URL. Empty disables the endpoint.
         'secret' => env('WHT_MCP_SECRET'),

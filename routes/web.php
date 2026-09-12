@@ -92,6 +92,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('auth/microsoft/test', [MicrosoftAuthController::class, 'testFetch'])->name('auth.microsoft.test');
     Route::get('auth/microsoft/refresh', [MicrosoftAuthController::class, 'refreshToken'])->name('auth.microsoft.refresh');
 
+    // SharePoint document browser
+    Route::get('documents', [\App\Http\Controllers\DocumentController::class, 'index'])->name('documents.index');
+    Route::post('documents/office', [\App\Http\Controllers\DocumentController::class, 'createOffice'])->name('documents.create-office');
+    Route::post('documents/folder', [\App\Http\Controllers\DocumentController::class, 'createFolder'])->name('documents.create-folder');
+    Route::post('documents/upload', [\App\Http\Controllers\DocumentController::class, 'upload'])->name('documents.upload');
+    Route::get('documents/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
+    Route::post('documents/delete', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
+    Route::post('documents/rename', [\App\Http\Controllers\DocumentController::class, 'rename'])->name('documents.rename');
+
     // Client Documents
     Route::get('client-documents', [ClientDocumentController::class, 'index'])->name('client-documents.index');
     Route::post('client-documents/{client}/update-link', [ClientDocumentController::class, 'updateLink'])->name('client-documents.update-link');

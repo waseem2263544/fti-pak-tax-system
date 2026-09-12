@@ -88,7 +88,7 @@ class ClientDocumentController extends Controller
                 'client_secret' => env('MICROSOFT_CLIENT_SECRET', ''),
                 'refresh_token' => $settings->refresh_token,
                 'grant_type' => 'refresh_token',
-                'scope' => 'openid profile email Mail.Read Sites.Read.All offline_access',
+                'scope' => \App\Services\Microsoft\SharePointClient::SCOPES,
             ]);
             if ($response->successful()) {
                 $data = $response->json();

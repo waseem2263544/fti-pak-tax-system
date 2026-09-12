@@ -26,7 +26,7 @@ class MicrosoftAuthController extends Controller
             'client_id' => $config['client_id'],
             'response_type' => 'code',
             'redirect_uri' => $config['redirect_uri'],
-            'scope' => 'openid profile email Mail.Read offline_access',
+            'scope' => \App\Services\Microsoft\SharePointClient::SCOPES,
             'response_mode' => 'query',
             'state' => csrf_token(),
         ]);
@@ -49,7 +49,7 @@ class MicrosoftAuthController extends Controller
             'code' => $request->code,
             'redirect_uri' => $config['redirect_uri'],
             'grant_type' => 'authorization_code',
-            'scope' => 'openid profile email Mail.Read offline_access',
+            'scope' => \App\Services\Microsoft\SharePointClient::SCOPES,
         ]);
 
         if (!$response->successful()) {
@@ -103,7 +103,7 @@ class MicrosoftAuthController extends Controller
             'client_secret' => $config['client_secret'],
             'refresh_token' => $settings->refresh_token,
             'grant_type' => 'refresh_token',
-            'scope' => 'openid profile email Mail.Read offline_access',
+            'scope' => \App\Services\Microsoft\SharePointClient::SCOPES,
         ]);
 
         if (!$response->successful()) {
@@ -136,7 +136,7 @@ class MicrosoftAuthController extends Controller
                 'client_secret' => $config['client_secret'],
                 'refresh_token' => $settings->refresh_token,
                 'grant_type' => 'refresh_token',
-                'scope' => 'openid profile email Mail.Read offline_access',
+                'scope' => \App\Services\Microsoft\SharePointClient::SCOPES,
             ]);
 
             if ($response->successful()) {
