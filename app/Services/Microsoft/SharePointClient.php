@@ -262,6 +262,35 @@ class SharePointClient
         return $response->json();
     }
 
+    /**
+     * Where an item sits, written relative to the browser's root.
+     *
+     * Graph gives the full drive path — /drives/{id}/root:/Operations/3. Clients/Acme —
+     * which is noise. This trims it back to what the user recognises.
+     */
+    public function relativePath(array $item): string
+    {
+        $raw = $item['parentReference']['path'] ?? '';
+
+        if ($raw === '') {
+            return '';
+        }
+
+        // Everything after "root:" is the path within the library.
+        $path = \Illuminate\Support\Str::after($raw, 'root:');
+        $path = rawurldecode($path);
+
+        $rootName = trim((string) config('services.sharepoint.root_path', 'Operations/3. Clients'), '/');
+
+        if ($rootName !== '' && str_starts_with(ltrim($path, '/'), $rootName)) {
+            $path = substr(ltrim($path, '/'), strlen($rootName));
+        }
+
+        $path = trim($path, '/');
+
+        return $path === '' ? config('services.sharepoint.root_label', 'Clients') : $path;
+    }
+
     /** Turn Graph's errors into something the user can act on. */
     private function guard($response): void
     {

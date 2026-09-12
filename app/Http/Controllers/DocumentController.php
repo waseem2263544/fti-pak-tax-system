@@ -58,6 +58,15 @@ class DocumentController extends Controller
             fn($a, $b) => strcasecmp($a['name'] ?? '', $b['name'] ?? ''),
         ])->values();
 
+        // Attach a readable location to every row, so search results say where
+        // they came from without the caller parsing Graph paths in a template.
+        $sp = $this->sharepoint;
+        $items = $items->map(function ($item) use ($sp) {
+            $item['_path'] = $sp->relativePath($item);
+
+            return $item;
+        });
+
         return view('documents.index', compact('items', 'breadcrumb', 'folder', 'error', 'search'));
     }
 

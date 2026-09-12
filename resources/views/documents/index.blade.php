@@ -104,9 +104,12 @@
                         @else
                             <a href="{{ $item['webUrl'] }}" target="_blank" class="text-decoration-none">{{ $item['name'] }}</a>
                         @endif
-                        @if(($search ?? '') !== '' && !empty($item['parentReference']['path']))
-                            <div class="text-muted" style="font-size: 0.74rem;">
-                                <i class="bi bi-folder me-1"></i>{{ \Illuminate\Support\Str::after($item['parentReference']['path'], 'root:') ?: '/' }}
+                        @if(($search ?? '') !== '' && !empty($item['_path']))
+                            <div style="font-size: 0.75rem;">
+                                <a href="{{ route('documents.index', ['folder' => $item['parentReference']['id'] ?? null]) }}"
+                                   class="text-muted text-decoration-none">
+                                    <i class="bi bi-folder me-1"></i>{{ $item['_path'] }}
+                                </a>
                             </div>
                         @endif
                     </td>

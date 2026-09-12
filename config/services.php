@@ -11,6 +11,9 @@ return [
         'root_folder' => env('SHAREPOINT_ROOT_FOLDER', '01CC2DZ2K4AMXS7NOOSNAJ37X5YARIIZDF'),
 
         'root_label' => env('SHAREPOINT_ROOT_LABEL', 'Clients'),
+
+        // Used to trim Graph's full drive path down to something readable.
+        'root_path' => env('SHAREPOINT_ROOT_PATH', 'Operations/3. Clients'),
     ],
 
 
