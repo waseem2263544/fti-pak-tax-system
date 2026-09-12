@@ -26,3 +26,7 @@ Thumbs.db
 .claude/*
 !.claude/skills/
 .env.deploy
+
+# Local copy of the retired standalone WHT portal. Contains live DB
+# credentials in db.php - must never be committed.
+/WHT/

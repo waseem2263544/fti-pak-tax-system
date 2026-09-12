@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'Clients')
-@section('page-title', 'Clients')
+@section('title', 'Client Credentials')
+@section('page-title', 'Client Credentials')
 
 @section('content')
 <!-- Search & Filters -->

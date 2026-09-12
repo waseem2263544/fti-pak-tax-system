@@ -115,10 +115,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('search', [SearchController::class, 'index'])->name('search');
     Route::get('search/suggest', [SearchController::class, 'suggest'])->name('search.suggest');
 
-    Route::get('/mini-apps', function () {
-        return view('mini-apps.index');
-    })->name('mini-apps.index');
-
     // Chrome Extension
     Route::get('extension', function () { return view('extension.download'); })->name('extension.download');
 
