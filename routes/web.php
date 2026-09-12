@@ -71,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('{client}/income', [$c, 'saveIncome'])->name('income.save');
         Route::post('{client}/reconciliation', [$c, 'saveReconciliation'])->name('reconciliation.save');
         Route::post('{client}/carry-forward', [$c, 'carryForward'])->name('carry-forward');
+        Route::post('{client}/lines/{line}/balancing', [$c, 'setBalancing'])->name('lines.balancing');
         Route::post('{client}/income-items', [$c, 'storeIncomeItem'])->name('income-items.store');
         Route::put('{client}/income-items/{item}', [$c, 'updateIncomeItem'])->name('income-items.update');
         Route::delete('{client}/income-items/{item}', [$c, 'destroyIncomeItem'])->name('income-items.destroy');

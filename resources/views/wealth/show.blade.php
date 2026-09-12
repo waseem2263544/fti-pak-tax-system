@@ -23,6 +23,31 @@
                 padding: 10px 18px; border-top: 2px solid var(--border-strong); font-weight: 700; }
     .ws-sub { font-size: 0.73rem; color: var(--text-muted); }
     .ws-money { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* The statement itself: Sr. | description | code | this year | last year. */
+    .st-head, .st-row { display: grid; grid-template-columns: 42px 1fr 74px 150px 150px;
+                        gap: 10px; align-items: center; padding: 6px 18px; font-size: 0.83rem; }
+    .st-head { background: var(--surface-sunk); border-bottom: 1px solid var(--border);
+               font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+    .st-row { border-bottom: 1px solid var(--n-100); }
+    .st-headrow { cursor: pointer; font-weight: 600; }
+    .st-headrow:hover { background: var(--n-25); }
+    .st-headrow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .st-chev { font-size: 0.6rem; transition: transform 0.15s; display: inline-block; color: var(--text-faint); }
+    .st-chev.open { transform: rotate(90deg); }
+    .st-count { background: var(--n-100); color: var(--text-soft); border-radius: 10px;
+                padding: 0 6px; font-size: 0.68rem; margin-left: 6px; font-weight: 600; }
+    .st-detail { display: none; background: var(--n-25); }
+    .st-detail.open { display: block; }
+    .st-line { font-weight: 400; padding-left: 30px; }
+    .st-rn { text-align: right; color: var(--text-faint); font-size: 0.75rem; }
+    .st-sum { font-weight: 600; background: var(--surface); }
+    .st-strong { border-top: 1px solid var(--border-strong); }
+    .st-py { color: var(--text-muted); position: relative; }
+    .st-acts { position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+               display: none; gap: 4px; background: var(--n-25); padding-left: 6px; }
+    .st-line:hover .st-acts { display: flex; }
+    .st-save { padding: 12px 18px; border-bottom: 1px solid var(--border); }
     /* A disclosure styled as a button: opens on click or Enter, and needs no
        script to do it. */
     details.ws-open > summary { list-style: none; padding: 14px 18px; }
@@ -74,9 +99,8 @@
 
 <ul class="nav nav-tabs mb-3" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-income" type="button">Income working</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-assets" type="button">Assets &amp; liabilities</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-assets" type="button">Wealth statement</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-expenses" type="button">Annex-F expenses</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-recon" type="button">Reconciliation</button></li>
 </ul>
 
 <div class="tab-content">
@@ -268,73 +292,275 @@
     </div>
 </div>
 
-{{-- ════════ ASSETS & LIABILITIES ════════ --}}
+{{-- ════════ WEALTH STATEMENT — laid out as IRIS presents it ════════
+     One numbered statement, Sr. 1 to 26, each row carrying its IRIS code, with
+     last year beside this year. Heads expand to the lines behind them. --}}
 <div class="tab-pane fade" id="t-assets">
-    <form method="POST" action="{{ route('wealth.values.save', $client) }}">
-        @csrf
-        <input type="hidden" name="tax_year" value="{{ $taxYear }}">
-        <div class="ws-sheet">
-            <div class="ws-head">
-                <h2>Wealth statement as at 30 June {{ $taxYear }}</h2>
-                <button class="btn btn-sm btn-primary">Save figures</button>
+    <div class="ws-sheet">
+        <div class="ws-head">
+            <div>
+                <h2>Wealth Statement</h2>
+                <div class="ws-sub">As at 30 June · figures in PKR · assets declared at cost</div>
             </div>
-
-            <div class="ws-row" style="font-weight: 600; color: var(--text-muted); font-size: 0.75rem;">
-                <div>Description</div><div class="ws-money">{{ $taxYear }}</div>
-                <div class="ws-money">{{ $taxYear - 1 }}</div><div></div>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="ws-sub">Expand a head to enter its lines</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleAll(true)">Expand all</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleAll(false)">Collapse</button>
             </div>
+        </div>
 
-            @foreach($assetHeads + $liabHeads as $code => $head)
-                @php $group = $lines->where('code', (string) $code); @endphp
-                @continue($group->isEmpty())
-                <div class="ws-group">
-                    <span>{{ $head['sr'] }}. {{ $head['label'] }}</span>
-                    <span class="ws-code">{{ $code }}</span>
+        <div class="st-head">
+            <div>Sr.</div><div>Description</div><div>Code</div>
+            <div class="ws-money">{{ $taxYear }}</div>
+            <div class="ws-money">{{ $taxYear - 1 }}</div>
+        </div>
+
+        {{-- ── Assets, Sr. 1–14 ── --}}
+        <form method="POST" action="{{ route('wealth.values.save', $client) }}" id="stmtForm">
+            @csrf
+            <input type="hidden" name="tax_year" value="{{ $taxYear }}">
+
+            @foreach($assetHeads as $code => $head)
+                @continue($code === '7016')
+                @php
+                    $group = $lines->where('code', (string) $code);
+                    $cy = $group->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
+                    $py = $group->sum(fn($l) => (float) ($l->amountFor($taxYear - 1) ?? 0));
+                @endphp
+                <div class="st-row st-headrow" data-head="{{ $code }}" onclick="toggleHead('{{ $code }}')" role="button" tabindex="0"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHead('{{ $code }}');}">
+                    <div>{{ $head['sr'] }}</div>
+                    <div>
+                        <i class="bi bi-chevron-right st-chev" id="chev-{{ $code }}"></i>
+                        {{ $head['label'] }}
+                        @if($group->count())<span class="st-count">{{ $group->count() }}</span>@endif
+                    </div>
+                    <div class="ws-code">{{ $code }}</div>
+                    <div class="ws-money">{{ $cy ? $n($cy) : '' }}</div>
+                    <div class="ws-money st-py">{{ $py ? $n($py) : '' }}</div>
                 </div>
-                @foreach($group as $line)
-                    <div class="ws-row">
-                        <div>
-                            {{ $line->description }}
-                            @if($line->attributeSummary())<div class="ws-sub">{{ $line->attributeSummary() }}</div>@endif
+                <div class="st-detail" id="det-{{ $code }}">
+                    @forelse($group as $line)
+                        <div class="st-row st-line">
+                            <div></div>
+                            <div>
+                                {{ $line->description }}
+                                @if($line->balancing)
+                                    <span class="badge bg-info" style="font-size: 0.6rem;">balancing figure</span>
+                                @endif
+                                @if($line->attributeSummary())<div class="ws-sub">{{ $line->attributeSummary() }}</div>@endif
+                            </div>
+                            <div></div>
+                            <div>
+                                @if($line->balancing)
+                                    <div class="ws-money" style="font-weight: 600;">{{ $n($line->amountFor($taxYear)) }}</div>
+                                @else
+                                    <input type="number" step="0.01" class="form-control form-control-sm num"
+                                           name="amounts[{{ $line->id }}]" value="{{ $line->amountFor($taxYear) }}"
+                                           aria-label="{{ $line->description }}">
+                                @endif
+                            </div>
+                            <div class="ws-money st-py">
+                                {{ $line->amountFor($taxYear - 1) === null ? '—' : $n($line->amountFor($taxYear - 1)) }}
+                                <div class="st-acts">
+                                    @unless($line->balancing)
+                                        <button type="button" class="btn btn-sm btn-outline-primary" title="Make this the balancing figure"
+                                                onclick="setBalancing({{ $line->id }})"><i class="bi bi-calculator"></i></button>
+                                    @endunless
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Remove"
+                                            onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
                         </div>
+                    @empty
+                        <div class="st-row st-line"><div></div><div class="text-muted">Nothing declared under this head.</div><div></div><div></div><div></div></div>
+                    @endforelse
+                </div>
+            @endforeach
+
+            @php
+                $inside = $lines->where('kind', 'asset')->where('code', '!=', '7016');
+                $insideCy = $inside->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
+                $insidePy = $inside->sum(fn($l) => (float) ($l->amountFor($taxYear - 1) ?? 0));
+                $fgn = $lines->where('code', '7016');
+                $fgnCy = $fgn->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
+                $fgnPy = $fgn->sum(fn($l) => (float) ($l->amountFor($taxYear - 1) ?? 0));
+            @endphp
+
+            <div class="st-row st-sum">
+                <div>15</div><div>Total Assets inside Pakistan</div><div class="ws-code">7015</div>
+                <div class="ws-money">{{ $n($insideCy) }}</div><div class="ws-money st-py">{{ $n($insidePy) }}</div>
+            </div>
+
+            <div class="st-row st-headrow" data-head="7016" onclick="toggleHead('7016')" role="button" tabindex="0"
+                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHead('7016');}">
+                <div>16</div>
+                <div><i class="bi bi-chevron-right st-chev" id="chev-7016"></i> Assets held outside Pakistan
+                     @if($fgn->count())<span class="st-count">{{ $fgn->count() }}</span>@endif</div>
+                <div class="ws-code">7016</div>
+                <div class="ws-money">{{ $fgnCy ? $n($fgnCy) : '' }}</div>
+                <div class="ws-money st-py">{{ $fgnPy ? $n($fgnPy) : '' }}</div>
+            </div>
+            <div class="st-detail" id="det-7016">
+                @forelse($fgn as $line)
+                    <div class="st-row st-line">
+                        <div></div>
+                        <div>{{ $line->description }}
+                            @if($line->attributeSummary())<div class="ws-sub">{{ $line->attributeSummary() }}</div>@endif</div>
+                        <div></div>
                         <div><input type="number" step="0.01" class="form-control form-control-sm num"
                                     name="amounts[{{ $line->id }}]" value="{{ $line->amountFor($taxYear) }}"
                                     aria-label="{{ $line->description }}"></div>
-                        <div class="ws-money text-muted">{{ $line->amountFor($taxYear - 1) === null ? '—' : $n($line->amountFor($taxYear - 1)) }}</div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                    onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
+                        <div class="ws-money st-py">{{ $line->amountFor($taxYear - 1) === null ? '—' : $n($line->amountFor($taxYear - 1)) }}
+                            <div class="st-acts">
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
+                            </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="st-row st-line"><div></div><div class="text-muted">Nothing declared under this head.</div><div></div><div></div><div></div></div>
+                @endforelse
+            </div>
+
+            <div class="st-row st-sum st-strong">
+                <div>17</div><div>Total Assets</div><div class="ws-code">7019</div>
+                <div class="ws-money">{{ $n($totals['current']['assets']) }}</div>
+                <div class="ws-money st-py">{{ $n($totals['prior']['assets']) }}</div>
+            </div>
+
+            {{-- ── Liabilities, Sr. 18–19 ── --}}
+            @foreach($liabHeads as $code => $head)
+                @php
+                    $group = $lines->where('code', (string) $code);
+                    $cy = $group->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
+                    $py = $group->sum(fn($l) => (float) ($l->amountFor($taxYear - 1) ?? 0));
+                @endphp
+                <div class="st-row st-headrow" data-head="{{ $code }}" onclick="toggleHead('{{ $code }}')" role="button" tabindex="0"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleHead('{{ $code }}');}">
+                    <div>{{ $head['sr'] }}</div>
+                    <div><i class="bi bi-chevron-right st-chev" id="chev-{{ $code }}"></i> {{ $head['label'] }}
+                         @if($group->count())<span class="st-count">{{ $group->count() }}</span>@endif</div>
+                    <div class="ws-code">{{ $code }}</div>
+                    <div class="ws-money">{{ $cy ? $n($cy) : '' }}</div>
+                    <div class="ws-money st-py">{{ $py ? $n($py) : '' }}</div>
+                </div>
+                <div class="st-detail" id="det-{{ $code }}">
+                    @forelse($group as $line)
+                        <div class="st-row st-line">
+                            <div></div>
+                            <div>{{ $line->description }}
+                                @if($line->attributeSummary())<div class="ws-sub">{{ $line->attributeSummary() }}</div>@endif</div>
+                            <div></div>
+                            <div><input type="number" step="0.01" class="form-control form-control-sm num"
+                                        name="amounts[{{ $line->id }}]" value="{{ $line->amountFor($taxYear) }}"
+                                        aria-label="{{ $line->description }}"></div>
+                            <div class="ws-money st-py">{{ $line->amountFor($taxYear - 1) === null ? '—' : $n($line->amountFor($taxYear - 1)) }}
+                                <div class="st-acts">
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="removeLine({{ $line->id }}, @json($line->description))"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="st-row st-line"><div></div><div class="text-muted">Nothing declared under this head.</div><div></div><div></div><div></div></div>
+                    @endforelse
+                </div>
             @endforeach
 
-            @if($lines->isEmpty())
-                <div class="ws-row"><div class="text-muted py-3">Nothing on the statement yet.</div><div></div><div></div><div></div></div>
-            @endif
-
-            <div class="ws-total">
-                <div>Total assets <span class="ws-code">7019</span></div>
-                <div class="ws-money">{{ $n($totals['current']['assets']) }}</div>
-                <div class="ws-money text-muted">{{ $n($totals['prior']['assets']) }}</div><div></div>
-            </div>
-            <div class="ws-total" style="border-top: 1px solid var(--border);">
-                <div>Total liabilities <span class="ws-code">7029</span></div>
+            <div class="st-row st-sum st-strong">
+                <div>19</div><div>Total Liabilities</div><div class="ws-code">7029</div>
                 <div class="ws-money">{{ $n($totals['current']['liabilities']) }}</div>
-                <div class="ws-money text-muted">{{ $n($totals['prior']['liabilities']) }}</div><div></div>
+                <div class="ws-money st-py">{{ $n($totals['prior']['liabilities']) }}</div>
             </div>
-            <div class="ws-total" style="border-top: 1px solid var(--border);">
-                <div>Net assets <span class="ws-code">703001</span></div>
-                <div class="ws-money">{{ $n($net) }}</div>
-                <div class="ws-money text-muted">{{ $n($totals['prior']['net']) }}</div><div></div>
+
+            <div class="st-save"><button class="btn btn-sm btn-primary">Save figures</button></div>
+        </form>
+
+        {{-- ── Reconciliation, Sr. 20–26 ── --}}
+        <form method="POST" action="{{ route('wealth.reconciliation.save', $client) }}">
+            @csrf
+            <input type="hidden" name="tax_year" value="{{ $taxYear }}">
+
+            <div class="st-row st-sum st-strong">
+                <div>20</div><div>Net Assets Current Year</div><div class="ws-code">703001</div>
+                <div class="ws-money">{{ $n($net) }}</div><div class="ws-money st-py"></div>
             </div>
-        </div>
-    </form>
+            <div class="st-row">
+                <div>21</div><div>Net Assets Previous Year</div><div class="ws-code">703002</div>
+                <div><input type="number" step="0.01" name="opening_wealth" class="form-control form-control-sm num"
+                            value="{{ $recon->opening_wealth }}" aria-label="Net assets previous year"></div>
+                <div class="ws-money st-py">{{ $n($totals['prior']['net']) }}</div>
+            </div>
+            <div class="st-row st-sum">
+                <div>22</div><div>Increase / Decrease in Assets</div><div class="ws-code">703003</div>
+                <div class="ws-money">{{ $n($increase) }}</div><div class="ws-money st-py"></div>
+            </div>
+
+            <div class="st-row st-sum st-strong">
+                <div>23</div><div>Inflows</div><div class="ws-code">7049</div>
+                <div class="ws-money">{{ $n($inflows) }}</div><div class="ws-money st-py"></div>
+            </div>
+            @foreach(['taxable' => ['i', '7031'], 'exempt' => ['ii', '7032'], 'final' => ['iii', '7033']] as $t => [$rn, $code])
+                <div class="st-row st-line">
+                    <div class="st-rn">{{ $rn }}</div>
+                    <div>{{ FbrSchema::INFLOWS[$code] }}
+                        <div class="ws-sub">From the income and salary workings</div></div>
+                    <div class="ws-code">{{ $code }}</div>
+                    <div class="ws-money">{{ $n($declared[$t]) }}</div><div class="ws-money st-py"></div>
+                </div>
+            @endforeach
+            @foreach(['adjustments' => ['iv', '7034'], 'foreign_remittance' => ['v', '7035'], 'inheritance' => ['vi', '7036'],
+                      'gift_received' => ['vii', '7037'], 'gain_disposal' => ['viii', '7038'], 'other_sources' => ['ix', '7048']] as $f => [$rn, $code])
+                <div class="st-row st-line">
+                    <div class="st-rn">{{ $rn }}</div>
+                    <div>{{ FbrSchema::INFLOWS[$code] }}</div>
+                    <div class="ws-code">{{ $code }}</div>
+                    <div><input type="number" step="0.01" name="{{ $f }}" class="form-control form-control-sm num"
+                                value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::INFLOWS[$code] }}"></div>
+                    <div class="ws-money st-py"></div>
+                </div>
+            @endforeach
+
+            <div class="st-row st-sum st-strong">
+                <div>24</div><div>Personal Expenses
+                    <div class="ws-sub">From Annex-F@if($salaryDeductions > 0), including {{ $n($salaryDeductions) }} stopped at source@endif</div></div>
+                <div class="ws-code">7089</div>
+                <div class="ws-money">{{ $n($expenseTotal) }}</div><div class="ws-money st-py"></div>
+            </div>
+
+            <div class="st-row st-sum st-strong">
+                <div>25</div><div>Outflows</div><div class="ws-code">7099</div>
+                <div class="ws-money">{{ $n($outflows) }}</div><div class="ws-money st-py"></div>
+            </div>
+            @foreach(['gift_given' => ['i', '7091'], 'loss_disposal' => ['ii', '7092'], 'other_outflows' => ['iii', '7098']] as $f => [$rn, $code])
+                <div class="st-row st-line">
+                    <div class="st-rn">{{ $rn }}</div>
+                    <div>{{ FbrSchema::OUTFLOWS[$code] }}</div>
+                    <div class="ws-code">{{ $code }}</div>
+                    <div><input type="number" step="0.01" name="{{ $f }}" class="form-control form-control-sm num"
+                                value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::OUTFLOWS[$code] }}"></div>
+                    <div class="ws-money st-py"></div>
+                </div>
+            @endforeach
+
+            <div class="st-row st-sum st-strong" style="background: {{ abs($unreconciled) < 1 ? 'var(--ok-tint)' : 'var(--danger-tint)' }};">
+                <div>26</div>
+                <div>Unreconciled Amount
+                    <div class="ws-sub">7049 − 7089 − 7099 − 703003. Must be nil.</div></div>
+                <div class="ws-code">703000</div>
+                <div class="ws-money">{{ $n($unreconciled) }}</div><div class="ws-money st-py"></div>
+            </div>
+
+            <div class="st-save d-flex gap-2 align-items-center">
+                <button class="btn btn-sm btn-primary">Save reconciliation</button>
+                <textarea name="notes" class="form-control form-control-sm" rows="1" placeholder="Notes" style="max-width: 420px;">{{ $recon->notes }}</textarea>
+            </div>
+        </form>
+    </div>
 
     <details class="ws-sheet ws-open">
-        <summary>
-            <span class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> Add a line to the statement</span>
-        </summary>
+        <summary><span class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i> Add a line to the statement</span></summary>
         <div>
             <form method="POST" action="{{ route('wealth.lines.store', $client) }}" id="addLineForm">
                 @csrf
@@ -344,14 +570,10 @@
                         <label class="form-label" for="lineHead">Head</label>
                         <select name="code" id="lineHead" class="form-select form-select-sm" required onchange="showHeadFields(this.value)">
                             <optgroup label="Assets">
-                                @foreach($assetHeads as $code => $h)
-                                    <option value="{{ $code }}">{{ $h['sr'] }}. {{ $h['label'] }} ({{ $code }})</option>
-                                @endforeach
+                                @foreach($assetHeads as $code => $h)<option value="{{ $code }}">{{ $h['sr'] }}. {{ $h['label'] }} ({{ $code }})</option>@endforeach
                             </optgroup>
                             <optgroup label="Liabilities">
-                                @foreach($liabHeads as $code => $h)
-                                    <option value="{{ $code }}">{{ $h['sr'] }}. {{ $h['label'] }} ({{ $code }})</option>
-                                @endforeach
+                                @foreach($liabHeads as $code => $h)<option value="{{ $code }}">{{ $h['sr'] }}. {{ $h['label'] }} ({{ $code }})</option>@endforeach
                             </optgroup>
                         </select>
                     </div>
@@ -365,13 +587,11 @@
                         <input type="number" step="0.01" name="amount" id="lineAmt" class="form-control form-control-sm num">
                     </div>
                 </div>
-
                 @foreach($assetHeads + $liabHeads as $code => $h)
                     <div class="row g-2 head-fields" data-code="{{ $code }}" style="display: none;">
                         @include('wealth.partials._fields', ['fields' => $h['fields'], 'values' => [], 'name' => 'details'])
                     </div>
                 @endforeach
-
                 <button class="btn btn-accent btn-sm mt-3">Add to statement</button>
                 <span class="ws-sub ms-2">Assets are declared at cost, including stamp duty, registration and transfer fees.</span>
             </form>
@@ -379,9 +599,7 @@
     </details>
 
     <details class="ws-sheet ws-open">
-        <summary>
-            <span class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-right me-1"></i> Carry figures forward from another year</span>
-        </summary>
+        <summary><span class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-right me-1"></i> Carry figures forward from another year</span></summary>
         <div>
             <p class="ws-sub mb-2">Copies each line's figure into another year. Anything already entered for the target year is left alone.</p>
             <form method="POST" action="{{ route('wealth.carry-forward', $client) }}" class="row g-2 align-items-end" style="max-width: 460px;">
@@ -396,167 +614,7 @@
     </details>
 </div>
 
-{{-- ════════ ANNEX-F ════════ --}}
-<div class="tab-pane fade" id="t-expenses">
-    <form method="POST" action="{{ route('wealth.expenses.save', $client) }}">
-        @csrf
-        <input type="hidden" name="tax_year" value="{{ $taxYear }}">
-        <div class="ws-sheet">
-            <div class="ws-head">
-                <div><h2>Annex-F — personal expenses</h2>
-                     <div class="ws-sub">Feeds Sr. 24 of the reconciliation <span class="ws-code">7089</span></div></div>
-                <button class="btn btn-sm btn-primary">Save</button>
-            </div>
-            @foreach(FbrSchema::EXPENSES as $code => $label)
-                @php $shown = isset($expenses[$code]); @endphp
-                <div class="ws-row opt-row" id="exp-{{ $code }}" data-key="{{ $code }}"
-                     style="grid-template-columns: 1fr 180px 90px;@if(!$shown) display: none;@endif">
-                    <div>{{ $label }}</div>
-                    <div><input type="number" step="0.01" name="expenses[{{ $code }}]" class="form-control form-control-sm num"
-                                value="{{ $expenses[$code] ?? '' }}" aria-label="{{ $label }}" @if(!$shown) disabled @endif></div>
-                    <div class="ws-code">{{ $code }}</div>
-                </div>
-            @endforeach
-            <div style="padding: 12px 18px; border-bottom: 1px solid var(--n-100);" class="d-flex flex-wrap gap-2 align-items-end">
-                <div style="min-width: 300px;">
-                    <label class="form-label" for="addExpense">Add an expense head</label>
-                    <select id="addExpense" class="form-select form-select-sm">
-                        @foreach(FbrSchema::EXPENSES as $code => $label)
-                            <option value="exp-{{ $code }}" @if(isset($expenses[$code])) hidden @endif>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addExpense')">Add</button>
-            </div>
-            <div class="ws-row" style="grid-template-columns: 1fr 180px 90px; background: var(--warn-tint);">
-                <div>{{ FbrSchema::EXPENSE_CONTRA_LABEL }}</div>
-                <div><input type="number" step="0.01" name="expenses[{{ FbrSchema::EXPENSE_CONTRA }}]"
-                            class="form-control form-control-sm num"
-                            value="{{ $expenses[FbrSchema::EXPENSE_CONTRA] ?? '' }}"
-                            aria-label="{{ FbrSchema::EXPENSE_CONTRA_LABEL }}"></div>
-                <div class="ws-code">{{ FbrSchema::EXPENSE_CONTRA }}</div>
-            </div>
-            @if($salaryDeductions > 0)
-                <div class="ws-group"><span>From the salary working</span><span class="ws-code">entered there</span></div>
-                @foreach($salary as $w)
-                    @foreach($w->deductions() as $c)
-                        @continue($c->amount() == 0)
-                        <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
-                            <div>{{ $c->label }} <span class="ws-sub">— {{ $w->employer }}</span></div>
-                            <div class="ws-money">{{ $n($c->amount()) }}</div>
-                            <div class="ws-code">{{ $c->is_tax ? 'tax' : '' }}</div>
-                        </div>
-                    @endforeach
-                @endforeach
-            @endif
-            <div class="ws-total" style="grid-template-columns: 1fr 180px 90px;">
-                <div>Personal expenses
-                    @if($salaryDeductions > 0)
-                        <div class="ws-sub">Includes {{ $n($salaryDeductions) }} stopped at source, of which {{ $n($salaryTax) }} is tax.</div>
-                    @endif
-                </div>
-                <div class="ws-money">{{ $n($expenseTotal) }}</div>
-                <div class="ws-code">7089</div>
-            </div>
-        </div>
-    </form>
-</div>
-
-{{-- ════════ RECONCILIATION ════════ --}}
-<div class="tab-pane fade" id="t-recon">
-    <form method="POST" action="{{ route('wealth.reconciliation.save', $client) }}">
-        @csrf
-        <input type="hidden" name="tax_year" value="{{ $taxYear }}">
-        <div class="ws-sheet">
-            <div class="ws-head"><h2>Reconciliation of net assets</h2><button class="btn btn-sm btn-primary">Save</button></div>
-
-            <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
-                <div>Net assets, current year</div>
-                <div class="ws-money">{{ $n($net) }}</div><div class="ws-code">703001</div>
-            </div>
-            <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
-                <div>Net assets, previous year
-                    <div class="ws-sub">Taken from last year's statement; change it if the prior year was filed elsewhere.</div></div>
-                <div><input type="number" step="0.01" name="opening_wealth" class="form-control form-control-sm num"
-                            value="{{ $recon->opening_wealth }}" aria-label="Net assets previous year"></div>
-                <div class="ws-code">703002</div>
-            </div>
-            <div class="ws-row" style="grid-template-columns: 1fr 180px 90px; font-weight: 600;">
-                <div>Increase / decrease in assets</div>
-                <div class="ws-money">{{ $n($increase) }}</div><div class="ws-code">703003</div>
-            </div>
-
-            <div class="ws-group"><span>Sr. 23 — Inflows</span><span class="ws-code">7049</span></div>
-            @foreach(['taxable' => '7031', 'exempt' => '7032', 'final' => '7033'] as $t => $code)
-                <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
-                    <div>{{ FbrSchema::INFLOWS[$code] }}
-                        <div class="ws-sub">From the income working and the salary working — add lines there, not here.</div></div>
-                    <div class="ws-money">{{ $n($declared[$t]) }}</div><div class="ws-code">{{ $code }}</div>
-                </div>
-            @endforeach
-            @foreach(['adjustments' => '7034', 'foreign_remittance' => '7035', 'inheritance' => '7036',
-                      'gift_received' => '7037', 'gain_disposal' => '7038', 'other_sources' => '7048'] as $f => $code)
-                @php $shown = (float) $recon->{$f} != 0; @endphp
-                <div class="ws-row opt-row" id="in-{{ $f }}" style="grid-template-columns: 1fr 180px 90px;@if(!$shown) display: none;@endif">
-                    <div>{{ FbrSchema::INFLOWS[$code] }}</div>
-                    <div><input type="number" step="0.01" name="{{ $f }}" class="form-control form-control-sm num"
-                                value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::INFLOWS[$code] }}"></div>
-                    <div class="ws-code">{{ $code }}</div>
-                </div>
-            @endforeach
-            <div style="padding: 10px 18px;" class="d-flex flex-wrap gap-2 align-items-end">
-                <select id="addInflow" class="form-select form-select-sm" style="max-width: 420px;">
-                    @foreach(['adjustments' => '7034', 'foreign_remittance' => '7035', 'inheritance' => '7036',
-                              'gift_received' => '7037', 'gain_disposal' => '7038', 'other_sources' => '7048'] as $f => $code)
-                        <option value="in-{{ $f }}" @if((float) $recon->{$f} != 0) hidden @endif>{{ FbrSchema::INFLOWS[$code] }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addInflow')">Add inflow</button>
-            </div>
-            <div class="ws-total" style="grid-template-columns: 1fr 180px 90px;">
-                <div>Total inflows</div><div class="ws-money">{{ $n($inflows) }}</div><div class="ws-code">7049</div>
-            </div>
-
-            <div class="ws-group"><span>Sr. 24 — Personal expenses</span><span class="ws-code">7089</span></div>
-            <div class="ws-row" style="grid-template-columns: 1fr 180px 90px;">
-                <div>From Annex-F</div><div class="ws-money">{{ $n($expenseTotal) }}</div><div class="ws-code">7089</div>
-            </div>
-
-            <div class="ws-group"><span>Sr. 25 — Outflows</span><span class="ws-code">7099</span></div>
-            @foreach(['gift_given' => '7091', 'loss_disposal' => '7092', 'other_outflows' => '7098'] as $f => $code)
-                @php $shown = (float) $recon->{$f} != 0; @endphp
-                <div class="ws-row opt-row" id="out-{{ $f }}" style="grid-template-columns: 1fr 180px 90px;@if(!$shown) display: none;@endif">
-                    <div>{{ FbrSchema::OUTFLOWS[$code] }}</div>
-                    <div><input type="number" step="0.01" name="{{ $f }}" class="form-control form-control-sm num"
-                                value="{{ $recon->{$f} ?: '' }}" aria-label="{{ FbrSchema::OUTFLOWS[$code] }}"></div>
-                    <div class="ws-code">{{ $code }}</div>
-                </div>
-            @endforeach
-            <div style="padding: 10px 18px;" class="d-flex flex-wrap gap-2 align-items-end">
-                <select id="addOutflow" class="form-select form-select-sm" style="max-width: 420px;">
-                    @foreach(['gift_given' => '7091', 'loss_disposal' => '7092', 'other_outflows' => '7098'] as $f => $code)
-                        <option value="out-{{ $f }}" @if((float) $recon->{$f} != 0) hidden @endif>{{ FbrSchema::OUTFLOWS[$code] }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="revealRow('addOutflow')">Add outflow</button>
-            </div>
-            <div class="ws-total" style="grid-template-columns: 1fr 180px 90px;">
-                <div>Total outflows</div><div class="ws-money">{{ $n($outflows) }}</div><div class="ws-code">7099</div>
-            </div>
-
-            <div class="ws-total" style="grid-template-columns: 1fr 180px 90px; background: {{ abs($unreconciled) < 1 ? 'var(--ok-tint)' : 'var(--danger-tint)' }};">
-                <div>Unreconciled amount — must be nil</div>
-                <div class="ws-money">{{ $n($unreconciled) }}</div><div class="ws-code">703000</div>
-            </div>
-
-            <div style="padding: 14px 18px;">
-                <p class="ws-sub">703000 = 7049 − 7089 − 7099 − 703003. IRIS will not accept the statement until this is nil.</p>
-                <label class="form-label" for="rcNotes">Notes</label>
-                <textarea name="notes" id="rcNotes" class="form-control form-control-sm" rows="2">{{ $recon->notes }}</textarea>
-            </div>
-        </div>
-    </form>
-</div>
+<form method="POST" id="balancingForm" class="d-none">@csrf<input type="hidden" name="tax_year" value="{{ $taxYear }}"></form>
 
 </div>
 
@@ -614,6 +672,42 @@ function revealRow(selectId) {
     var next = Array.prototype.find.call(sel.options, function (o) { return !o.hidden; });
     if (next) { sel.value = next.value; } else { sel.closest('div').style.display = 'none'; }
 }
+
+/* Heads open to show the lines behind them; the state is remembered so a save
+   does not collapse what the preparer was working in. */
+function toggleHead(code, force) {
+    var det = document.getElementById('det-' + code);
+    var chev = document.getElementById('chev-' + code);
+    if (!det) return;
+    var open = force === undefined ? !det.classList.contains('open') : force;
+    det.classList.toggle('open', open);
+    if (chev) chev.classList.toggle('open', open);
+    try {
+        var keys = JSON.parse(localStorage.getItem('ws-open') || '[]');
+        var i = keys.indexOf(code);
+        if (open && i < 0) keys.push(code);
+        if (!open && i >= 0) keys.splice(i, 1);
+        localStorage.setItem('ws-open', JSON.stringify(keys));
+    } catch (e) { /* private window */ }
+}
+
+function toggleAll(open) {
+    document.querySelectorAll('.st-headrow').forEach(function (r) { toggleHead(r.dataset.head, open); });
+}
+
+function setBalancing(lineId) {
+    if (!confirm('Make this the balancing figure?\n\nIt will be worked out so the reconciliation comes to nil, and can no longer be typed in.')) return;
+    var f = document.getElementById('balancingForm');
+    f.action = '{{ url('wealth/' . $client->id . '/lines') }}/' + lineId + '/balancing';
+    f.submit();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var keys = [];
+    try { keys = JSON.parse(localStorage.getItem('ws-open') || '[]'); } catch (e) {}
+    // A head with nothing in it opens on request only; ones in use come back open.
+    keys.forEach(function (c) { toggleHead(c, true); });
+});
 
 function showHeadFields(code) {
     document.querySelectorAll('.head-fields').forEach(function (el) {

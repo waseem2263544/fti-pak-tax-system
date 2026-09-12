@@ -47,9 +47,13 @@ class WealthStatementController extends Controller
     {
         $taxYear = (int) $request->get('year', self::currentTaxYear());
 
+        // Solve the balancing line before anything is read, so the statement and
+        // the reconciliation on screen agree.
+        $this->rebalance($client, $taxYear);
+
         $lines = WealthLine::with('values')
             ->where('client_id', $client->id)
-            ->orderBy('section')
+            ->orderBy('code')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -61,42 +65,24 @@ class WealthStatementController extends Controller
             ->unique()->sortDesc()->values();
 
         $income = IncomeWorking::firstOrNew(['client_id' => $client->id, 'tax_year' => $taxYear]);
-        $recon  = WealthReconciliation::firstOrNew(['client_id' => $client->id, 'tax_year' => $taxYear]);
+
+        // One source for every reconciliation figure, shared with rebalance().
+        $f = $this->figures($client, $taxYear);
+
+        $recon            = $f['recon'];
+        $expenses         = $f['expenses'];
+        $declared         = $f['declared'];
+        $expenseTotal     = $f['expenseTotal'];
+        $salary           = $f['salary'];
+        $salaryDeductions = $f['salaryDeductions'];
+        $salaryTax        = $salary->sum(fn($w) => $w->taxDeducted());
+        $inflows          = $f['inflows'];
+        $outflows         = $f['outflows'];
 
         $items = IncomeItem::with('wealthLine')
             ->where('client_id', $client->id)->where('tax_year', $taxYear)
             ->orderBy('head')->orderBy('sort_order')->orderBy('id')
             ->get()->groupBy('head');
-
-        $expenses = WealthExpense::where('client_id', $client->id)
-            ->where('tax_year', $taxYear)->pluck('amount', 'code');
-
-        $salary = SalaryWorking::with('components.months')
-            ->where('client_id', $client->id)->where('tax_year', $taxYear)
-            ->orderBy('sort_order')->get();
-
-        // The income working feeds the reconciliation: what was declared under
-        // each treatment is what Sr. 23(i)-(iii) has to show. Gross salary goes
-        // in, not net - the deductions are accounted for as expenses below, and
-        // counting them on both sides would understate the year twice over.
-        $declared = ['taxable' => 0.0, 'exempt' => 0.0, 'final' => 0.0];
-
-        foreach ($items->flatten() as $item) {
-            $declared[$item->treatment] = ($declared[$item->treatment] ?? 0) + (float) $item->amount;
-        }
-
-        $declared['taxable'] += $salary->sum(fn($w) => $w->incomeBy('taxable'));
-        $declared['exempt']  += $salary->sum(fn($w) => $w->incomeBy('exempt'));
-
-        // Salary deductions - tax withheld and everything else stopped at
-        // source - are money that left the taxpayer, so they belong in personal
-        // expenses alongside the Annex-F heads.
-        $salaryDeductions = $salary->sum(fn($w) => $w->totalDeductions());
-        $salaryTax        = $salary->sum(fn($w) => $w->taxDeducted());
-
-        $expenseTotal = $expenses->except([FbrSchema::EXPENSE_CONTRA])->sum()
-                      - (float) ($expenses[FbrSchema::EXPENSE_CONTRA] ?? 0)
-                      + $salaryDeductions;
 
         $totals = [
             'current' => $this->netWealth($lines, $taxYear),
@@ -112,8 +98,96 @@ class WealthStatementController extends Controller
         return view('wealth.show', compact(
             'client', 'taxYear', 'years', 'lines', 'income', 'recon', 'totals',
             'items', 'expenses', 'declared', 'expenseTotal',
-            'salary', 'salaryDeductions', 'salaryTax'
+            'salary', 'salaryDeductions', 'salaryTax', 'inflows', 'outflows'
         ));
+    }
+
+    /**
+     * Everything the reconciliation needs for a year, in one place.
+     *
+     * show() renders from this and rebalance() solves from it, so the figure
+     * on screen and the figure written to the balancing line can never come
+     * from two different sums.
+     */
+    private function figures(Client $client, int $taxYear): array
+    {
+        $items = IncomeItem::where('client_id', $client->id)->where('tax_year', $taxYear)->get();
+
+        $salary = SalaryWorking::with('components.months')
+            ->where('client_id', $client->id)->where('tax_year', $taxYear)
+            ->orderBy('sort_order')->get();
+
+        $declared = ['taxable' => 0.0, 'exempt' => 0.0, 'final' => 0.0];
+        foreach ($items as $item) {
+            $declared[$item->treatment] = ($declared[$item->treatment] ?? 0) + (float) $item->amount;
+        }
+        $declared['taxable'] += $salary->sum(fn($w) => $w->incomeBy('taxable'));
+        $declared['exempt']  += $salary->sum(fn($w) => $w->incomeBy('exempt'));
+
+        $expenses = WealthExpense::where('client_id', $client->id)
+            ->where('tax_year', $taxYear)->pluck('amount', 'code');
+
+        $salaryDeductions = $salary->sum(fn($w) => $w->totalDeductions());
+
+        $expenseTotal = $expenses->except([FbrSchema::EXPENSE_CONTRA])->sum()
+                      - (float) ($expenses[FbrSchema::EXPENSE_CONTRA] ?? 0)
+                      + $salaryDeductions;
+
+        $recon = WealthReconciliation::firstOrNew(['client_id' => $client->id, 'tax_year' => $taxYear]);
+
+        $inflows = $declared['taxable'] + $declared['exempt'] + $declared['final']
+                 + (float) $recon->adjustments + (float) $recon->foreign_remittance
+                 + (float) $recon->inheritance + (float) $recon->gift_received
+                 + (float) $recon->gain_disposal + (float) $recon->other_sources;
+
+        $outflows = (float) $recon->gift_given + (float) $recon->loss_disposal + (float) $recon->other_outflows;
+
+        return compact('items', 'salary', 'declared', 'expenses', 'expenseTotal',
+                       'salaryDeductions', 'recon', 'inflows', 'outflows');
+    }
+
+    /**
+     * Solve the balancing line so the year reconciles to nil.
+     *
+     * From 703000 = 7049 - 7089 - 7099 - 703003, with 703003 = net assets this
+     * year less last:
+     *
+     *     cash = opening + inflows - expenses - outflows - other assets + liabilities
+     *
+     * Everything else on the statement is evidenced; the notes and coins are
+     * whatever is left, which is what a preparer plugs by hand anyway.
+     */
+    private function rebalance(Client $client, int $taxYear): void
+    {
+        $balancing = WealthLine::where('client_id', $client->id)->where('balancing', true)->first();
+
+        if (!$balancing) {
+            return;
+        }
+
+        $f = $this->figures($client, $taxYear);
+
+        // Nothing to solve against until an opening position exists.
+        if ($f['recon']->opening_wealth === null) {
+            return;
+        }
+
+        $lines = WealthLine::with('values')->where('client_id', $client->id)->get();
+
+        $otherAssets = $lines->where('kind', 'asset')->where('id', '!=', $balancing->id)
+            ->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
+
+        $liabilities = $lines->where('kind', 'liability')
+            ->sum(fn($l) => (float) ($l->amountFor($taxYear) ?? 0));
+
+        $cash = (float) $f['recon']->opening_wealth
+              + $f['inflows'] - $f['expenseTotal'] - $f['outflows']
+              - $otherAssets + $liabilities;
+
+        WealthValue::updateOrCreate(
+            ['wealth_line_id' => $balancing->id, 'tax_year' => $taxYear],
+            ['amount' => round($cash, 2)]
+        );
     }
 
     /** Assets, liabilities and net wealth for one year. */
@@ -178,6 +252,13 @@ class WealthStatementController extends Controller
             'sort_order'  => (int) WealthLine::where('client_id', $client->id)
                                 ->where('code', $code)->max('sort_order') + 1,
         ]);
+
+        // Cash in hand is what a preparer plugs, so the first one becomes the
+        // balancing line unless another already is.
+        if ($code === '7012'
+            && !WealthLine::where('client_id', $client->id)->where('balancing', true)->exists()) {
+            $line->update(['balancing' => true]);
+        }
 
         if ($validated['amount'] !== null && $validated['amount'] !== '') {
             WealthValue::create([
@@ -254,6 +335,8 @@ class WealthStatementController extends Controller
             );
         }
 
+        $this->rebalance($client, $year);
+
         return back()->with('success', "Figures saved for tax year {$year}.");
     }
 
@@ -309,6 +392,8 @@ class WealthStatementController extends Controller
             ['client_id' => $client->id, 'tax_year' => (int) $validated['tax_year']],
             $data
         );
+
+        $this->rebalance($client, (int) $validated['tax_year']);
 
         return back()->with('success', 'Reconciliation saved.');
     }
@@ -429,7 +514,22 @@ class WealthStatementController extends Controller
             );
         }
 
+        $this->rebalance($client, $year);
+
         return back()->with('success', 'Annex-F saved.');
+    }
+
+    /** Choose which line carries the balancing figure. Only one can. */
+    public function setBalancing(Request $request, Client $client, WealthLine $line)
+    {
+        abort_unless($line->client_id === $client->id, 404);
+
+        WealthLine::where('client_id', $client->id)->update(['balancing' => false]);
+        $line->update(['balancing' => true]);
+
+        $this->rebalance($client, (int) $request->get('tax_year', self::currentTaxYear()));
+
+        return back()->with('success', $line->description . ' now carries the balancing figure.');
     }
 
     /** Copy a year's figures forward, so next year starts from last year's closing position. */

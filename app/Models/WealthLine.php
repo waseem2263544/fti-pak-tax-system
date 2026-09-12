@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class WealthLine extends Model
 {
-    protected $fillable = ['client_id', 'kind', 'code', 'section', 'description', 'details', 'sort_order', 'disposed_in', 'notes'];
+    protected $fillable = ['client_id', 'kind', 'code', 'balancing', 'section', 'description', 'details', 'sort_order', 'disposed_in', 'notes'];
 
-    protected $casts = ['details' => 'array'];
+    protected $casts = ['details' => 'array', 'balancing' => 'boolean'];
 
     /** Kept for rows created before the move onto FBR codes. */
     public const LEGACY_SECTION = 'legacy';
