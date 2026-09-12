@@ -6,11 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class LetterNumber extends Model
 {
-    protected $fillable = ['date', 'reference', 'sequence_no', 'year', 'client_id', 'description'];
+    protected $fillable = ['date', 'raw_date', 'reference', 'sequence_no', 'year', 'client_id', 'client_name', 'description', 'source'];
 
     protected $casts = ['date' => 'date'];
 
     public function client() { return $this->belongsTo(Client::class); }
+
+    /** Who the letter was for; the register often names someone who is not a client. */
+    public function getPartyNameAttribute(): string
+    {
+        return $this->client?->name ?? ($this->client_name ?: '—');
+    }
 
     public static function nextSequence()
     {

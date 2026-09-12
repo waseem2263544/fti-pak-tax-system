@@ -71,6 +71,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('file-management/files', [FileController::class, 'storeFile'])->name('files.store-file');
     Route::post('file-management/letters', [FileController::class, 'storeLetter'])->name('files.store-letter');
     Route::delete('file-management/files/{fileNumber}', [FileController::class, 'destroyFile'])->name('files.destroy-file');
+    Route::put('file-management/files/{fileNumber}', [FileController::class, 'updateFile'])->name('files.update-file');
+    Route::put('file-management/letters/{letterNumber}', [FileController::class, 'updateLetter'])->name('files.update-letter');
     Route::delete('file-management/letters/{letterNumber}', [FileController::class, 'destroyLetter'])->name('files.destroy-letter');
 
     // Notifications
