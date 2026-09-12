@@ -11,13 +11,19 @@
                 <form method="POST" action="{{ route('wht.companies.update', $company) }}">
                     @csrf @method('PUT')
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-md-5">
                             <label class="form-label">Company Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control" value="{{ old('name', $company->name) }}" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">NTN / CNIC</label>
                             <input type="text" name="ntn_cnic" class="form-control" value="{{ old('ntn_cnic', $company->ntn_cnic) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Office Reference</label>
+                            <input type="text" name="office_reference" class="form-control"
+                                   value="{{ old('office_reference', $company->office_reference) }}">
+                            <div class="form-text">Required on the FBR withholding statement.</div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Address</label>

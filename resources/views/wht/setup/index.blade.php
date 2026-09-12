@@ -5,6 +5,17 @@
 @section('content')
 @include('wht.partials.agent-switch', ['company' => $company])
 
+@if(blank($company->office_reference))
+<div class="alert alert-warning d-flex align-items-start" style="font-size: 0.87rem;">
+    <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+    <div>
+        <strong>{{ $company->name }}</strong> has no Office Reference. FBR requires it on the withholding
+        statement, and the file will not generate without one.
+        <a href="{{ route('wht.companies.edit', $company) }}">Add it</a>.
+    </div>
+</div>
+@endif
+
 @if($partiesMissingId > 0)
 <div class="alert alert-warning d-flex align-items-start" style="font-size: 0.87rem;">
     <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
