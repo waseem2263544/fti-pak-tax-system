@@ -27,8 +27,16 @@
                         <span class="badge bg-primary">Active</span>
                     @endif
                 </div>
-                <div class="text-muted mb-3" style="font-size: 0.85rem;">
+                <div class="text-muted mb-2" style="font-size: 0.85rem;">
                     NTN / CNIC: {{ $c->ntn_cnic ?: '—' }}
+                </div>
+                <div class="mb-3" style="font-size: 0.85rem;">
+                    Office Reference:
+                    @if($c->office_reference)
+                        <span class="text-muted">{{ $c->office_reference }}</span>
+                    @else
+                        <span class="badge bg-warning text-dark">not set</span>
+                    @endif
                 </div>
                 <div class="d-flex gap-3 mb-3" style="font-size: 0.8rem; color: #6b7280;">
                     <span><i class="bi bi-people me-1"></i>{{ $c->parties_count }} parties</span>
@@ -40,7 +48,9 @@
                         <i class="bi bi-box-arrow-in-right me-1"></i> Open
                     </a>
                     @if(Auth::user()->hasRole('admin'))
-                        <a href="{{ route('wht.companies.edit', $c) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ route('wht.companies.edit', $c) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil me-1"></i> Edit
+                        </a>
                     @endif
                 </div>
             </div>

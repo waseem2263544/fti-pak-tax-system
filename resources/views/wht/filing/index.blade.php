@@ -48,6 +48,17 @@
     </div>
 </div>
 
+@if(blank($company->office_reference))
+<div class="alert alert-danger d-flex align-items-start">
+    <i class="bi bi-exclamation-octagon me-2 mt-1"></i>
+    <div>
+        <strong>{{ $company->name }} has no Office Reference.</strong>
+        FBR requires it on the withholding statement, so the .xlsm will not generate until it is set.
+        <a href="{{ route('wht.companies.edit', $company) }}" class="alert-link">Add it now</a>.
+    </div>
+</div>
+@endif
+
 <div class="row g-3 mb-3">
     <div class="col-md-3"><div class="card h-100"><div class="card-body">
         <div class="text-muted" style="font-size: 0.72rem; text-transform: uppercase;">Tax Withheld</div>

@@ -29,6 +29,12 @@
                 @endforeach
                 @if(Auth::user()->hasRole('admin'))
                     <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ route('wht.companies.edit', $company) }}">
+                        <i class="bi bi-pencil me-1"></i> Edit {{ $company->name }}
+                        @if(blank($company->office_reference))
+                            <span class="badge bg-warning text-dark ms-1">office ref missing</span>
+                        @endif
+                    </a></li>
                     <li><a class="dropdown-item" href="{{ route('wht.companies.create') }}">
                         <i class="bi bi-plus-lg me-1"></i> Add withholding agent
                     </a></li>
