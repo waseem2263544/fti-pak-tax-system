@@ -264,15 +264,24 @@
         <form class="modal-content" method="POST" action="{{ route('documents.upload') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="folder" value="{{ $folder }}">
-            <div class="modal-header"><h5 class="modal-title">Upload a file</h5>
+            <div class="modal-header"><h5 class="modal-title">Upload files</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <input type="file" name="file" class="form-control" required>
-                <div class="form-text">Up to 4 MB. Larger files are best added in SharePoint directly.</div>
+                @php $lim = \App\Http\Controllers\DocumentController::uploadLimits(); @endphp
+                <input type="file" name="files[]" id="uploadInput" class="form-control" multiple required
+                       data-max-count="{{ $lim['count'] }}" data-max-kb="{{ $lim['per_file'] }}">
+                <div class="form-text">
+                    Pick several at once, or drop them on the box.
+                    Up to {{ $lim['count'] }} files, each under {{ round($lim['per_file'] / 1024, 1) }} MB
+                    and {{ round($lim['total'] / 1024, 1) }} MB in total.
+                    Anything larger is best added in SharePoint directly.
+                </div>
+                <ul id="uploadList" class="mt-2 mb-0 ps-3" style="font-size: 0.8rem; color: var(--text-soft);"></ul>
+                <div id="uploadWarn" class="alert alert-warning mt-2 d-none" style="font-size: 0.8rem;"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Upload</button>
+                <button type="submit" class="btn btn-primary" id="uploadGo">Upload</button>
             </div>
         </form>
     </div>
@@ -299,6 +308,50 @@
 @endsection
 
 @section('scripts')
+<script>
+/*
+ * PHP drops files past max_file_uploads without a word, and rejects an
+ * oversized one after the whole batch has uploaded. Both are worth catching
+ * here, where the user can still do something about it.
+ */
+(function () {
+    var input = document.getElementById('uploadInput');
+    if (!input) { return; }
+
+    var list = document.getElementById('uploadList');
+    var warn = document.getElementById('uploadWarn');
+    var go   = document.getElementById('uploadGo');
+
+    input.addEventListener('change', function () {
+        var files = Array.prototype.slice.call(input.files || []);
+        var maxCount = parseInt(input.dataset.maxCount, 10);
+        var maxKb    = parseInt(input.dataset.maxKb, 10);
+        var problems = [];
+
+        list.innerHTML = '';
+        files.forEach(function (f) {
+            var kb = Math.round(f.size / 1024);
+            var li = document.createElement('li');
+            li.textContent = f.name + ' — ' + (kb > 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' KB');
+            if (kb > maxKb) {
+                li.style.color = 'var(--danger-ink)';
+                problems.push(f.name + ' is too large');
+            }
+            list.appendChild(li);
+        });
+
+        if (files.length > maxCount) {
+            problems.push('Only ' + maxCount + ' files can go up at once; you picked ' + files.length + '.');
+        }
+
+        warn.classList.toggle('d-none', problems.length === 0);
+        warn.textContent = problems.join(' ');
+        go.disabled = problems.length > 0;
+    });
+})();
+</script>
+
+
 <script>
 // ── Search suggestions ──────────────────────────────────────────────────────
 (function () {

@@ -240,26 +240,90 @@ class DocumentController extends Controller
         return back()->with('success', 'Folder created.');
     }
 
+    /**
+     * What PHP will actually accept, in kilobytes and file count.
+     *
+     * The form says the real limits rather than a number written into the
+     * template, because they are set by the host and change without us.
+     */
+    public static function uploadLimits(): array
+    {
+        $toKb = function (string $value): int {
+            $value = trim($value);
+            $unit  = strtolower(substr($value, -1));
+            $n     = (int) $value;
+
+            return match ($unit) {
+                'g' => $n * 1024 * 1024,
+                'm' => $n * 1024,
+                'k' => $n,
+                default => (int) ($n / 1024),
+            };
+        };
+
+        $perFile = $toKb((string) ini_get('upload_max_filesize'));
+        $post    = $toKb((string) ini_get('post_max_size'));
+        $count   = (int) ini_get('max_file_uploads') ?: 20;
+
+        return [
+            'per_file' => $perFile > 0 ? $perFile : 2048,
+            'total'    => $post > 0 ? $post : 8192,
+            'count'    => $count,
+        ];
+    }
+
+    /**
+     * Upload one file or many.
+     *
+     * Each file is sent to Graph on its own, and one failing does not stop the
+     * rest: a batch of twenty where the third is rejected should still leave
+     * nineteen in SharePoint, and say which one did not make it.
+     */
     public function upload(Request $request)
     {
+        $limits = self::uploadLimits();
+
         $validated = $request->validate([
-            'file'   => 'required|file|max:4096',
-            'folder' => 'nullable|string',
+            'files'   => 'required|array|min:1|max:' . $limits['count'],
+            'files.*' => 'file|max:' . $limits['per_file'],
+            'folder'  => 'nullable|string',
+        ], [
+            'files.required' => 'Choose at least one file.',
+            'files.*.max'    => 'Each file must be under ' . round($limits['per_file'] / 1024, 1) . ' MB.',
         ]);
 
-        $file = $request->file('file');
+        $folder = $validated['folder'] ?? null;
+        $done = [];
+        $failed = [];
 
-        try {
-            $item = $this->sharepoint->upload(
-                $validated['folder'] ?? null,
-                $file->getClientOriginalName(),
-                file_get_contents($file->getRealPath())
-            );
-        } catch (\Throwable $e) {
-            return back()->with('error', $e->getMessage());
+        foreach ($request->file('files') as $file) {
+            $name = $file->getClientOriginalName();
+
+            try {
+                $item = $this->sharepoint->upload($folder, $name, file_get_contents($file->getRealPath()));
+                $done[] = $item['name'] ?? $name;
+            } catch (\Throwable $e) {
+                $failed[$name] = $e->getMessage();
+            }
         }
 
-        return back()->with('success', "Uploaded {$item['name']}.");
+        if ($done && !$failed) {
+            return back()->with('success', count($done) === 1
+                ? "Uploaded {$done[0]}."
+                : 'Uploaded ' . count($done) . ' files.');
+        }
+
+        if ($done && $failed) {
+            return back()->with('error', sprintf(
+                'Uploaded %d of %d. These did not go up: %s',
+                count($done),
+                count($done) + count($failed),
+                collect($failed)->map(fn($why, $name) => "{$name} ({$why})")->implode('; ')
+            ));
+        }
+
+        return back()->with('error', 'Nothing was uploaded. ' .
+            collect($failed)->map(fn($why, $name) => "{$name}: {$why}")->implode('; '));
     }
 
     public function download(Request $request)
