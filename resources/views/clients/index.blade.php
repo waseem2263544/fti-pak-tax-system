@@ -90,8 +90,24 @@
                     <td>
                         @if($client->fbr_username)
                             <span style="font-family: monospace; font-size: 0.78rem; color: var(--n-500);">{{ $client->fbr_username }}</span>
+                            {{-- Shown only once the extension has announced itself, so it is
+                                 never a button that quietly does nothing. --}}
+                            <span class="ext-only" hidden>
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-1 portal-go"
+                                        data-client="{{ $client->id }}" data-portal="fbr"
+                                        title="Open IRIS signed in as {{ $client->name }}">
+                                    <i class="bi bi-box-arrow-up-right"></i> IRIS
+                                </button>
+                            </span>
                         @else
                             <span style="color: var(--n-300);">-</span>
+                        @endif
+                        @if($client->kpra_username)
+                            <span class="ext-only" hidden>
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-1 portal-go"
+                                        data-client="{{ $client->id }}" data-portal="kpra"
+                                        title="Open KPRA signed in as {{ $client->name }}">KPRA</button>
+                            </span>
                         @endif
                     </td>
                     <td>
@@ -132,4 +148,91 @@
 </div>
 
 <div class="mt-3">{{ $clients->links() }}</div>
+@endsection
+
+@section('scripts')
+<script>
+/*
+ * "Open IRIS signed in" hands the job to the browser extension: the page has no
+ * business holding a client's password, and a cross-site form post would not
+ * survive the portal's own session handling anyway.
+ *
+ * The extension marks the document when it loads, so the buttons appear only
+ * where they will work.
+ */
+(function () {
+    var waiting = {};
+    var seq = 0;
+
+    function extensionReady() {
+        return document.documentElement.getAttribute('data-fairtax-extension') === 'ready';
+    }
+
+    function reveal() {
+        if (!extensionReady()) { return; }
+        document.querySelectorAll('.ext-only').forEach(function (el) { el.hidden = false; });
+    }
+
+    // The content script may land after this page's own script.
+    reveal();
+    new MutationObserver(reveal).observe(document.documentElement, {
+        attributes: true, attributeFilter: ['data-fairtax-extension'],
+    });
+
+    window.addEventListener('message', function (e) {
+        if (e.source !== window) { return; }
+        var d = e.data;
+        if (!d || d.source !== 'fairtax-extension' || d.action !== 'openPortalResult') { return; }
+
+        var btn = waiting[d.requestId];
+        if (!btn) { return; }
+        delete waiting[d.requestId];
+
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.label;
+
+        var r = d.result || {};
+        if (r.ok) { return; }
+
+        alert(
+            r.error === 'signed-out'      ? 'The extension is signed out. Open it from the toolbar and sign in again.'
+          : r.error === 'no-credentials'  ? 'No password is stored for this client on that portal.'
+          : r.error === 'lookup-failed'   ? 'Could not read the credentials. Check you are still signed in to the app.'
+                                          : 'The extension could not open the portal.'
+        );
+    });
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.portal-go');
+        if (!btn) { return; }
+
+        if (!extensionReady()) {
+            alert('The FairTax extension is not installed in this browser. Get it from Administration → Chrome Extension.');
+            return;
+        }
+
+        var id = 'p' + (++seq);
+        waiting[id] = btn;
+        btn.dataset.label = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Opening…';
+
+        window.postMessage({
+            source: 'fairtax-app',
+            action: 'openPortal',
+            requestId: id,
+            clientId: btn.dataset.client,
+            portal: btn.dataset.portal,
+        }, '*');
+
+        // If the extension never answers, give the button back.
+        setTimeout(function () {
+            if (!waiting[id]) { return; }
+            delete waiting[id];
+            btn.disabled = false;
+            btn.innerHTML = btn.dataset.label;
+        }, 8000);
+    });
+})();
+</script>
 @endsection

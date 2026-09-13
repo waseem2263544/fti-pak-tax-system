@@ -161,3 +161,31 @@ function setInputValue(el, value) {
     el.dispatchEvent(new Event('change', { bubbles: true }));
     el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 }
+
+/*
+ * Ask for credentials on load.
+ *
+ * When the app opens a portal it hands the job to the service worker, which
+ * cannot fill a tab that has not finished loading. So the page asks once it is
+ * ready, rather than relying on a guess at how long the portal takes.
+ */
+chrome.runtime.sendMessage({ action: 'claimFill' }, function (reply) {
+    if (chrome.runtime.lastError || !reply || !reply.ok) { return; }
+
+    const fill = function () {
+        switch (reply.portal) {
+            case 'fbr':  return fillFBR(reply.credentials);
+            case 'kpra': return fillKPRA(reply.credentials);
+            case 'secp': return fillSECP(reply.credentials);
+        }
+        return false;
+    };
+
+    // Portals that build their form after load get a few attempts.
+    let tries = 0;
+    const attempt = function () {
+        if (fill() || ++tries > 8) { return; }
+        setTimeout(attempt, 600);
+    };
+    attempt();
+});

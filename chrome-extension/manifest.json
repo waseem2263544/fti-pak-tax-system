@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "FairTax Credential Manager",
-  "version": "1.0",
-  "description": "Auto-fill FBR, KPRA, SECP login credentials from FairTax International client database",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "version": "1.1",
+  "description": "Open FBR, KPRA and SECP portals already signed in, from the FairTax client list",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
   "host_permissions": [
     "https://iris.fbr.gov.pk/*",
     "https://*.fbr.gov.pk/*",
@@ -33,7 +37,18 @@
         "https://eservices.secp.gov.pk/*",
         "https://leap.secp.gov.pk/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://app.fairtaxint.com/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -41,5 +56,8 @@
     "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
   }
 }
