@@ -122,5 +122,39 @@ foreach ($fbr as $section => $f) {
 }
 
 printf("\nCorrected %d codes, added %d sections FBR lists that the app did not have.\n", $fixed, $added);
+
+/*
+ * Drop duplicate rows for the same section.
+ *
+ * Nothing points at a section by id - entries, rates and the upload file all
+ * carry the section string - so the extra rows are safe to remove. The one
+ * kept is whichever now matches FBR's code, since a lookup by section returns
+ * an arbitrary row and picking the wrong one is how three sections ended up
+ * with the wrong code.
+ */
+$removed = 0;
+foreach ($pdo->query("SELECT section, COUNT(*) n FROM wht_sections GROUP BY section HAVING n > 1")
+              ->fetchAll(PDO::FETCH_ASSOC) as $d) {
+    $rows = $pdo->prepare("SELECT id, code FROM wht_sections WHERE section = ? ORDER BY id");
+    $rows->execute([$d['section']]);
+    $rows = $rows->fetchAll(PDO::FETCH_ASSOC);
+
+    $wanted = $fbr[$d['section']]['code'] ?? null;
+    $keep = null;
+
+    foreach ($rows as $r) {
+        if ($wanted !== null && trim((string) $r['code']) === $wanted) { $keep = $r['id']; break; }
+    }
+    $keep = $keep ?? $rows[0]['id'];
+
+    foreach ($rows as $r) {
+        if ($r['id'] === $keep) { continue; }
+        $pdo->prepare("DELETE FROM wht_sections WHERE id = ?")->execute([$r['id']]);
+        $removed++;
+    }
+}
+
+printf("Removed %d duplicate section rows.\n", $removed);
+printf("wht_sections now holds %d rows.\n", $pdo->query("SELECT COUNT(*) FROM wht_sections")->fetchColumn());
 echo "Sections FBR does not list were left alone.\n";
 echo "\nDone!\n</pre>";
