@@ -9,6 +9,7 @@
  * storage, and are dropped as soon as they are used or the tab goes away.
  */
 const API_BASE = 'https://app.fairtaxint.com/api/ext';
+const PSID_API  = API_BASE + '/wht/psid-request/';
 
 const PORTAL_URLS = {
     fbr:  'https://iris.fbr.gov.pk/',
@@ -24,6 +25,20 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
             sendResponse({ ok: false, error: e.message });
         });
         return true;                       // the reply is asynchronous
+    }
+
+    if (msg.action === 'startPsid') {
+        startPsid(msg).then(sendResponse).catch(function (e) {
+            sendResponse({ ok: false, error: e.message });
+        });
+        return true;
+    }
+
+    if (msg.action === 'filePsid') {
+        filePsid(msg).then(sendResponse).catch(function (e) {
+            sendResponse({ ok: false, error: e.message });
+        });
+        return true;
     }
 
     // A portal page asking what it should be filled with.
@@ -88,3 +103,77 @@ async function openPortal(msg) {
 
 // Never leave credentials behind for a tab that has gone.
 chrome.tabs.onRemoved.addListener(function (tabId) { pending.delete(tabId); });
+
+/**
+ * Arm the PSID watcher.
+ *
+ * The app opens a request and hands over its token; the watcher on the IRIS
+ * pages picks it up from storage, so it survives the navigation into
+ * ePayments and any reload along the way.
+ */
+async function startPsid(msg) {
+    const stored = await chrome.storage.local.get(['token']);
+
+    if (!stored.token) {
+        return { ok: false, error: 'signed-out' };
+    }
+
+    const res = await fetch(PSID_API + encodeURIComponent(msg.token), {
+        headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+    });
+
+    if (res.status === 401) {
+        await chrome.storage.local.remove(['token', 'userName']);
+        return { ok: false, error: 'signed-out' };
+    }
+
+    if (!res.ok) {
+        return { ok: false, error: 'request-not-found' };
+    }
+
+    const info = await res.json();
+
+    await chrome.storage.local.set({
+        psidJob: {
+            token: info.token,
+            agent: info.agent,
+            kind: info.kind,
+            entryCount: info.entry_count,
+            totalTax: info.total_tax,
+        },
+    });
+
+    await chrome.tabs.create({ url: 'https://iris.fbr.gov.pk/', active: true });
+
+    return { ok: true };
+}
+
+async function filePsid(msg) {
+    const stored = await chrome.storage.local.get(['token']);
+
+    if (!stored.token) {
+        return { ok: false, error: 'the extension is signed out' };
+    }
+
+    const res = await fetch(PSID_API + encodeURIComponent(msg.token), {
+        method: 'POST',
+        headers: {
+            'X-Extension-Token': stored.token,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ psid_no: msg.psid }),
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(function () { return {}; });
+        return { ok: false, error: body.error || ('the app returned ' + res.status) };
+    }
+
+    const data = await res.json();
+
+    // The job is done; clear it so the watcher stops offering.
+    await chrome.storage.local.remove(['psidJob']);
+
+    return { ok: true, entries: data.entries, psid: data.psid_no };
+}

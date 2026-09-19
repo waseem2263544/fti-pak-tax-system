@@ -427,3 +427,85 @@ function injectFill(portal, creds) {
 
     return { success: filled, debug: debugInfo };
 }
+
+/*
+ * Capture the shape of whatever FBR screen is open.
+ *
+ * Teaching the extension a new screen - the ePayments form behind a PSID, say -
+ * means knowing what its fields are called. This reports names, ids, types and
+ * labels, and deliberately never reads a value: the point is the form's shape,
+ * and the page may well have a password on it.
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('captureBtn');
+    if (!btn) { return; }
+
+    btn.addEventListener('click', function () {
+        const status = document.getElementById('captureStatus');
+
+        chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
+            if (!tabs[0]) { return; }
+
+            try {
+                const results = await chrome.scripting.executeScript({
+                    target: { tabId: tabs[0].id },
+                    func: describeForms,
+                });
+
+                const text = JSON.stringify(results[0].result, null, 2);
+                await navigator.clipboard.writeText(text);
+
+                status.textContent = 'Copied. Paste it to whoever is adding the screen.';
+                status.className = 'status success';
+            } catch (e) {
+                status.textContent = 'Could not read this page: ' + e.message;
+                status.className = 'status error';
+            }
+        });
+    });
+});
+
+/** Runs in the page. Structure only - no values leave the tab. */
+function describeForms() {
+    const describe = function (el) {
+        const label =
+            (el.labels && el.labels[0] && el.labels[0].innerText.trim()) ||
+            el.getAttribute('aria-label') ||
+            el.getAttribute('placeholder') || '';
+
+        return {
+            tag: el.tagName.toLowerCase(),
+            type: el.type || null,
+            name: el.getAttribute('name') || null,
+            id: el.id || null,
+            formControlName: el.getAttribute('formcontrolname') || null,
+            label: label.slice(0, 80),
+            required: el.required || false,
+            options: el.tagName === 'SELECT'
+                ? Array.prototype.slice.call(el.options, 0, 25).map(function (o) { return o.text.trim(); })
+                : undefined,
+        };
+    };
+
+    return {
+        url: location.href,
+        title: document.title,
+        forms: Array.prototype.map.call(document.forms, function (f) {
+            return {
+                action: f.getAttribute('action') || null,
+                method: f.method || null,
+                fields: Array.prototype.map.call(f.elements, describe),
+            };
+        }),
+        // Angular apps like IRIS often render controls outside any <form>.
+        loose: Array.prototype.map.call(
+            document.querySelectorAll('input:not(form input), select:not(form select), textarea:not(form textarea)'),
+            describe
+        ),
+        buttons: Array.prototype.map.call(
+            document.querySelectorAll('button, input[type=submit]'),
+            function (b) { return (b.innerText || b.value || '').trim().slice(0, 40); }
+        ).filter(Boolean),
+        fileInputs: document.querySelectorAll('input[type=file]').length,
+    };
+}

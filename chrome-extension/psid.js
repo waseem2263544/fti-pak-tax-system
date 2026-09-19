@@ -1,0 +1,125 @@
+/**
+ * Watches an IRIS page for the PSID that FBR issues, while a request is open.
+ *
+ * Filling the ePayments form outright would mean knowing its markup, and IRIS
+ * changes without notice. Watching for the number it produces does not: the
+ * preparer works the screen exactly as they do today, and the extension takes
+ * care of the part that actually goes wrong - carrying an eleven digit number
+ * back and typing it against forty entries.
+ *
+ * Nothing is filed without being confirmed. A page full of figures has plenty
+ * of numbers on it, and filing the wrong one against a deposit is worse than
+ * typing it by hand.
+ */
+const PSID_API = 'https://app.fairtaxint.com/api/ext/wht/psid-request/';
+
+let job = null;          // { token, agent, entryCount, totalTax }
+let offered = new Set(); // numbers already put to the user, so we ask once
+
+chrome.storage.local.get(['psidJob'], function (stored) {
+    if (!stored.psidJob) { return; }
+
+    job = stored.psidJob;
+    watch();
+});
+
+function watch() {
+    scan();
+
+    const observer = new MutationObserver(function () {
+        clearTimeout(watch._t);
+        watch._t = setTimeout(scan, 400);   // IRIS repaints a great deal
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+}
+
+/**
+ * Look for a PSID.
+ *
+ * Only numbers sitting near the words that introduce one count. A bare run of
+ * digits on a page of tax figures is far more likely to be an amount or an NTN.
+ */
+function scan() {
+    if (!job) { return; }
+
+    const text = document.body.innerText || '';
+    const near = /(?:psid|payment\s*slip\s*id|p\.?s\.?i\.?d)\D{0,40}(\d{9,14})/gi;
+
+    let m;
+    while ((m = near.exec(text)) !== null) {
+        const number = m[1];
+        if (!offered.has(number)) {
+            offered.add(number);
+            offer(number);
+            return;
+        }
+    }
+}
+
+function offer(number) {
+    if (document.getElementById('fairtax-psid-bar')) { return; }
+
+    const bar = document.createElement('div');
+    bar.id = 'fairtax-psid-bar';
+    bar.style.cssText = [
+        'position:fixed', 'left:50%', 'bottom:24px', 'transform:translateX(-50%)',
+        'z-index:2147483647', 'background:#16181d', 'color:#fff',
+        'font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif',
+        'padding:14px 18px', 'border-radius:10px', 'box-shadow:0 10px 30px rgba(0,0,0,.35)',
+        'display:flex', 'gap:14px', 'align-items:center', 'max-width:min(640px,92vw)',
+    ].join(';');
+
+    const text = document.createElement('div');
+    text.innerHTML =
+        'File PSID <strong style="font-family:ui-monospace,Menlo,monospace">' + number + '</strong>'
+        + ' against ' + job.entryCount + ' ' + (job.kind === 'salaries' ? 'salary' : 'vendor')
+        + ' entries for <strong>' + (job.agent || 'this agent') + '</strong>?'
+        + '<div style="opacity:.65;font-size:12px;margin-top:3px">'
+        + Number(job.totalTax || 0).toLocaleString() + ' in tax</div>';
+
+    const yes = button('File it', '#2F6FEB');
+    const no  = button('Not this one', 'transparent');
+    no.style.border = '1px solid rgba(255,255,255,.28)';
+
+    yes.addEventListener('click', function () {
+        yes.disabled = true;
+        yes.textContent = 'Filing…';
+        send(number, bar, yes);
+    });
+
+    no.addEventListener('click', function () { bar.remove(); });
+
+    bar.appendChild(text);
+    bar.appendChild(no);
+    bar.appendChild(yes);
+    document.body.appendChild(bar);
+}
+
+function button(label, bg) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.style.cssText = 'background:' + bg + ';color:#fff;border:0;border-radius:7px;'
+        + 'padding:8px 14px;font:600 13px system-ui;cursor:pointer;white-space:nowrap';
+    return b;
+}
+
+function send(number, bar, btn) {
+    chrome.runtime.sendMessage({ action: 'filePsid', token: job.token, psid: number }, function (reply) {
+        if (chrome.runtime.lastError || !reply || !reply.ok) {
+            btn.disabled = false;
+            btn.textContent = 'File it';
+            const why = (reply && reply.error) || 'could not reach the app';
+            bar.style.background = '#7a1d1d';
+            bar.firstChild.innerHTML = 'Could not file it — ' + why + '.';
+            return;
+        }
+
+        job = null;
+        offered.clear();
+        bar.style.background = '#0a6b4d';
+        bar.innerHTML = '<div>Filed. PSID <strong>' + number + '</strong> recorded against '
+            + reply.entries + ' entries.</div>';
+        setTimeout(function () { bar.remove(); }, 6000);
+    });
+}

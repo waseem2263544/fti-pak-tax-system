@@ -199,6 +199,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('deposit', [\App\Http\Controllers\Wht\WhtPsidController::class, 'index'])->name('deposit.index');
         Route::post('deposit/download', [\App\Http\Controllers\Wht\WhtPsidController::class, 'download'])->name('deposit.download');
         Route::post('deposit/assign-psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignPsid'])->name('deposit.assign-psid');
+        Route::post('deposit/request-psid', [\App\Http\Controllers\Wht\WhtPsidController::class, 'requestPsid'])->name('deposit.request-psid');
+        Route::post('deposit/request-psid/{psidRequest}/cancel', [\App\Http\Controllers\Wht\WhtPsidController::class, 'cancelPsidRequest'])->name('deposit.cancel-psid');
         Route::post('deposit/assign-cpr', [\App\Http\Controllers\Wht\WhtPsidController::class, 'assignCpr'])->name('deposit.assign-cpr');
         Route::post('deposit/clear', [\App\Http\Controllers\Wht\WhtPsidController::class, 'clear'])->name('deposit.clear');
         Route::post('deposit-layout', [\App\Http\Controllers\Wht\WhtPsidController::class, 'saveLayout'])->name('deposit.layout');

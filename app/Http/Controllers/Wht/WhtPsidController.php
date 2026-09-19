@@ -7,6 +7,7 @@ use App\Http\Controllers\Wht\Concerns\ResolvesWhtCompany;
 use App\Models\WhtSetting;
 use App\Services\Wht\WhtPsidBatcher;
 use App\Services\Wht\WhtPsidWorkbook;
+use App\Models\WhtPsidRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -138,6 +139,78 @@ class WhtPsidController extends Controller
     }
 
     /** Stamp the PSID IRIS returned onto exactly the selected entries. */
+    /**
+     * Open a PSID request for the selected entries.
+     *
+     * The entries are locked to it, so the same payment cannot be sent to IRIS
+     * twice while the first one is still out. The browser extension takes the
+     * token from here and posts the number back once FBR issues it.
+     */
+    public function requestPsid(Request $request)
+    {
+        $company = $this->currentCompany();
+        $this->authorizeAbility('edit', $company);
+
+        [$kind, $ids] = $this->selection($request);
+
+        $locked = WhtPsidRequest::lockedIds($company->id, $kind);
+        $clash  = array_values(array_intersect($ids, $locked));
+
+        if ($clash) {
+            return back()->with('error', sprintf(
+                '%d of those entries are already in a PSID request that has not come back yet. '
+                . 'Finish or cancel that one first.', count($clash)
+            ));
+        }
+
+        $rows = $this->baseQuery($company, $kind)->whereIn('id', $ids)->get();
+
+        // An entry with no tax has nothing to pay, and FBR rejects a zero line.
+        $payable = $rows->filter(fn($r) => (float) ($kind === 'salaries' ? $r->tax_deducted : $r->tax_withheld) > 0);
+
+        if ($payable->isEmpty()) {
+            return back()->with('error', 'None of those entries carry any tax to deposit.');
+        }
+
+        $already = $payable->filter(fn($r) => filled($r->psid_no))->count();
+
+        $psidRequest = WhtPsidRequest::create([
+            'token'          => bin2hex(random_bytes(16)),
+            'wht_company_id' => $company->id,
+            'kind'           => $kind,
+            'entry_ids'      => $payable->pluck('id')->all(),
+            'entry_count'    => $payable->count(),
+            'total_tax'      => $payable->sum(fn($r) => (float) ($kind === 'salaries' ? $r->tax_deducted : $r->tax_withheld)),
+            'created_by'     => auth()->id(),
+        ]);
+
+        $note = $already
+            ? " Note: {$already} of them already carry a PSID; creating another will replace it."
+            : '';
+
+        return back()
+            ->with('psid_request', $psidRequest->token)
+            ->with('success', sprintf(
+                'PSID request opened for %d entries, %s in tax. Complete it in IRIS - the extension will file the number.%s',
+                $psidRequest->entry_count,
+                number_format($psidRequest->total_tax, 0),
+                $note
+            ));
+    }
+
+    /** Abandon an open request, releasing its entries. */
+    public function cancelPsidRequest(Request $request, WhtPsidRequest $psidRequest)
+    {
+        $company = $this->currentCompany();
+        $this->authorizeAbility('edit', $company);
+
+        abort_unless($psidRequest->wht_company_id === $company->id, 404);
+
+        $psidRequest->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Request cancelled. Those entries are free to be sent again.');
+    }
+
     public function assignPsid(Request $request)
     {
         $company = $this->currentCompany();

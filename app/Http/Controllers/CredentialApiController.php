@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\WhtPsidRequest;
+use App\Models\WhtPurchase;
+use App\Models\WhtSalary;
 use Illuminate\Http\Request;
 
 class CredentialApiController extends Controller
@@ -107,5 +110,77 @@ class CredentialApiController extends Controller
         if (!$userId) return null;
 
         return \App\Models\User::find($userId);
+    }
+
+    /** What the extension needs to know about an open PSID request. */
+    public function psidRequest(Request $request, string $token)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $psid = WhtPsidRequest::with('company')->where('token', $token)->first();
+
+        if (!$psid) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+
+        return response()->json([
+            'token'       => $psid->token,
+            'status'      => $psid->status,
+            'agent'       => $psid->company->name ?? null,
+            'kind'        => $psid->kind,
+            'entry_count' => $psid->entry_count,
+            'total_tax'   => (float) $psid->total_tax,
+            'psid_no'     => $psid->psid_no,
+        ]);
+    }
+
+    /**
+     * File the number FBR issued.
+     *
+     * Writing it onto the entries is what the preparer would otherwise retype,
+     * and retyping an eleven digit number against forty rows is where a deposit
+     * goes astray. Completing twice is harmless: the same number simply lands
+     * on the same entries again.
+     */
+    public function completePsidRequest(Request $request, string $token)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $validated = $request->validate([
+            'psid_no' => 'required|string|max:50',
+        ]);
+
+        $psid = WhtPsidRequest::where('token', $token)->first();
+
+        if (!$psid) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+
+        if ($psid->status === 'cancelled') {
+            return response()->json(['error' => 'That request was cancelled.'], 409);
+        }
+
+        $number = trim($validated['psid_no']);
+
+        $model = $psid->kind === 'salaries' ? WhtSalary::class : WhtPurchase::class;
+
+        $affected = $model::whereIn('id', $psid->entry_ids)
+            ->where('wht_company_id', $psid->wht_company_id)
+            ->update(['psid_no' => $number, 'updated_at' => now()]);
+
+        $psid->update([
+            'status'       => 'completed',
+            'psid_no'      => $number,
+            'completed_at' => now(),
+        ]);
+
+        return response()->json([
+            'ok'       => true,
+            'psid_no'  => $number,
+            'entries'  => $affected,
+            'agent'    => $psid->company->name ?? null,
+        ]);
     }
 }

@@ -195,6 +195,12 @@
         </div>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-primary" onclick="selectAllRows()">Select all</button>
+            {{-- Shown only where the extension is installed: it is what carries the
+                 number back from IRIS, so without it the button would only open a
+                 request nothing ever closes. --}}
+            <button type="button" class="btn btn-accent ext-only" id="createPsid" disabled hidden>
+                <i class="bi bi-receipt me-1"></i> Create PSID
+            </button>
             <button class="btn btn-outline-danger" id="bulkDelete" disabled>
                 <i class="bi bi-trash me-1"></i> Delete selected
             </button>
@@ -208,6 +214,79 @@
 @endsection
 
 @section('scripts')
+
+{{-- Opens the request, then hands the token to the extension. Kept out of the
+     bulk form: a form inside a form is discarded by the browser. --}}
+<form method="POST" action="{{ route('wht.deposit.request-psid') }}" id="psidForm" class="d-none">
+    @csrf
+    <input type="hidden" name="kind" value="{{ $kind }}">
+    <div id="psidIds"></div>
+</form>
+
+<script>
+(function () {
+    function extensionReady() {
+        return document.documentElement.getAttribute('data-fairtax-extension') === 'ready';
+    }
+
+    function reveal() {
+        if (!extensionReady()) return;
+        document.querySelectorAll('.ext-only').forEach(el => el.hidden = false);
+    }
+
+    reveal();
+    new MutationObserver(reveal).observe(document.documentElement, {
+        attributes: true, attributeFilter: ['data-fairtax-extension'],
+    });
+
+    const btn = document.getElementById('createPsid');
+    if (btn) {
+        btn.addEventListener('click', function () {
+            const sel = Array.from(document.querySelectorAll('.row-check'))
+                .filter(c => c.checked && parseFloat(c.dataset.tax || 0) > 0);
+
+            if (!sel.length) return;
+
+            const skipped = Array.from(document.querySelectorAll('.row-check')).filter(c => c.checked).length - sel.length;
+            const note = skipped ? '\n\n' + skipped + ' selected ' + (skipped === 1 ? 'entry carries' : 'entries carry')
+                + ' no tax and will be left out.' : '';
+
+            if (!confirm('Open a PSID request for ' + sel.length + ' entries?' + note
+                + '\n\nThey will be locked until the number comes back, so they cannot be sent to IRIS twice.')) {
+                return;
+            }
+
+            const box = document.getElementById('psidIds');
+            box.innerHTML = '';
+            sel.forEach(function (c) {
+                const i = document.createElement('input');
+                i.type = 'hidden';
+                i.name = 'ids[]';
+                i.value = c.value;
+                box.appendChild(i);
+            });
+            document.getElementById('psidForm').submit();
+        });
+    }
+
+    // After the request is opened the page comes back with a token; hand it over
+    // and the extension takes it from there.
+    @if(session('psid_request'))
+        window.addEventListener('load', function () {
+            if (!extensionReady()) {
+                alert('The request is open, but the FairTax extension is not installed here, '
+                    + 'so nothing will carry the number back. Install it, or enter the PSID by hand on the Deposit page.');
+                return;
+            }
+            window.postMessage({
+                source: 'fairtax-app',
+                action: 'startPsid',
+                token: @json(session('psid_request')),
+            }, '*');
+        });
+    @endif
+})();
+</script>
 <script>
 (function () {
     const checks = () => Array.from(document.querySelectorAll('.row-check'));
@@ -224,6 +303,13 @@
         document.getElementById('selCount').textContent = sel.length;
         document.getElementById('selTax').textContent = tax.toLocaleString(undefined, {maximumFractionDigits: 0});
         document.getElementById('bulkDelete').disabled = sel.length === 0;
+
+        const psid = document.getElementById('createPsid');
+        if (psid) {
+            // Only entries carrying tax can be deposited.
+            const payable = sel.filter(c => parseFloat(c.dataset.tax || 0) > 0).length;
+            psid.disabled = payable === 0;
+        }
         document.getElementById('selHint').classList.toggle('d-none', sel.length > 0);
 
         // Deleting an entry that has been deposited is the risky case, so say so.

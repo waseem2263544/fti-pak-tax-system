@@ -11,14 +11,19 @@ window.addEventListener('message', function (event) {
     if (event.source !== window) { return; }
 
     const data = event.data;
-    if (!data || data.source !== 'fairtax-app' || data.action !== 'openPortal') { return; }
+    if (!data || data.source !== 'fairtax-app') { return; }
+    if (data.action !== 'openPortal' && data.action !== 'startPsid') { return; }
+
+    const payload = data.action === 'startPsid'
+        ? { action: 'startPsid', token: data.token }
+        : { action: 'openPortal', clientId: data.clientId, portal: data.portal, directorId: data.directorId };
 
     chrome.runtime.sendMessage(
-        { action: 'openPortal', clientId: data.clientId, portal: data.portal, directorId: data.directorId },
+        payload,
         function (reply) {
             window.postMessage({
                 source: 'fairtax-extension',
-                action: 'openPortalResult',
+                action: data.action + 'Result',
                 requestId: data.requestId,
                 result: reply || { ok: false, error: 'no-response' },
             }, '*');
