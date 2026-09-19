@@ -68,19 +68,81 @@ async function prepare(job) {
         done.push(data.tax_month);
     }
 
-    // 3. The file lives behind its own tab, which has to be opened first.
-    if (await openFileTab()) {
-        await wait(700);
-        if (attachFile(data)) { done.push(data.entries + ' entries attached'); }
-    }
+    // 3. The file lives behind its own tab, which only renders once opened.
+    const attached = await attachWhenReady(data);
+    if (attached) { done.push(data.entries + ' entries attached'); }
 
     focusCaptcha();
     offerSubmit();
 
-    note(done.length
-        ? 'Filled: ' + done.join(' · ') + '. Type the captcha, then check the figures before submitting.'
-        : 'Nothing could be filled automatically — the page may have changed. Fill it by hand; '
-          + 'the PSID will still be picked up.', !done.length);
+    if (attached) {
+        note('Filled: ' + done.join(' · ') + '. Type the captcha, then check the figures before submitting.');
+        return;
+    }
+
+    // Say so. An attach that quietly did not happen looks like one that did,
+    // and the challan would go up with no entries behind it.
+    note((done.length ? 'Filled: ' + done.join(' · ') + '. ' : '')
+        + 'The file is NOT attached — the Attach File for Payment tab was not found. '
+        + 'Open that tab and press the button below.', true);
+    offerAttach(data);
+}
+
+/**
+ * Open the file tab and attach, retrying while Angular builds the page.
+ *
+ * The input does not exist until its tab is shown, and the tab itself may not
+ * be there the moment this runs, so both are retried rather than attempted
+ * once and given up on.
+ */
+async function attachWhenReady(data) {
+    for (let i = 0; i < 18; i++) {
+        if (attachFile(data)) { return true; }
+
+        const tab = findFileTab();
+        if (tab) { tab.click(); }
+
+        await wait(800);
+    }
+
+    return false;
+}
+
+/** The tab is matched on its words rather than a class, which varies. */
+function findFileTab() {
+    const candidates = Array.from(document.querySelectorAll(
+        '[role="tab"], .mat-tab-label, .mat-mdc-tab, button, a, li, span, div'
+    ));
+
+    return candidates.find(function (el) {
+        const t = text(el);
+        if (t.length > 60) { return false; }              // a container, not a label
+        return /attach/i.test(t) && /file/i.test(t);
+    });
+}
+
+/** A button of last resort, for when the tab cannot be found automatically. */
+function offerAttach(data) {
+    if (document.getElementById('fairtax-ep-attach')) { return; }
+
+    const btn = document.createElement('button');
+    btn.id = 'fairtax-ep-attach';
+    btn.textContent = 'Attach the entries file';
+    btn.style.cssText = 'position:fixed;left:18px;bottom:114px;z-index:2147483646;'
+        + 'background:#D97706;color:#fff;border:0;border-radius:8px;padding:10px 16px;'
+        + 'font:600 13px system-ui;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)';
+
+    btn.addEventListener('click', function () {
+        if (attachFile(data)) {
+            btn.remove();
+            note('File attached — ' + data.entries + ' entries. Type the captcha and submit.');
+        } else {
+            note('Still no file input on this page. Open the Attach File for Payment tab first, '
+               + 'then press the button again.', true);
+        }
+    });
+
+    document.body.appendChild(btn);
 }
 
 /** The regime lives in the sidebar, under a panel that may be collapsed. */
@@ -140,19 +202,6 @@ function setSelectByValue(sel, value) {
     sel.selectedIndex = i;
     commit(sel);
     return true;
-}
-
-async function openFileTab() {
-    if (document.querySelector('input[type="file"]')) { return true; }
-
-    const tab = Array.from(document.querySelectorAll('[role="tab"], .mat-tab-label, button, a'))
-        .find(el => /attach\s*file\s*for\s*payment/i.test(text(el)));
-
-    if (!tab) { return false; }
-
-    tab.click();
-    await wait(600);
-    return !!document.querySelector('input[type="file"]');
 }
 
 /**
