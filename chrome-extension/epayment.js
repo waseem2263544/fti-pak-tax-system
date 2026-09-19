@@ -1,14 +1,18 @@
 /**
- * Fills FBR's single-payment page as far as a machine honestly can.
+ * Fills FBR's single-payment page.
  *
- * The page asks for a registration number, a captcha, a tax year and month,
- * and a file. Everything but the captcha is known to the app, so everything
- * but the captcha is filled: the number, the period, and the same upload
- * workbook the Deposit page produces.
+ * Written against the page as it actually is, not as it looked from the outside:
  *
- * The captcha is the reason this runs in the preparer's browser rather than on
- * a server. It is not an obstacle to work around - it is the point at which a
- * person confirms what is being filed.
+ *  - the taxpayer block is read-only and comes from whoever is signed in, so
+ *    there is nothing to fill there and the challan is always raised for that
+ *    login;
+ *  - the regime is a sidebar menu item, not a tab, and choosing it clears the
+ *    tax year, so it has to come first;
+ *  - the file input does not exist until its own tab is opened;
+ *  - the month select takes "09", not "September".
+ *
+ * Nothing here has a stable id. Everything is found by role and text, which is
+ * the least bad option available on this page.
  */
 const EP_API = 'https://app.fairtaxint.com/api/ext/wht/psid-request/';
 
@@ -18,12 +22,14 @@ if (location.pathname.indexOf('/payment/single') === 0) {
     });
 }
 
-async function prepare(jobInfo) {
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const text = el => (el.innerText || el.textContent || '').trim();
+
+async function prepare(job) {
     let data;
-    let filledTab = null;
 
     try {
-        const res = await chrome.runtime.sendMessage({ action: 'psidFile', token: jobInfo.token });
+        const res = await chrome.runtime.sendMessage({ action: 'psidFile', token: job.token });
         if (!res || !res.ok) { return note('Could not load the deposit file: ' + ((res && res.error) || 'no answer'), true); }
         data = res.data;
     } catch (e) {
@@ -31,126 +37,149 @@ async function prepare(jobInfo) {
     }
 
     if (data.mixed) {
-        note('These entries span ' + data.periods.length + ' tax months (' + data.periods.join(', ')
-           + '). FBR issues one challan per month, so this needs splitting before it will be accepted.', true);
-        return;
+        return note('These entries span ' + data.periods.length + ' tax months (' + data.periods.join(', ')
+            + '). FBR issues one challan per month, so this needs splitting.', true);
     }
 
     if (data.mixed_regime) {
-        note('These entries mix adjustable and final tax sections. FBR keeps those on separate '
-           + 'tabs with different payment codes, so they need splitting into two challans.', true);
-        return;
+        return note('These entries mix adjustable and final tax sections, which live under '
+            + 'different menu items with different payment codes. They need splitting.', true);
     }
 
-    // The regime tab comes first: it decides which payment codes the page will
-    // accept, so choosing it after filling would undo the rest.
-    const wanted = data.regime === 'final' ? /fixed\s*\/?\s*final/i : /adjustable/i;
+    const done = [];
 
-    const tab = Array.prototype.slice.call(document.querySelectorAll('button'))
-        .filter(function (b) { return b.id !== 'fairtax-ep-submit'; })
-        .find(function (b) { return wanted.test(b.innerText || ''); });
+    // 1. Regime first. It clears the tax year, so anything set before it is lost.
+    if (await pickRegime(data.regime)) { done.push(data.regime_label); }
+    await wait(800);
 
-    if (tab) {
-        tab.click();
-        filledTab = data.regime_label;
-        await new Promise(function (r) { setTimeout(r, 700); });
+    // 2. Tax year, then month. The month list is built from the year and takes
+    //    a two digit value rather than a name.
+    const selects = paymentSelects();
+
+    if (selects.year && setSelectByText(selects.year, String(data.tax_year))) {
+        done.push('tax year ' + data.tax_year);
+        await wait(900);
     }
 
-    // Angular only notices a value that arrives with the events a person's
-    // typing would have produced.
-    const set = function (el, value) {
-        if (!el) { return false; }
-        const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-        const setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
-        setter.call(el, value);
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-        el.dispatchEvent(new Event('blur', { bubbles: true }));
-        return true;
+    const after = paymentSelects();
+    const mm = String(data.tax_month_no).padStart(2, '0');
+
+    if (after.month && setSelectByValue(after.month, mm)) {
+        done.push(data.tax_month);
+    }
+
+    // 3. The file lives behind its own tab, which has to be opened first.
+    if (await openFileTab()) {
+        await wait(700);
+        if (attachFile(data)) { done.push(data.entries + ' entries attached'); }
+    }
+
+    focusCaptcha();
+    offerSubmit();
+
+    note(done.length
+        ? 'Filled: ' + done.join(' · ') + '. Type the captcha, then check the figures before submitting.'
+        : 'Nothing could be filled automatically — the page may have changed. Fill it by hand; '
+          + 'the PSID will still be picked up.', !done.length);
+}
+
+/** The regime lives in the sidebar, under a panel that may be collapsed. */
+async function pickRegime(regime) {
+    const wanted = regime === 'final' ? /fixed\s*\/?\s*final\s*income\s*tax/i : /adjustable\s*income\s*tax/i;
+
+    const find = () => Array.from(document.querySelectorAll('button.menu-item-btn'))
+        .find(b => wanted.test(text(b.querySelector('.menu-item-text') || b)));
+
+    let btn = find();
+
+    if (!btn) {
+        // The Withholding panel is probably closed; Income Tax opens by default.
+        const header = Array.from(document.querySelectorAll('button, [role="button"], mat-panel-title, .mat-expansion-panel-header'))
+            .find(el => /withholding/i.test(text(el)));
+        if (header) { header.click(); await wait(600); }
+        btn = find();
+    }
+
+    if (!btn) { return false; }
+
+    if (!btn.classList.contains('active')) { btn.click(); }
+    return true;
+}
+
+/** The two period selects, identified by what they contain rather than by id. */
+function paymentSelects() {
+    const all = Array.from(document.querySelectorAll('select'));
+    const has = (sel, re) => Array.from(sel.options).some(o => re.test(text(o)));
+
+    return {
+        year:  all.find(s => has(s, /tax year/i) || Array.from(s.options).some(o => /^20\d\d$/.test(text(o)))),
+        month: all.find(s => has(s, /tax month/i) || Array.from(s.options).some(o => /^(jan|feb|mar)$/i.test(text(o)))),
     };
+}
 
-    const filled = [];
-    if (typeof filledTab !== 'undefined' && filledTab) { filled.push(filledTab); }
+/*
+ * Angular only sees a change that arrives the way a person's would. A plain
+ * assignment to .value updates the DOM and nothing else.
+ */
+function commit(el) {
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+}
 
-    // Registration type, then the number itself.
-    const radio = document.getElementById(data.reg_type === 'cnic' ? 'comm' : 'resident');
-    if (radio && !radio.checked) {
-        radio.click();
-        filled.push(data.reg_type === 'cnic' ? 'CNIC' : 'NTN');
-    }
+function setSelectByText(sel, wanted) {
+    const i = Array.from(sel.options).findIndex(o => text(o) === wanted);
+    if (i < 0 || sel.selectedIndex === i) { return false; }
+    sel.selectedIndex = i;
+    commit(sel);
+    return true;
+}
 
-    if (set(document.querySelector('[formcontrolname="regTypeValue"]'), data.registration)) {
-        filled.push('registration ' + data.registration);
-    }
+function setSelectByValue(sel, value) {
+    const i = Array.from(sel.options).findIndex(o => o.value === value);
+    if (i < 0 || sel.selectedIndex === i) { return false; }
+    sel.selectedIndex = i;
+    commit(sel);
+    return true;
+}
 
-    // Year and month, once the page offers them.
-    const pickPeriod = function () {
-        const selects = Array.prototype.slice.call(document.querySelectorAll('select'));
+async function openFileTab() {
+    if (document.querySelector('input[type="file"]')) { return true; }
 
-        selects.forEach(function (sel) {
-            const texts = Array.prototype.map.call(sel.options, function (o) { return o.text.trim(); });
+    const tab = Array.from(document.querySelectorAll('[role="tab"], .mat-tab-label, button, a'))
+        .find(el => /attach\s*file\s*for\s*payment/i.test(text(el)));
 
-            const yearIdx = texts.indexOf(String(data.tax_year));
-            if (texts.some(function (t) { return /tax year/i.test(t); }) && yearIdx >= 0 && sel.selectedIndex !== yearIdx) {
-                sel.selectedIndex = yearIdx;
-                sel.dispatchEvent(new Event('change', { bubbles: true }));
-                filled.push('tax year ' + data.tax_year);
-            }
+    if (!tab) { return false; }
 
-            if (texts.some(function (t) { return /tax month/i.test(t); })) {
-                const monthIdx = texts.findIndex(function (t) {
-                    return new RegExp('^' + data.tax_month + '\\b', 'i').test(t)
-                        || t === String(data.tax_month_no);
-                });
-                if (monthIdx >= 0 && sel.selectedIndex !== monthIdx) {
-                    sel.selectedIndex = monthIdx;
-                    sel.dispatchEvent(new Event('change', { bubbles: true }));
-                    filled.push(data.tax_month);
-                }
-            }
-        });
-    };
-
-    pickPeriod();
-    // The month list is built only after a year is chosen.
-    setTimeout(pickPeriod, 900);
-    setTimeout(pickPeriod, 2200);
-
-    // Attach the workbook. A script cannot assign to a file input, but it can
-    // hand it a DataTransfer, which is what a drop would have done.
-    const attach = function () {
-        const input = document.querySelector('input[type="file"]');
-        if (!input || input.files.length) { return false; }
-
-        const bytes = Uint8Array.from(atob(data.base64), function (c) { return c.charCodeAt(0); });
-        const file = new File([bytes],
-            data.filename,
-            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        input.files = dt.files;
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        filled.push(data.entries + ' entries attached');
-        return true;
-    };
-
-    if (!attach()) { setTimeout(attach, 1500); }
-
-    setTimeout(function () {
-        note('Filled: ' + filled.join(' · ') + '. Type the captcha and press Enter.');
-        focusCaptcha();
-        offerSubmit();
-    }, 2600);
+    tab.click();
+    await wait(600);
+    return !!document.querySelector('input[type="file"]');
 }
 
 /**
- * Put the cursor in the captcha, and make Enter carry it forward.
+ * Hand the workbook to the file input.
  *
- * The captcha is the one thing here a person has to do. Everything around it -
- * reaching the box, and moving on once it is answered - is not, so it is taken
- * care of.
+ * A script cannot assign to input.files, but it can give it a DataTransfer,
+ * which is what a drop would have produced. The page uploads and parses on
+ * change, so this is the first irreversible thing that happens - it is done
+ * last, once everything else is in place.
  */
+function attachFile(data) {
+    const input = document.querySelector('input[type="file"][accept*="xlsx"]')
+        || document.querySelector('input[type="file"]');
+
+    if (!input || input.files.length) { return false; }
+
+    const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
+    const file = new File([bytes], data.filename,
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    commit(input);
+    return true;
+}
+
 function focusCaptcha() {
     const box = document.querySelector('[formcontrolname="userInput"]');
     if (!box || box.dataset.ftBound) { return; }
@@ -161,49 +190,47 @@ function focusCaptcha() {
     box.addEventListener('keydown', function (e) {
         if (e.key !== 'Enter') { return; }
         e.preventDefault();
-
-        // Whatever button follows the captcha is the one that verifies it.
-        const buttons = Array.prototype.slice.call(document.querySelectorAll('button'));
-        const after = buttons.filter(function (b) {
-            return box.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
-        });
+        const after = Array.from(document.querySelectorAll('button'))
+            .filter(b => box.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+            .filter(b => b.id !== 'fairtax-ep-submit');
         if (after.length) { after[0].click(); }
     });
 }
 
 /**
- * Press Submit on request.
+ * The page's own Submit, pressed on request.
  *
- * The page's own Submit is clicked for the preparer once they have answered the
- * captcha - the check the captcha exists for has happened by then. It is not
- * pressed on its own: a challan is a real record at FBR, and the moment before
- * it is created is the last one at which a wrong batch can be caught.
+ * Only offered while a Submit button is actually on screen: the sidebar keeps
+ * this script alive across views where submitting means nothing.
  */
 function offerSubmit() {
-    if (document.getElementById('fairtax-ep-submit')) { return; }
+    const find = () => Array.from(document.querySelectorAll('button'))
+        .filter(b => b.id !== 'fairtax-ep-submit')
+        .find(b => /^\s*submit\s*$/i.test(text(b)));
 
-    const submit = Array.prototype.slice.call(document.querySelectorAll('button'))
-        .find(function (b) { return /^\s*submit\s*$/i.test(b.innerText || ''); });
+    const sync = function () {
+        const target = find();
+        const existing = document.getElementById('fairtax-ep-submit');
 
-    if (!submit) { return; }
+        if (!target) { if (existing) { existing.remove(); } return; }
+        if (existing) { return; }
 
-    const btn = document.createElement('button');
-    btn.id = 'fairtax-ep-submit';
-    btn.textContent = 'Submit to FBR';
-    btn.style.cssText = [
-        'position:fixed', 'left:18px', 'bottom:66px', 'z-index:2147483646',
-        'background:#2F6FEB', 'color:#fff', 'border:0', 'border-radius:8px',
-        'padding:10px 16px', 'font:600 13px system-ui', 'cursor:pointer',
-        'box-shadow:0 6px 20px rgba(0,0,0,.3)',
-    ].join(';');
+        const btn = document.createElement('button');
+        btn.id = 'fairtax-ep-submit';
+        btn.textContent = 'Submit to FBR';
+        btn.style.cssText = 'position:fixed;left:18px;bottom:66px;z-index:2147483646;'
+            + 'background:#2F6FEB;color:#fff;border:0;border-radius:8px;padding:10px 16px;'
+            + 'font:600 13px system-ui;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)';
+        btn.addEventListener('click', function () {
+            btn.disabled = true;
+            btn.textContent = 'Submitting…';
+            find() && find().click();
+        });
+        document.body.appendChild(btn);
+    };
 
-    btn.addEventListener('click', function () {
-        btn.disabled = true;
-        btn.textContent = 'Submitting…';
-        submit.click();
-    });
-
-    document.body.appendChild(btn);
+    sync();
+    new MutationObserver(sync).observe(document.body, { childList: true, subtree: true });
 }
 
 function note(message, bad) {
@@ -212,12 +239,9 @@ function note(message, bad) {
     if (!el) {
         el = document.createElement('div');
         el.id = 'fairtax-ep-note';
-        el.style.cssText = [
-            'position:fixed', 'left:18px', 'bottom:18px', 'z-index:2147483646',
-            'font:12px/1.5 system-ui,-apple-system,Segoe UI,sans-serif',
-            'padding:11px 15px', 'border-radius:8px', 'max-width:360px', 'color:#fff',
-            'box-shadow:0 6px 20px rgba(0,0,0,.3)',
-        ].join(';');
+        el.style.cssText = 'position:fixed;left:18px;bottom:18px;z-index:2147483646;'
+            + 'font:12px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:11px 15px;'
+            + 'border-radius:8px;max-width:380px;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.3)';
         document.body.appendChild(el);
     }
 

@@ -49,7 +49,7 @@ function arm() {
         + '<div style="opacity:.75">' + (job.agent || 'this agent') + ' &middot; '
         + job.entryCount + ' entries &middot; '
         + Number(job.totalTax || 0).toLocaleString() + ' tax</div>'
-        + '<div style="opacity:.6;margin-top:4px">Create the challan as usual; the number will be filed for you.</div>';
+        + '<div style="opacity:.6;margin-top:4px">The number is picked up automatically, or type it below.</div>';
 
     const close = document.createElement('button');
     close.textContent = 'Stop watching';
@@ -61,6 +61,26 @@ function arm() {
         chip.remove();
     });
 
+    const manual = document.createElement('div');
+    manual.style.cssText = 'margin-top:8px;display:flex;gap:6px';
+    manual.innerHTML = '<input placeholder="PSID number" '
+        + 'style="flex:1;min-width:0;background:#0e1014;border:1px solid rgba(255,255,255,.2);'
+        + 'color:#fff;border-radius:6px;padding:5px 8px;font:12px ui-monospace,Menlo,monospace">';
+
+    const file = button('File', '#2F6FEB');
+    file.style.padding = '5px 11px';
+    file.style.fontSize = '12px';
+
+    file.addEventListener('click', function () {
+        const value = (manual.querySelector('input').value || '').replace(/\D/g, '');
+        if (value.length < 9) { return; }
+        file.disabled = true;
+        file.textContent = 'Filing…';
+        send(value, chip, file);
+    });
+
+    manual.appendChild(file);
+    chip.appendChild(manual);
     chip.appendChild(close);
     document.body.appendChild(chip);
 }
@@ -79,24 +99,63 @@ function watch() {
 /**
  * Look for a PSID.
  *
- * Only numbers sitting near the words that introduce one count. A bare run of
- * digits on a page of tax figures is far more likely to be an amount or an NTN.
+ * The results grid puts "PSID" once in a header and the numbers far below it,
+ * so proximity to the word finds nothing. The column is located instead, and
+ * read by position. A plain confirmation line is still matched, for whatever
+ * the page shows straight after a submission.
  */
 function scan() {
     if (!job) { return; }
 
-    const text = document.body.innerText || '';
+    const fromGrid = scanGrid();
+    if (fromGrid && !offered.has(fromGrid)) {
+        offered.add(fromGrid);
+        return offer(fromGrid);
+    }
+
     const near = /(?:psid|payment\s*slip\s*id|p\.?s\.?i\.?d)\D{0,40}(\d{9,14})/gi;
+    const body = document.body.innerText || '';
 
     let m;
-    while ((m = near.exec(text)) !== null) {
-        const number = m[1];
-        if (!offered.has(number)) {
-            offered.add(number);
-            offer(number);
-            return;
+    while ((m = near.exec(body)) !== null) {
+        if (!offered.has(m[1])) {
+            offered.add(m[1]);
+            return offer(m[1]);
         }
     }
+}
+
+/**
+ * Find the PSID column, then read it.
+ *
+ * The grid is built from divs rather than a table, so the header is matched on
+ * its text and the same offset is read from each row.
+ */
+function scanGrid() {
+    const headers = Array.prototype.slice.call(
+        document.querySelectorAll('[role="columnheader"], th, .grid-header, .datatable-header-cell')
+    );
+
+    let header = headers.find(function (h) { return /^\s*psid\s*$/i.test(h.textContent || ''); });
+
+    if (header) {
+        const siblings = Array.prototype.slice.call(header.parentElement.children);
+        const index = siblings.indexOf(header);
+
+        const rows = Array.prototype.slice.call(
+            document.querySelectorAll('[role="row"], .datatable-body-row, .grid-row')
+        );
+
+        for (const row of rows) {
+            const cells = Array.prototype.slice.call(row.children);
+            const cell = cells[index];
+            if (!cell) { continue; }
+            const digits = (cell.textContent || '').trim().match(/^(\d{9,14})$/);
+            if (digits) { return digits[1]; }
+        }
+    }
+
+    return null;
 }
 
 function offer(number) {
