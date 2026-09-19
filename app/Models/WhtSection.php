@@ -10,7 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 class WhtSection extends Model
 {
     protected $table = 'wht_sections';
-    protected $fillable = ['section', 'payment_nature', 'payment_section', 'code', 'applies_to', 'is_active'];
+    protected $fillable = ['section', 'payment_nature', 'payment_section', 'code', 'applies_to', 'regime', 'is_active'];
+
+    /** FBR's payment page splits by regime before anything else. */
+    public const REGIMES = [
+        'adjustable' => 'Adjustable Income Tax',
+        'final'      => 'Fixed / Final Income Tax',
+    ];
     protected $casts = ['is_active' => 'boolean'];
 
     public function scopeActive($q) { return $q->where('is_active', true); }

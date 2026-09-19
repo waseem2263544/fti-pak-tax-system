@@ -52,6 +52,13 @@
                     <td>{{ $s->payment_section }}</td>
                     <td>{{ ['purchase' => 'Payments', 'salary' => 'Salaries', 'both' => 'Both'][$s->applies_to] }}</td>
                     <td>
+                        @if($s->regime === 'final')
+                            <span class="badge bg-warning text-dark">Final</span>
+                        @else
+                            <span class="badge bg-secondary">Adjustable</span>
+                        @endif
+                    </td>
+                    <td>
                         @if($s->is_active)
                             <span class="badge bg-success bg-opacity-10 text-success">Active</span>
                         @else
@@ -110,6 +117,15 @@
                         </select>
                     </div>
                     <div class="col-6">
+                        <label class="form-label">Challan tab <span class="text-danger">*</span></label>
+                        <select name="regime" id="x_regime" class="form-select" required>
+                            @foreach(\App\Models\WhtSection::REGIMES as $k => $label)
+                                <option value="{{ $k }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Which tab FBR's payment page opens for this section.</div>
+                    </div>
+                    <div class="col-6">
                         <label class="form-label">Status</label>
                         <div class="form-check form-switch mt-2">
                             <input class="form-check-input" type="checkbox" name="is_active" value="1" id="x_active" checked>
@@ -144,6 +160,7 @@ function openSection(s) {
         set('x_nature', s.payment_nature);
         set('x_payment', s.payment_section);
         set('x_applies', s.applies_to);
+        set('x_regime', s.regime || 'adjustable');
         document.getElementById('x_active').checked = !!s.is_active;
     } else {
         document.getElementById('sectionTitle').textContent = 'Add Section';

@@ -227,6 +227,14 @@ class CredentialApiController extends Controller
         $periods = $rows->pluck('period')->unique()->sort()->values();
         $period  = Carbon::parse($periods->first() . '-01');
 
+        // FBR's page splits by regime before anything else, and the payment
+        // codes differ between the two tabs - so a batch cannot straddle them
+        // any more than it can straddle two months.
+        $codes = $rows->pluck('code')->filter()->unique()->values();
+        $regimes = \App\Models\WhtSection::whereIn('code', $codes)
+            ->pluck('regime')->filter()->unique()->values();
+        $regime = $regimes->count() === 1 ? $regimes->first() : 'adjustable';
+
         $book = (new WhtPsidWorkbook())->build($company, $period, $psid->kind, $rows);
 
         $tmp = tempnam(sys_get_temp_dir(), 'psid') . '.xlsx';
@@ -256,6 +264,9 @@ class CredentialApiController extends Controller
             'period'      => $period->format('Y-m'),
             'periods'     => $periods->all(),
             'mixed'       => $periods->count() > 1,
+            'regime'      => $regime,
+            'regime_label'=> \App\Models\WhtSection::REGIMES[$regime] ?? 'Adjustable Income Tax',
+            'mixed_regime'=> $regimes->count() > 1,
             'entries'     => $rows->count(),
         ]);
     }

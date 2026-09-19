@@ -67,6 +67,7 @@ class WhtSectionController extends Controller
             'payment_section' => 'required|string|max:255',
             'code'            => ['required', 'string', 'max:50', $unique],
             'applies_to'      => 'required|in:purchase,salary,both',
+            'regime'          => 'required|in:adjustable,final',
             'is_active'       => 'boolean',
         ]);
 

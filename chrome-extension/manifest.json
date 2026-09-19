@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FairTax Credential Manager",
-  "version": "1.9",
+  "version": "2.0",
   "description": "Open FBR, KPRA and SECP portals already signed in, from the FairTax client list",
   "permissions": [
     "storage",

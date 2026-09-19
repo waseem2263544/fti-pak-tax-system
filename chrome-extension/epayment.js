@@ -20,6 +20,7 @@ if (location.pathname.indexOf('/payment/single') === 0) {
 
 async function prepare(jobInfo) {
     let data;
+    let filledTab = null;
 
     try {
         const res = await chrome.runtime.sendMessage({ action: 'psidFile', token: jobInfo.token });
@@ -33,6 +34,26 @@ async function prepare(jobInfo) {
         note('These entries span ' + data.periods.length + ' tax months (' + data.periods.join(', ')
            + '). FBR issues one challan per month, so this needs splitting before it will be accepted.', true);
         return;
+    }
+
+    if (data.mixed_regime) {
+        note('These entries mix adjustable and final tax sections. FBR keeps those on separate '
+           + 'tabs with different payment codes, so they need splitting into two challans.', true);
+        return;
+    }
+
+    // The regime tab comes first: it decides which payment codes the page will
+    // accept, so choosing it after filling would undo the rest.
+    const wanted = data.regime === 'final' ? /fixed\s*\/?\s*final/i : /adjustable/i;
+
+    const tab = Array.prototype.slice.call(document.querySelectorAll('button'))
+        .filter(function (b) { return b.id !== 'fairtax-ep-submit'; })
+        .find(function (b) { return wanted.test(b.innerText || ''); });
+
+    if (tab) {
+        tab.click();
+        filledTab = data.regime_label;
+        await new Promise(function (r) { setTimeout(r, 700); });
     }
 
     // Angular only notices a value that arrives with the events a person's
@@ -49,6 +70,7 @@ async function prepare(jobInfo) {
     };
 
     const filled = [];
+    if (typeof filledTab !== 'undefined' && filledTab) { filled.push(filledTab); }
 
     // Registration type, then the number itself.
     const radio = document.getElementById(data.reg_type === 'cnic' ? 'comm' : 'resident');
