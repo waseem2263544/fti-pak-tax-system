@@ -11,8 +11,9 @@
 const API_BASE = 'https://app.fairtaxint.com/api/ext';
 const PSID_API  = API_BASE + '/wht/psid-request/';
 
-// FBR's e-Payments portal, where a challan is created. No sign-in required.
-const EPAYMENT_URL = 'https://e.fbr.gov.pk/';
+// Where a challan is actually created. Not the IRIS home page, and not the
+// separate e-Payments site - both were guesses, and both were wrong.
+const EPAYMENT_URL = 'https://iris.fbr.gov.pk/payment/single';
 
 const PORTAL_URLS = {
     fbr:  'https://iris.fbr.gov.pk/',

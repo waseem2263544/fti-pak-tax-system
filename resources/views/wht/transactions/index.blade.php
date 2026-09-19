@@ -82,6 +82,37 @@
     </div>
 </div>
 
+@if(($openRequests ?? collect())->isNotEmpty())
+    <div class="card mb-3" style="border-color: var(--warn); background: var(--warn-tint);">
+        <div class="card-body" style="padding: 14px 18px;">
+            <div style="font-weight: 600; font-size: 0.88rem; margin-bottom: 8px;">
+                <i class="bi bi-hourglass-split me-1"></i>
+                {{ $openRequests->count() }} PSID {{ Str::plural('request', $openRequests->count()) }} still open
+            </div>
+            <p class="mb-2" style="font-size: 0.82rem;">
+                Their entries are held until a number comes back, so they cannot be sent to FBR twice.
+                Cancel one to release its entries.
+            </p>
+            @foreach($openRequests as $req)
+                <div class="d-flex justify-content-between align-items-center gap-3 py-2"
+                     style="border-top: 1px solid rgba(0,0,0,.08); font-size: 0.83rem;">
+                    <div>
+                        <strong>{{ $req->entry_count }} entries</strong> ·
+                        {{ number_format($req->total_tax, 0) }} tax ·
+                        opened {{ $req->created_at->diffForHumans() }}
+                        @if($req->creator) by {{ $req->creator->name }} @endif
+                    </div>
+                    <form method="POST" action="{{ route('wht.deposit.cancel-psid', $req) }}"
+                          onsubmit="return confirm('Cancel this request and release its {{ $req->entry_count }} entries?')">
+                        @csrf
+                        <button class="btn btn-sm btn-outline-danger">Cancel request</button>
+                    </form>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
+
 <form method="POST" action="{{ route('wht.transactions.delete-bulk') }}" id="bulkForm"
       onsubmit="return confirmBulkDelete()">
 @csrf

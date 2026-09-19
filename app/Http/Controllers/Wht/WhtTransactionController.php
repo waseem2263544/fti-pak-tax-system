@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Wht;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Wht\Concerns\ResolvesWhtCompany;
 use App\Models\WhtSection;
+use App\Models\WhtPsidRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -81,8 +82,17 @@ class WhtTransactionController extends Controller
 
         $sections = WhtSection::active()->for($isSalary ? 'salary' : 'purchase')->orderBy('code')->get();
 
+        // Open requests hold their entries, so they have to be visible and
+        // cancellable from here - otherwise a failed attempt locks entries with
+        // nothing on screen explaining why.
+        $openRequests = WhtPsidRequest::where('wht_company_id', $company->id)
+            ->where('kind', $kind)
+            ->where('status', 'open')
+            ->latest()
+            ->get();
+
         return view('wht.transactions.index', compact(
-            'company', 'kind', 'isSalary', 'rows', 'totals', 'parties', 'sections'
+            'company', 'kind', 'isSalary', 'rows', 'totals', 'parties', 'sections', 'openRequests'
         ));
     }
 
