@@ -1,0 +1,354 @@
+section,payment_nature,payment_section,code
+137/1,Admitted Income Tax,Admitted Income Tax,9203
+147,Advance Income Tax,Advance Income Tax,9202
+147(5B),Advance Income Tax,Advance Income Tax u/s 147(5B),92021
+147(A),Advance Income Tax,Advance Income Tax u/s 147(A),92022
+147(100D),Advance Income Tax,Advance Income Tax for 100D,92025
+CVT,CVT,"Modaraba certificate or any instrument of redeemable capital as cefined in the Companies Ordinance, 1984",920701
+CVT/1,CVT,Shares of a public company listed on a registered stock exchange,920702
+CVT/2,CVT,"Motor vehicle not plying for hire whether imported, purchased from a manufacturerer in Pakistan or others",920703
+CVT/3,CVT,Commercial immoveable property of any size situated in an urban area,920704
+CVT/4,CVT,"Residential immoveable property (other than plots) situated in urban area, measuring at least 500 sq yards or one kanal or more",920705
+CVT/5,CVT,Residential flats of any size situated in urban area,920706
+CVT/6,CVT,CVT 2022 on Motor Vehicles in Pakistan,64100401
+137/2,Demanded Income Tax,Demanded Income Tax,9204
+Misc.,Misc.,Misc.,920600
+153(1)(a)/6,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) (ATL @ 1% / Non-ATL @ 2%),64060002
+153(1)(a)/7,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a)  (ATL @ 1.5% / Non-ATL @ 3%),64060003
+153(1)(a)/8,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) (ATL @ 4% / Non-ATL @ 8%),64060008
+153(1)(a)/9,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) (ATL @ 4.5% / Non-ATL @ 9%),64060009
+153(1)(a)/10,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @3.5%,64060007
+153(1)(a)/11,Withheld Income Tax (Adjustable),'Payment for Goods u/s 153(1)(a) @3%,64060006
+153(1)(a)/12,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) (ATL @ 2% / Non-ATL @ 4%),64060004
+153(1)(a)/13,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) (ATL @ 2.5% / Non-ATL @ 5%),64060005
+153(1)(a)/14,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @6%,64060012
+153(1)(a)/15,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @7%,64060014
+153(1)(a)/16,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @7.75%,64060031
+153(1)(a)/17,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a)  (ATL @ 2% / Non-ATL @ 4%),64060054
+153(1)(a)/18,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 2.5% / Non-ATL @ 5%),64060055
+153(1)(a)/19,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) @6%,64060062
+153(1)(a)/20,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) @7%,64060064
+153(1)(a)/21,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) @7.75%,64060081
+153(1)(a)/22,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @8%,64060016
+153(1)(a)/23,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @9%,64060018
+153(1)(b)/8,Withheld Income Tax (Adjustable),Payment for Services u/s 153(1)(b) @1%,64060102
+153(1)(b)/9,Withheld Income Tax (Adjustable),Payment for Services u/s 153(1)(b) @2%,64060104
+153(1)(b)/10,Withheld Income Tax (Adjustable),Payment for Services u/s 153(1)(b) @8% / 12%,64060116
+153(1)(b)/11,Withheld Income Tax (Final),Payment to electronic / print media for advertising Services u/s 153(1)(b) (ATL @ 1.5% / Non-ATL @ 3%),64060153
+153(1)(b)/12,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @14.5%,64060179
+153(1)(b)/13,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @17.5%,64060185
+153(1)(b)/14,Withheld Income Tax (Adjustable),Payment for Services u/s 153(1)(b) @12%,64060124
+153(1)(b)/15,Withheld Income Tax (Adjustable),Payment for Services u/s 153(1)(b) @15%,64060130
+233A(1)(b),Withheld Income Tax (Adjustable),Value of Shares traded through a member of a Stock exchange u/s 233A (1)(b) (ATL @ 0.02% / Non-ATL @ 0.04%),64120102
+233A(1)(c),Withheld Income Tax (Adjustable),Value of Shares traded by a member of a Stock exchange u/s 233A (1)(c),64120103
+236(1)(d),Withheld Income Tax (Adjustable),Internet Bill u/s 236(1)(d) @15%,64150005
+236(1)€,Withheld Income Tax (Adjustable),Prepaid Internet card u/s 236(1)(e) @15%,64150006
+231B(1)/5,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (Upto 850 cc) – on value of vehicle,64100301
+231B/3,Withheld Income Tax (Adjustable),Motor Vehicle Transfer Fee u/s 231B(2),64100302
+231B/4,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B (1A) (Non-ATL @ 4%),64100304
+149/1,Withheld Income Tax (Adjustable),Salary of Federal Government Employees u/s 149,64020001
+149/2,Withheld Income Tax (Adjustable),Salary of Provincial Government Employees u/s 149,64020002
+149/3,Withheld Income Tax (Adjustable),Salary of Other Employees u/s 149,64020004
+155,Withheld Income Tax (Adjustable),Rent of Immovable Property u/s 155,64080001
+156B,Withheld Income Tax (Adjustable),Withdrawal from Pension Fund u/s 156B,64090201
+23A/1,Withheld Income Tax (Adjustable),"Withdrawal from Pension Fund u/c (23A), Part I, Second Schedule",64090202
+231AB/1,Withheld Income Tax (Adjustable),Advance tax on cash withdrawal u/s 231AB,64100101
+234/1,Withheld Income Tax (Adjustable),Goods Transport Public Vehicle Tax u/s 234,64130001
+234/2,Withheld Income Tax (Adjustable),Passenger Transport Public Vehicle Tax u/s 234 (Non-Air Conditioned),64130002
+236A,Withheld Income Tax (Adjustable),Purchase by Auction u/s 236A (ATL @ 10% / Non-ATL @ 20%),64150101
+236A(3)/1,Withheld Income Tax (Final),Purchase by Auction u/s 236A (3) (ATL @ 10% / Non-ATL @ 20%),64150102
+231AA,Withheld Income Tax (Adjustable),Certain Banking Transactions u/s 231AA (Non-ATL @ 0.6%),64100201
+236B,Withheld Income Tax (Adjustable),Domestic Air Ticket Charges u/s 236B (5%),64150201
+236D,Withheld Income Tax (Adjustable),Functions / Gatherings Charges u/s 236D,64150401
+236C/1,Withheld Income Tax (Adjustable),Sale / Transfer of Immovable Property u/s 236C,64150301
+236F(1),Withheld Income Tax (Adjustable),Issuance of License to Cable Operators u/s 236F,64150601
+236E(a),Withheld Income Tax (Adjustable),Certification of Foreign-Produced TV Play Single u/s 236E,64150501
+236I,Withheld Income Tax (Adjustable),Educational Institution Fee u/s 236I (non-ATL) (5%),64150901
+236G/2024/1,Withheld Income Tax (Adjustable),Purchase of other commodities by Distributors / Dealers / Wholesalers u/s 236G (ATL @0.1% / Non-ATL @0.2%) - For Tax Year 2024,64150701
+236G/2024/2,Withheld Income Tax (Adjustable),Purchase of Fertilizer by Distributors / Dealers / Wholesalers u/s 236G (ATL @ 0.25% / Non-ATL @ 0.7%)  - For Tax Year 2024,64150702
+236J,Withheld Income Tax (Adjustable),Issuance / Renewal of License to Dealers / Commission Agents / Arhatis u/s 236J,64151001
+236G/2,Withheld Income Tax (Adjustable),Purchase of Fertilizer by Distributors / Dealers / Wholesalers u/s 236G (ATL (IT & ST) @0.25% / Non-ATL (ST) & ATL (IT) @0.7% / Non-ATL (IT) @2%),64150702
+236L,Withheld Income Tax (Adjustable),Purchase of International Air Ticket u/s 236L,64151201
+235A,Withheld Income Tax (Adjustable),Electricity Bill of Domestic Consumer u/s 235A,64140101
+234/3,Withheld Income Tax (Adjustable),Private Vehicle Tax u/s 234,64130003
+231B(3)/2,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (Upto 850 cc) – on value of vehicle,64100303
+236P,Withheld Income Tax (Adjustable),Banking transactions otherwise than through cash u/s 236P (Non-ATL @ 0.6%),64151501
+236Q,Withheld Income Tax (Final),"Payment for use or right to use industrial, commercial and scientific equipment u/s 236Q (1) (10%)",64151651
+236R,Withheld Income Tax (Adjustable),Education related expenses remitted abroad u/s 236R,64151701
+236T,Withheld Income Tax (Adjustable),Purchase of future commodity contracts u/s 236T,64151901
+236S,Withheld Income Tax (Adjustable),Dividend in specie u/s 236S (ATL @ 15% / Non-ATL @ 30%),64151801
+236U/1,Withheld Income Tax (Adjustable),Advance tax on life insurance premium u/s 236U (Non-ATL @ 1%),64151903
+236U/2,Withheld Income Tax (Adjustable),Advance tax on general insurance premium u/s 236U (Non-ATL @ 4%),64151902
+236V,Withheld Income Tax (Adjustable),Advance tax on general insurance premium u/s 236U (Non-ATL @ 4%),64151904
+236(1)(a)/1,Withheld Income Tax (Adjustable),Telephone Bill u/s 236(1)(a),64150001
+236(1)(a)/2,Withheld Income Tax (Adjustable),Cell phone Bill u/s 236(1)(a) 15%,64150002
+149/4,Withheld Income Tax (Adjustable),Salary of Corporate Sector Employees u/s 149,64020003
+152(2)/1,Withheld Income Tax (Adjustable),"Payment for Goods, Services, Contracts, Rent, etc. to a Non-Resident u/s 152(2) (@ 20%)",64050007
+152(2)/2,Withheld Income Tax (Adjustable),Profit on Debt to a Non-Resident u/s 152(2),64050008
+152(2A)(a),Withheld Income Tax (Adjustable),"Payment for Goods to a PE of a Non-Resident u/s 152(2A)(a) / Division II, Part III, 1st Schedule",64050009
+152(2A)(b)/1,Withheld Income Tax (Adjustable),"Payment for Transport Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule",64050010
+152(2A)(b)/2,Withheld Income Tax (Adjustable),"Payment for Other Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule",64050011
+152(2A)(c),Withheld Income Tax (Adjustable),"Payment for Contracts to a PE of a Non-Resident u/s 152(2A)(c) / Division II, Part III, 1st Schedule",64050012
+233A(1)(a),Withheld Income Tax (Adjustable),Value of Shares traded through a member of a Stock exchange u/s 233A (1)(a) (ATL @ 0.02% / Non-ATL @ 0.04%),64120101
+233AA/2,Withheld Income Tax (Adjustable),"Margin Financing, Margin Trading or Securities Lending u/s 233AA (10% on Mark-up/ Interest)",64120201
+235/3,Withheld Income Tax (Adjustable),Electricity Bill of Commercial Consumer u/s 235,64140001
+235/4,Withheld Income Tax (Adjustable),Electricity Bill of Industrial Consumer u/s 235,64140002
+236(1)(b),Withheld Income Tax (Adjustable),Prepaid Telephone Card u/s 236(1)(b) 15%,64150003
+236(1)(c),Withheld Income Tax (Adjustable),Phone Unit u/s 236(1)(c) 15%,64150004
+236E,Withheld Income Tax (Adjustable),Certification of Foreign-Produced TV Drama Serial u/s 236E,64150502
+236F,Withheld Income Tax (Adjustable),Renewal of License to Cable Operators u/s 236F,64150602
+150/6,Withheld Income Tax (Final),Dividend u/s 150 @20%,64030057
+150/8,Withheld Income Tax (Final),Dividend to a Non-Resident covered under ADTT u/s 150 / u/s 5,64030099
+150/9,Withheld Income Tax (Final),Dividend u/s 150 (ATL @ 15% / Non-ATL @ 30%),64030055
+152(1),Withheld Income Tax (Final),"Royalty / Fee for Technical Services to a Non-Resident u/s 152(1) / Division IV, Part I, 1st Schedule (ATL @ 15%)",64050051
+152(1A)(a),Withheld Income Tax (Final),"Payment for Contracts for Construction, Assembly or Installation to a Non-Resident u/s 152(1A)(a) / Division II, Part III, 1st Schedule (7%)",64050052
+152(1A)(b),Withheld Income Tax (Final),"Payment for Services, Contracts to a Non-Resident u/s 152(1A)(b) / Division II, Part III, 1st Schedule (ATL @ 7% / Non-ATL @ 14%)",64050053
+152(1A)(c),Withheld Income Tax (Final),"Fee for Advertisement Services to a Non-Resident u/s 152(1A)(c) / Division II, Part III, 1st Schedule (7%)",64050054
+152(1AA),Withheld Income Tax (Final),"Insurance / Reinsurance Premium to a Non-Resident u/s 152(1AA) / Division II, Part III, 1st Schedule (ATL @ 5% ))",64050055
+152(1AAA),Withheld Income Tax (Final),"Fee for Advertisement Services to a Non-Resident u/s 152(1AAA) / Division II, Part III, 1st Schedule",64050056
+152(2),Withheld Income Tax (Final),"Profit on Debt u/s 152(2) / u/c (5A), Part II, 2nd Schedule",64050096
+152(2)/3,Withheld Income Tax (Adjustable),"Profit on Debt u/s 152(2) / u/c (5A), Part II, 2nd Schedule",64050018
+ADTT/1,Withheld Income Tax (Final),Royalty / Fee for Technical Services to a Non-Resident covered under ADTT,64050097
+ADTT/2,Withheld Income Tax (Final),"Payment for Goods, Services, Contracts, Rent, Capital Gains, etc. to a Non-Resident covered under ADTT",64050098
+153(1)(a)/2,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a)  (ATL @ 1% / Non-ATL @ 2%),64060052
+153(1)(a)/3,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 1.5% / Non-ATL @ 3%),64060053
+153(1)(a)/4,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 4% / Non-ATL @ 8%),64060058
+153(1)(a)/5,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 4.5% / Non-ATL @ 9%),64060059
+153(1)(b)/2,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @1% and 2% for non-ATL),64060152
+153(1)(b)/3,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @2%,64060154
+153(1)(b)/4,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) (ATL @ 8% / Non-ATL @ 16%),64060166
+153(1)(b)/5,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) (ATL @ 10% / Non-ATL @ 20%),64060170
+153(1)(c)/1,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) (ATL @ 7% / Non-ATL @ 14%),64060264
+153(1)(c)/2,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) (ATL @ 7.5% / Non-ATL @ 15%),64060265
+153(1)(c)/3,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) (ATL @ 10% / Non-ATL @ 20%),64060270
+153(1)(c)/4,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) @12%,64060274
+153(1)(c)/5,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) @12.5%,64060275
+153(1)(c)/9,Withheld Income Tax (Adjustable),Receipts from Contracts u/s 153(1)(c) (ATL @ 7% / Non-ATL @ 14%),64060214
+153(1)(c)/8,Withheld Income Tax (Adjustable),Receipts from Contracts u/s 153(1)(c) @14%,64060228
+153(2),Withheld Income Tax (Final),Fee for export related services u/s 153(2) (ATL @ 1% / Non-ATL @ 2%),64060352
+233/1,Withheld Income Tax (Final),Brokerage / Commission (Advertising Agencies) u/s 233 (ATL @ 10% / Non-ATL @ 20%),64120070
+233/2,Withheld Income Tax (Final),Brokerage / Commission (others) u/s 233 (ATL @ 12% / Non-ATL @ 24%),64120074
+233/3,Withheld Income Tax (Final),Brokerage / Commission (Life insurance below 0.5 million P.A) u/s 233 (ATL @ 8% / Non-ATL @ 16%),64120066
+233/4,Withheld Income Tax (Final),Brokerage / Commission – Advertising Agents u/s 233 (2A),64120086
+233/5,Withheld Income Tax (Final),Brokerage / Commission u/s 233 @5%,64120060
+233/6,Withheld Income Tax (Final),Brokerage / Commission u/s 233 @15%,64120080
+233/7,Withheld Income Tax (Final),Brokerage / Commission u/s 233 @16%,64120082
+ADTT/3,Withheld Income Tax (Final),Profit on Debt to a Non-Resident covered under ADTT,64050099
+156/3,Withheld Income Tax (Final),Winnings from Raffle u/s 156 (ATL @ 20% / Non-ATL @ 40%),64090053
+156/4,Withheld Income Tax (Final),Winnings from Lottery u/s 156 (ATL @ 20% / Non-ATL @ 40%),64090054
+156/5,Withheld Income Tax (Final),Winnings from Quiz u/s 156 (ATL @ 20% / Non-ATL @ 40%),64090055
+156/6,Withheld Income Tax (Final),Winnings from Sale Promotion u/s 156 (ATL @ 20% / Non-ATL @ 40%),64090056
+236Z/1,Withheld Income Tax (Final),Issuance of Bonus shares by companies u/s 236Z (ATL @10% / Non-ATL @20%),64151351
+235/1,Withheld Income Tax (Final),Electricity Bill of Commercial Consumer u/s 235,64140051
+234(A),Withheld Income Tax (Final),CNG Station Gas Bill u/s 234A (ATL @ 4% / Non-ATL @ 8%),64130151
+156/1,Withheld Income Tax (Final),Prize on Prize Bond u/s 156 (ATL @ 15% / Non-ATL @ 30%),64090051
+156/2,Withheld Income Tax (Final),Winnings from Crossword Puzzle u/s 156 (ATL @ 15% / Non-ATL @ 30%),64090052
+156A,Withheld Income Tax (Final),Commission / Discount on petroleum products u/s 156A (ATL @ 12% / Non-ATL @ 24%),64090151
+150/3,Withheld Income Tax (Final),Dividend u/s 150 (ATL @ 7.5% / Non-ATL @ 15%),64030052
+154(1)/2,Withheld Income Tax (Final),Export Proceeds u/s 154(1) @1%,64070054
+154(2),Withheld Income Tax (Final),Foreign Indenting Commission u/s 154(2) (5%),64070151
+235/2,Withheld Income Tax (Final),Electricity Bill of Industrial Consumer u/s 235,64140052
+236N/2,Withheld Income Tax (Final),Issuance of Bonus Shares by Companies not quoted on Stock Exchange u/s 236N,64151451
+37(1A),Withheld Income Tax (Final),Capital Gains on Immovable Property u/s 37(1A) @10%,64220055
+148/1,Withheld Income Tax (Final),Import u/s 148 @6%,64010062
+148/2,Withheld Income Tax (Final),Import u/s 148 @1%,64010052
+148/3,Withheld Income Tax (Final),Import u/s 148 @2%,64010054
+148/4,Withheld Income Tax (Final),Import u/s 148 @3%,64010056
+7/1,Withheld Income Tax (Final),Gross Receipts of Non-Resident ship owner / chatrer u/s 143,64240051
+7/2,Withheld Income Tax (Final),Gross Receipts of Non-Resident aircraft owner / charterer u/s 144,64250051
+7C,Advance Income Tax,Income Tax Collected in advance from builders u/s 7C 5%,64310057
+7D,Advance Income Tax,Income Tax Collected in advance from developers u/s 7D 5%,64310058
+236C/2,Withheld Income Tax (Final),Turnover / Tax Chargeable u/s 113 @0.1%,923151
+111A/1,Withheld Income Tax (Final),"Dividend u/s 150 @ 7.5% (Non-resident u/c (111A), Part IV of Second Schedule)",64030062
+111A/2,Withheld Income Tax (Final),"Dividend u/s 150 @ 15% (Non-resident u/c (111A), Part IV of Second Schedule)",64030063
+236C/3,Withheld Income Tax (Final),Capital Gains on Immovable Property u/s 37(1A) @5%,64220053
+37A/1,Withheld Income Tax (Final),Capital Gains on Securities u/s 37A @12.5%,64220156
+37A/2,Withheld Income Tax (Final),Capital Gains on Securities u/s 37A @10%,64220155
+235B,Withheld Income Tax (Final),Steel Melters / Re-Rollers u/s 235B,64140201
+37A/3,Withheld Income Tax (Final),Capital Gains on Securities u/s 37A @ corporate tax rate,64220199
+152A,Withheld Income Tax (Final),Payment for foreign produced commercials to a Non-Resident u/s 152A (ATL @ 20% / Non-ATL @ 40%),64050100
+236W,Withheld Income Tax (Final),Advance tax on registering or attesting transfer of immovable prop 236W,92023
+150A,Withheld Income Tax (Final),Deduction of tax by special purpose vehicles u/s 150A@ 25% if Sukuk holder is a company,64030081
+7C/1,Withheld Income Tax (Final),Income Tax paid by builders u/s 7C,64310059
+7D/1,Withheld Income Tax (Final),Income Tax paid by developers u/s 7D,64310060
+WPPF,WPPF,WPPF,920800
+WWF,WWF,WWF,920900
+152(2A)(c)/2,Withheld Income Tax (Adjustable),"Payment to Non-Resident Sports Person u/s 152(2A)(c) / Division II, Part III, 1st Schedule",64050013
+236X,Withheld Income Tax (Adjustable),Advance tax on tobacco u/s 236X,64152101
+236H/2024/1,Withheld Income Tax (Adjustable),Purchase by Retailers u/s 236H – Electronics (ATL @ 1% / Non-ATL @ 2%) – For Tax Year 2024,64150802
+236H/2024/2,Withheld Income Tax (Adjustable),Purchase by Retailers u/s 236H - Others (ATL @ 0.5% / Non-ATL @ 1%) – For Tax Year 2024,64150803
+236H/2,Withheld Income Tax (Adjustable),Purchase by Retailers u/s 236H (ATL @0.5% / Non-ATL @2.5%),64150803
+5/1,Admitted Income Tax,Payment of tax on Repatriation of assets & income under section 5,92033
+5/2,Admitted Income Tax,Payment of Tax Under Foreign Assets (Declaration & Repatriation) Act 2018,92034
+236HA,Withheld Income Tax (Final),Tax on sale (on ex-depot sale price) of certain petroleum products u/s 236HA (ATL @ 0.5% / Non-ATL @ 1%),64151653
+236Y,Withheld Income Tax (Adjustable),Tax on remitting amounts abroad through credit / debit / prepaid cards u/s 236Y,64151906
+152(1AAA)/1,Withheld Income Tax (Adjustable),"Fee for Advertisement Services to a Non-Resident media person u/s 152(1AAA) / Division II, Part III, 1st Schedule (ATL @ 10% / Non-ATL @ 20%)",64050006
+152(1C)/1,Withheld Income Tax (Adjustable),Fee for offshore digital services u/s 152 (1C) (ATL @ 5% / Non-ATL @ 10%),64050014
+153(1)(a)/24,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) @8%,64060066
+153(1)(a)/25,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) @9%,64060068
+153(1)(b)/16,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @12%,64060174
+153(1)(b)/17,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @15%,64060180
+153(1)(b)/18,Withheld Income Tax (Adjustable),Payment for Specified Services u/s 153(1)(b)  (ATL @ 3% / Non-ATL @ 6%),64060106
+153(1)(b)/19,Withheld Income Tax (Final),Payment for Specified Services u/s 153(1)(b)  (ATL @ 3% / Non-ATL @ 6%),64060156
+153(2)/1,Withheld Income Tax (Adjustable),Fee for export related services u/s 153(2) (ATL @ 1% / Non-ATL @ 2%),64060231
+153(1)(c)/6,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) @14%,64060278
+153(1)(c)/7,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) @15%,64060280
+236Y/1,Withheld Income Tax (Adjustable),Advance tax on persons remitting amounts abroad through credit / debit / prepaid cards u/s 236Y (ATL @ 1% / Non-ATL @ 2%),64151905
+214E,Misc.,Payment of tax for closure of audit u/s 214E,92035
+154(3)/1,Withheld Income Tax (Final),Sale Proceeds of goods to exporter u/s 154(3),64070152
+154(3B)/1,Withheld Income Tax (Final),Contract Payments to indirect exporter u/s 154(3B),64070154
+236K,Withheld Income Tax (Adjustable),Purchase / Transfer of Immovable Property u/s 236K,64151101
+9/3,Admitted Income Tax,Payment for Foreign Assets,92036
+9/2,Admitted Income Tax,Payment for Foreign Currency Account (Domestic),92037
+9/1,Admitted Income Tax,Payment for Domestic Assets / Expenditure / Sales,92038
+9/4,Admitted Income Tax,Payment surcharge for Foreign Assets,92039
+9/5,Admitted Income Tax,Payment surcharge for Foreign Currency Account (Domestic),92040
+9/6,Admitted Income Tax,Payment surcharge for Domestic Assets / Expenditure / Sales,92041
+153B/1,Withheld Income Tax (Adjustable),Payment of Royalty to Resident Persons u/s 153B (ATL @ 15% / Non-ATL @ 30%),64060232
+182(A)/1,Misc.,Surcharge for ATL,920601
+236D/1,Withheld Income Tax (Adjustable),"For Functions of Marriage u/s 236D (5% of the bill ad valorem or Rs. 5,000/- per wedding function, whichever is higher) – for marriage halls, Marquees, or a community place with total function area less than 500 sq. yards",64150404
+236D/2,Withheld Income Tax (Adjustable),"For Functions of Marriage u/s 236D (5% of the bill ad valorem or Rs. 5,000/- per wedding function, whichever is higher) – for a multi storied premises with the largest total function area on one floor less than 500 sq. yards",64150405
+153(1)(b)/20,Withheld Income Tax (Adjustable),Payment for Specified Services u/s 153(1)(b)  (ATL @ 3% / Non-ATL @ 6%),64060206
+153(1)(b)/21,Withheld Income Tax (Final),Payment for Specified Services u/s 153(1)(b) (ATL @ 3% / Non-ATL @ 6%),64060056
+153(1)(c)/10,Withheld Income Tax (Adjustable),Receipts from Contracts u/s 153(1)(c) (ATL @ 3% / Non-ATL @ 6%),64060206
+153(1)(c)/11,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) (ATL @ 3% / Non-ATL @ 6%),64060256
+153B/1,Withheld Income Tax (Adjustable),Royalty to resident person u/s 153B (ATL @ 15% / Non-ATL @ 30%),64060232
+235/5,Withheld Income Tax (Final),Electricity Bill of Steal melters and composite Units,64140251
+236S/1,Withheld Income Tax (Adjustable),Dividend in specie u/s 236S (ATL @ 7.5% / Non-ATL @ 15%),64151802
+236D/3,Withheld Income Tax (Adjustable),"For Functions of Marriage u/s 236D (5% of the bill ad valorem or Rs. 20,000 per wedding function, whichever is higher) – for prescribed cities",64150402
+236D/4,Withheld Income Tax (Adjustable),"For Functions of Marriage u/s 236D (5% of the bill ad valorem or Rs. 10,000 per wedding function, whichever is higher) – for cities other than prescribed",64150403
+236F/1,Withheld Income Tax (Adjustable),"Issuance of License to IPTV, FM Radio, MMDS, Mobile TV, Mobile Audio, Satellite TV Channel and Landing Rights u/s 236F",64150603
+236F/2,Withheld Income Tax (Adjustable),"Renewal of License to IPTV, FM Radio, MMDS, Mobile TV, Mobile Audio, Satellite TV Channel and Landing Rights u/s 236F",64150604
+153(1)(a)/26,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) @0.25%,64060032
+152(2A)(a)/5,Withheld Income Tax (Final),"Payment for Goods to a PE of a Non-Resident u/s 152(2A)(a) / Division II, Part III, 1st Schedule",64050061
+152(2A)(b)/3,Withheld Income Tax (Final),"Payment for rendering or providing Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule",64050062
+152(2A)(c)/6,Withheld Income Tax (Final),"Payment for Contracts to a PE of a Non-Resident u/s 152(2A)(c) / Division II, Part III, 1st Schedule (ATL @ 8% / Non-ATL @ 16%)",64050063
+127(4),Misc,Prescribed Fee for filing of Appeal u/s 127(4),920602
+152(2)/4,Withheld Income Tax (Final),Profit on Debt to a Non-Resident u/s 152(2)/having no PE (@ 10%),64050064
+152(2A)(b)/4,Withheld Income Tax (Final),"Payment for Other Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule(11% & 22% Non-ATL) other than companies",0
+152(2A)(a)/8,Withheld Income Tax (Final),"Payment for Goods to a PE of a Non-Resident u/s 152(2A)(a) / Division II, Part III, 1st Schedule (5.5% & 11% for non-ATL) other than companies",64050066
+236A/2,Withheld Income Tax (Adjustable),Purchase by Auction u/s 236A in case of immovable property / train management services (Pakistan Railway) (ATL @5% and 10% for Non-ATL),64150103
+150A/2,Withheld Income Tax (Final),Deduction of tax by special purpose vehicles u/s 150A@ 12.5% if Sukuk holder is an individual or AOP (if return is more than one million),64030082
+150A/3,Withheld Income Tax (Final),Deduction of tax by special purpose vehicles u/s 150A@ 10% if Sukuk holder is an individual or AOP (if return is less than one million),64030083
+153(1)(a)/27,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 0.5% / Non-ATL @ 1%),64060051
+153(1)(b)/22,Withheld Income Tax (Final),Payment for Specified Services u/s 153(1)(b) (ATL @ 3% / Non-ATL @ 6%),64060556
+153(1)(a)/28,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) @0.25%,64060082
+152(1AAA)/2,Withheld Income Tax (Final),"Fee for Advertisement Services to a Non-Resident media person u/s 152(1AAA) / Division II, Part III, 1st Schedule (10%)",64050067
+152(2A)(a)/6,Withheld Income Tax (Final),"Payment for Goods to a PE of a Non-Resident u/s 152(2A)(a) / Division II, Part III, 1st Schedule (5% & 10% for non-ATL) for Companies",64050068
+152(2A)(b)/5,Withheld Income Tax (Final),"Payment for Specified Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule (ATL @ 3% / Non-ATL @ 8%)",64050069
+152(2A)(b)/6,Withheld Income Tax (Final),"Payment for Other Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule (9% & 18% non-ATL) for companies",64050070
+152(2A)(c)/7,Withheld Income Tax (Final),"Payment to Non-Resident Sports Person u/s 152(2A)(c) / Division II, Part III, 1st Schedule (ATL @ 10% / Non-ATL @ 20%)",64050071
+152(2)/5,Withheld Income Tax (Final),"Payment for Goods, Services, Contracts, Rent, etc. to a Non-Resident u/s 152(2) (@ 20%)",64050072
+101A/1,Withheld Income Tax (Final),Payable u/s 101A @ 10%,64010041
+101A/2,Withheld Income Tax (Final),Payable u/s 101A @ 20%,64010042
+231B(2A)/1,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(2A),64100305
+154A/1,Withheld Income Tax (Adjustable),Export of other specified Services u/s 154A,64070201
+100E/1,Withheld Income Tax (Final),100E,64070301
+100E/2,Withheld Income Tax (Final),100E,64070302
+153(1)(b)/23,Withheld Income Tax (Final),Payment for Oil Tanker Services u/c 28F of Part II of Second Schedule u/s 153(1)(b),64062101
+231B(2A)/2,Withheld Income Tax (Adjustable),Motor vehicle registration by person who has not purchased vehicle from local manufacturer u/s 231B(2A),64100306
+153(1)(c)/12,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) (ATL @ 6.5% / Non-ATL @ 13%),64060263
+151(1A)/1,Withheld Income Tax (Final),Deduction of tax by special purpose vehicles u/s 151(1A) @ 25% if Sukuk holder is a company,64030086
+151(1A)/2,Withheld Income Tax (Final),Deduction of tax by special purpose vehicles u/s 151(1A)@ 10% if Sukuk holder is an individual or AOP (if return is less than one million),64030084
+151(1A)/3,Withheld Income Tax (Final),Deduction of tax by special purpose vehicles u/s 151(1A)@ 12.5% if Sukuk holder is an individual or AOP (if return is more than one million),64030085
+235/6,Withheld Income Tax (Adjustable),Electricity Bill of Domestic Consumer u/s 235 (Only for Non-ATL),64140102
+235/7,Withheld Income Tax (Final),Electricity Bill of Domestic Consumer u/s 235 (Only for Non-ATL),64140152
+153(1)(b)/24,Withheld Income Tax (Final),Payment for Services  u/s 153(1)(b) (ATL @ 0.5% / Non-ATL @ 1%),64060151
+152(4B)/1,Withheld Income Tax (Final),Payment for contracts to PE of Non-Resident u/s 152(4B) @ 1.4%,64050073
+150/10,Withheld Income Tax (Adjustable),Dividend u/s 150 (ATL @ 35% / Non-ATL @ 70%),64030064
+150/11,Withheld Income Tax (Adjustable),"Dividend u/s 150 (Non-Resident u/c (111A), Part IV of Second Schedule) @ 35%",64030065
+231B(2A)/3,Withheld Income Tax (Adjustable),Motor vehicle registration fee u/s 231B(2A),64100307
+236CA/1,Withheld Income Tax (Final),Foreign produced TV drama serial or play u/s 236CA,64150503
+236CA/2,Withheld Income Tax (Final),Foreign produced TV play (single episode) u/s 236CA,64150504
+236CA/3,Withheld Income Tax (Final),Advertisement starring foreign actor u/s 236CA,64150505
+231B(2)/1,Withheld Income Tax (Adjustable),Motor Vehicle Transfer Fee u/s 231B(2) (Without Engine Capacity),64100308
+234/18,Withheld Income Tax (Adjustable),Passenger Transport Public Vehicle Tax u/s 234 (Air Conditioned),64130004
+148/5,Withheld Income Tax (Final),Import u/s 148 @3.5%,64010057
+152(1DB)/1,Withheld Income Tax (Final),Payment of a return on investment in sukuks to a non-resident u/s 152(1DB) @ 10%,64050077
+152(1DC)/1,Withheld Income Tax (Final),Payment of service charges or commission or fee to remittances operators u/s 152(1DC) @ 10%,64050078
+154A/2,Withheld Income Tax (Final),Export of Computer software /IT services / IT Enabled services by persons registered with Pakistan Software Export Board u/s 154A @ 0.25%,64060286
+152(1DD)/1,Withheld Income Tax (Final),Payment of any type of fee to a card network company or payment gateway u/s 152(1DD) @10%,64050079
+231B(3)/1,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (Without Engine Capacity),64100309
+231B(1)/1,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (Without Engine Capacity),64100310
+CVT/6,CVT on Motor Vehicle in Pakistan,CVT 2022 on Motor Vehicles in Pakistan,64100401
+CVT/7,CVT on Foreign Assets,Capital Value Tax on Movable Assets,927001
+CVT/8,CVT on Foreign Assets,Capital Value Tax on Immovable Assets,927002
+154A/3,Withheld Income Tax (Final),Export of other specified Services u/s 154A,64070202
+154A/4,Withheld Income Tax (Adjustable),Export of Computer software /IT services / IT Enabled services by persons registered with Pakistan Software Export Board u/s 154A @ 0.25%,64060287
+154A/5,Withheld Income Tax (Final),Export of Computer software /IT services / IT Enabled services by persons not registered with Pakistan Software Export Board u/s 154A @ 1%,64060288
+154A/6,Withheld Income Tax (Adjustable),Export of Computer software /IT services / IT Enabled services by persons not registered with Pakistan Software Export Board u/s 154A @ 1%,64060289
+236CB,Withheld Income Tax (Adjustable),Functions / Gatherings Charges u/s 236CB (ATL @ 10% / Non-ATL @ 20%),64150407
+37(6),Withheld Income Tax (Adjustable),Withholding tax on Sale Considerations u/s 37(6),64220160
+152(2A)(b)/7,Withheld Income Tax (Final),"Payment for Specified Services u/s 152(2A)(b) / Division II, Part III, 1st Schedule (ATL @ 4% / Non-ATL @ 8%)",64050080
+152(2A)(b)/8,Withheld Income Tax (Final),"Payment for IT/IT-enabled service u/s 152(2A)(b) / Division II, Part III, 1st Schedule (ATL @ 4% / Non-ATL @ 8%)",64050080
+231C/1,Withheld Income Tax (Adjustable),Advance tax on foreign domestic workers u/s 231C,64151907
+37A/4,Withheld Income Tax (Final),"Capital Gains on Securities u/s 37A @12.5% (for securities acquired from 1st July, 2013 to 30th June, 2022)",64330068
+37A/5,Withheld Income Tax (Final),Capital Gains on Securities u/s 37A @15%,64330069
+37A/6,Withheld Income Tax (Final),Capital Gains on Securities u/s 37A @5%,64330070
+147(5C)/1,Advance Income Tax,Advance Income Tax u/s 147(5C),92026
+231B(1)/2,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (2001cc to 2500cc) – on value of vehicle,64100311
+231B(1)/3,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (2501cc to 3000cc) – on value of vehicle,64100312
+231B(1)/4,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (Above 3000cc) – on value of vehicle,64100313
+153(1)(a)/29,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 5% / Non-ATL @ 10%) for companies,64060060
+153(1)(a)/30,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @ 5.5% / Non-ATL @ 11%) other than companies,64060083
+153(1)(b)/26,Withheld Income Tax (Final),Payment for Specified Services u/s 153(1)(b) (ATL @ 4% / Non-ATL @ 8%),64060158
+153(1)(b)/31,Withheld Income Tax (Final),Payment for IT/IT-enabled service u/s 153(1)(b) @4%,64060158
+153(1)(b)/27,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) (ATL @ 9% / Non-ATL @ 18%),64060168
+153(1)(b)/28,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) (ATL @ 11% / Non-ATL @ 22%) other than companies,64060172
+153(1)(c)/14,Withheld Income Tax (Final),Receipts from Contracts u/s 153(1)(c) (ATL @ 8% / Non-ATL @ 16%) other than companies,64060266
+153(1)(a)/31,Withheld Income Tax (Adjustable),Payment for Goods u/s 153(1)(a) (ATL @ 5% / Non-ATL @ 10%) for companies,64060010
+153(1)(c)/15,Withheld Income Tax (Adjustable),Receipts from Contracts u/s 153(1)(c) (ATL @ 7.5% / Non-ATL @ 15%) for companies,64060215
+152(1D)/1,Withheld Income Tax (Final),"Tax deductible from non-residents on capital gains on debt instruments/Government securities invested through SCRA u/s 152(1D) /Division II, Part III,1st Schedule",64060061
+152(1DA)/1,Withheld Income Tax (Final),"Tax deductible from non-residents on capital gains on disposal of debt instruments/Government securities/certificates invested through FCVA/NRVA u/s 152(1DA) /Division II, Part III,1st Schedule",64050050
+99D/1,Misc.,"99D - Additional tax on Certain Income, Profits and Gains",920603
+153(1)(a)/25,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @9% / Non-ATL @18%) for Companies - Toll manufacturers,64060068
+153(1)(a)/32,Withheld Income Tax (Final),Payment for Goods u/s 153(1)(a) (ATL @11% / Non-ATL @22%) for other than Companies - Toll manufacturers,64060084
+231B(1)/6,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (851cc to 1000cc) – on value of vehicle,64100317
+231B(1)/7,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (1001cc to 1300cc) – on value of vehicle,64100318
+231B(1)/8,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (1301cc to 1600cc) – on value of vehicle,64100319
+231B(1)/9,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (1601cc to 1800cc) – on value of vehicle,64100320
+231B(1)/10,Withheld Income Tax (Adjustable),Motor Vehicle Registration Fee u/s 231B(1) (1801cc to 2000cc) – on value of vehicle,64100321
+231B(3)/6,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (851cc to 1000cc) – on value of vehicle,64100322
+231B(3)/7,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (1001cc to 1300cc) – on value of vehicle,64100323
+231B(3)/8,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (1301cc to 1600cc) – on value of vehicle,64100324
+231B(3)/9,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (1601cc to 1800cc) – on value of vehicle,64100325
+231B(3)/10,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (1801cc to 2000cc) – on value of vehicle,64100326
+231B(3)/3,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (2001cc to 2500cc) – on value of vehicle,64100314
+231B(3)/4,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (2501cc to 3000cc) – on value of vehicle,64100315
+231B(3)/5,Withheld Income Tax (Adjustable),Motor Vehicle Sale u/s 231B(3) (Above 3000cc) – on value of vehicle,64100316
+147(6C)/1,Withheld Income Tax (Adjustable),147 (6C) Advance tax @ 1% Export proceeds,64010037
+150/14,Withheld Income Tax (Final),Dividend u/s 150 - Dividend received from Mutual Funds driving 50% or more income from profit on debt (ATL @25% / Non-ATL @50%),64330050
+147,Advance Income Tax,Advance Income Tax u/s 147 read with section 7F,92027
+236G/1,Withheld Income Tax (Adjustable),Purchase of other commodities by Distributors / Dealers / Wholesalers u/s 236G (ATL @0.1% / Non-ATL @2%),64150701
+150/15,Withheld Income Tax (Final),Dividend u/s 150 - Dividend received from debt securities mutual funds,64330050
+151(1)(a),Withheld Income Tax (Final),151(1)(a) - Profit on Debt u/s 151 from NSC / PO Deposits,64040051
+151(1)(b),Withheld Income Tax (Final),151(1)(b) - Profit on Debt u/s 151 from Bank Accounts / Deposits,64040052
+151(1)(c),Withheld Income Tax (Final),151(1)(c) - Profit on Debt u/s 151 from Government Securities,64040053
+151(1)(d),Withheld Income Tax (Final),151(1) (d) - Profit on Debt u/s 151 from Others,64040054
+151(1)(a)/4,Withheld Income Tax (Adjustable),151(1)(a) - Profit on Debt u/s 151 from NSC / PO Deposits,64040001
+151(1)(b)/4,Withheld Income Tax (Adjustable),151(1)(b) - Profit on Debt u/s 151 from Bank Accounts / Deposits,64040002
+151(1)(c)/4,Withheld Income Tax (Adjustable),151(1)(c) - Profit on Debt u/s 151 from Government Securities,64040003
+151(1)(d)/4,Withheld Income Tax (Adjustable),151(1) (d) - Profit on Debt u/s 151 from Others,64040004
+152(1C)/2,Withheld Income Tax (Final),Fee for offshore digital services u/s 152 (1C),64050057
+152(2A)(b)/9,Withheld Income Tax (Final),"Payment for Other Services to a PE of a Non-Resident u/s 152(2A)(b) / Division II, Part III, 1st Schedule (ATL @ 15% / Non-ATL @ 30%)",64050065
+152(2A)(c)/8,Withheld Income Tax (Final),"Payment to Non-Resident Sports Person u/s 152(2A)(c) / Division II, Part III, 1st Schedule (ATL @ 15% / Non-ATL @ 30%)",64050071
+4AB/1,Withheld Income Tax (Adjustable),Surcharge on high earning person u/s 4AB,64020006
+149/5,Withheld Income Tax (Final),Pension u/s 149 where the amount of pension received exceeds rupees ten million and not attained the age of 70 years,64020007
+151A/1,Withheld Income Tax (Final),Gain arising on pre-mature disposal of government securities u/s 151A,64330072
+153(2A)/1,Withheld Income Tax (Final),Payment for Goods u/s 153(2A) through Digital means @1%,64060557
+153(2A)/2,Withheld Income Tax (Final),Payment for Goods u/s 153(2A) through Courier Service @2%,64060558
+150/16,Withheld Income Tax (Final),Dividend u/s 150 – Dividend received from investments in equities mutual funds,64330073
+152(2A)(b)/10,Withheld Income Tax (Final),"Payment for Specified Services u/s 152(2A)(b) / Division II, Part III, 1st Schedule (ATL @ 8% / Non-ATL @ 16%)",64340212
+153(1)(b)/30,Withheld Income Tax (Final),Payment for Services u/s 153(1)(b) @3%,64060156
+236A(1)/1,Withheld Income Tax (Final),Purchase by Auction u/s 236A(1) (ATL @ 3% / Non-ATL @ 6%),64150104
+DPPL/1,Withheld Income Tax (Final),Payment for foreign supply of goods,64050101
+DPPL/2,Withheld Income Tax (Final),Payment for foreign supply of services,64050102
+152(1D)/2,Withheld Income Tax (Final),"Tax deductible from non-residents on capital gains on debt instruments/Government securities invested through SCRA u/s 152(1D) /Division II, Part III,1st Schedule (holding period less than six months)",64060085
+151B/1,Withheld Income Tax (Final),Payment on Life Insurance Payouts within 1 year of issue of policy / takaful u/s 151B (ATL @15%/ Non-ATL @30%),64040030
+151B/2,Withheld Income Tax (Final),Payment on life insurance payouts after 1 year but before 4 years u/s 151B (ATL@10%/ Non-ATL@20%),64040031
+153(1)(b)/32,Withheld Income Tax (Final),Payment for specified services u/s 153(1)(b) (ATL@7%/Non-ATL@14%),64060186
+153(1)(b)/33,Withheld Income Tax (Final),Payment to companies for terminal and port operating services u/s 153(1)(b) (ATL@12%/Non-ATL@24%,64060188
+153(1)(b)/34,Withheld Income Tax (Final),Payment for services u/s 153(1)(b) (ATL@14%/ Non-ATL@28%),64060178
+154B/1,Withheld Income Tax (Final),Payment on social media platform u/s 154B (ATL@5%/ Non-ATL@10%),64070401
+153(1)(b)/35,Withheld Income Tax (Final),Payment for Services of Independent Professionals u/s 153(1)(b) (ATL @ 15% / Non-ATL @30%),64060187
+154(1)/3,Withheld Income Tax (Final),Export Proceeds u/s 154(1) @1.25%,64070054
