@@ -140,12 +140,39 @@ async function startPsid(msg) {
             kind: info.kind,
             entryCount: info.entry_count,
             totalTax: info.total_tax,
+            hasLogin: !!info.has_login,
         },
     });
 
-    await chrome.tabs.create({ url: 'https://iris.fbr.gov.pk/', active: true });
+    // The withholding agent files its own return, so sign in as the agent
+    // rather than dropping the preparer on a login page.
+    let credentials = null;
 
-    return { ok: true };
+    if (info.has_login && info.client_id) {
+        try {
+            const cr = await fetch(API_BASE + '/credentials/' + info.client_id + '?portal=fbr', {
+                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+            });
+            if (cr.ok) {
+                const c = await cr.json();
+                if (c.password) { credentials = c; }
+            }
+        } catch (e) { /* the page still opens; it is just not filled */ }
+    }
+
+    const tab = await chrome.tabs.create({ url: 'https://iris.fbr.gov.pk/', active: true });
+
+    if (credentials) {
+        pending.set(tab.id, { portal: 'fbr', credentials: credentials });
+
+        setTimeout(function () {
+            chrome.tabs.sendMessage(tab.id, { action: 'fill', portal: 'fbr', credentials: credentials }, function () {
+                void chrome.runtime.lastError;
+            });
+        }, 2500);
+    }
+
+    return { ok: true, filled: !!credentials };
 }
 
 async function filePsid(msg) {

@@ -20,8 +20,51 @@ chrome.storage.local.get(['psidJob'], function (stored) {
     if (!stored.psidJob) { return; }
 
     job = stored.psidJob;
+    arm();
     watch();
 });
+
+/**
+ * Say that the extension is waiting.
+ *
+ * Without this the feature is invisible until a PSID happens to appear, which
+ * is indistinguishable from it not working - and on a login page, which is
+ * where this often starts, nothing appears for some time.
+ */
+function arm() {
+    if (document.getElementById('fairtax-psid-armed')) { return; }
+
+    const chip = document.createElement('div');
+    chip.id = 'fairtax-psid-armed';
+    chip.style.cssText = [
+        'position:fixed', 'right:18px', 'bottom:18px', 'z-index:2147483646',
+        'background:#16181d', 'color:#fff', 'border-left:3px solid #2F6FEB',
+        'font:12px/1.5 system-ui,-apple-system,Segoe UI,sans-serif',
+        'padding:10px 14px', 'border-radius:8px', 'box-shadow:0 6px 20px rgba(0,0,0,.3)',
+        'max-width:320px',
+    ].join(';');
+
+    chip.innerHTML =
+        '<div style="font-weight:600;margin-bottom:2px">Waiting for a PSID</div>'
+        + '<div style="opacity:.75">' + (job.agent || 'this agent') + ' &middot; '
+        + job.entryCount + ' entries &middot; '
+        + Number(job.totalTax || 0).toLocaleString() + ' tax</div>'
+        + (job.hasLogin ? '' : '<div style="opacity:.6;margin-top:4px">No FBR login stored for this agent &mdash; sign in yourself.</div>')
+        + '<div style="opacity:.6;margin-top:4px">Create the payment as usual; the number will be filed for you.</div>';
+
+    const close = document.createElement('button');
+    close.textContent = 'Stop watching';
+    close.style.cssText = 'margin-top:8px;background:none;border:1px solid rgba(255,255,255,.3);'
+        + 'color:#fff;border-radius:6px;padding:4px 9px;font:11px system-ui;cursor:pointer';
+    close.addEventListener('click', function () {
+        chrome.storage.local.remove(['psidJob']);
+        job = null;
+        chip.remove();
+    });
+
+    chip.appendChild(close);
+    document.body.appendChild(chip);
+}
 
 function watch() {
     scan();
@@ -117,6 +160,8 @@ function send(number, bar, btn) {
 
         job = null;
         offered.clear();
+        const chip = document.getElementById('fairtax-psid-armed');
+        if (chip) { chip.remove(); }
         bar.style.background = '#0a6b4d';
         bar.innerHTML = '<div>Filed. PSID <strong>' + number + '</strong> recorded against '
             + reply.entries + ' entries.</div>';

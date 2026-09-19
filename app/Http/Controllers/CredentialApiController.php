@@ -124,10 +124,16 @@ class CredentialApiController extends Controller
             return response()->json(['error' => 'Not found'], 404);
         }
 
+        // The withholding agent files its own return, so the login that matters
+        // is the agent's, not any client's.
+        $agentClient = $psid->company?->client;
+
         return response()->json([
             'token'       => $psid->token,
             'status'      => $psid->status,
             'agent'       => $psid->company->name ?? null,
+            'client_id'   => $agentClient?->id,
+            'has_login'   => (bool) ($agentClient && filled($agentClient->fbr_username)),
             'kind'        => $psid->kind,
             'entry_count' => $psid->entry_count,
             'total_tax'   => (float) $psid->total_tax,
