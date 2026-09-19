@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\WhtPsidRequest;
+use App\Services\Wht\WhtPsidBatcher;
+use App\Services\Wht\WhtPsidWorkbook;
+use Illuminate\Support\Carbon;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Models\WhtPurchase;
 use App\Models\WhtSalary;
 use Illuminate\Http\Request;
@@ -187,6 +191,68 @@ class CredentialApiController extends Controller
             'psid_no'  => $number,
             'entries'  => $affected,
             'agent'    => $psid->company->name ?? null,
+        ]);
+    }
+
+    /**
+     * Everything the ePayments page needs: the agent's registration number,
+     * the period, and the upload file itself.
+     *
+     * The page takes a file rather than a row per payment, which is the same
+     * workbook the Deposit page already produces - so the extension attaches
+     * what the app would otherwise have asked someone to download and pick.
+     */
+    public function psidRequestFile(Request $request, string $token)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $psid = WhtPsidRequest::with('company')->where('token', $token)->first();
+
+        if (!$psid || !$psid->company) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+
+        $company = $psid->company;
+        $rows = (new WhtPsidBatcher())->rowsForIds($company, $psid->kind, $psid->entry_ids);
+        $rows = $rows->filter(fn($r) => (float) ($r['tax_withheld'] ?? 0) > 0)->values();
+
+        if ($rows->isEmpty()) {
+            return response()->json(['error' => 'Nothing to deposit in this request.'], 422);
+        }
+
+        // FBR issues one challan for one tax month, so a selection spanning
+        // months cannot become a single PSID. Say so rather than producing a
+        // file that will be rejected.
+        $periods = $rows->pluck('period')->unique()->sort()->values();
+        $period  = Carbon::parse($periods->first() . '-01');
+
+        $book = (new WhtPsidWorkbook())->build($company, $period, $psid->kind, $rows);
+
+        $tmp = tempnam(sys_get_temp_dir(), 'psid') . '.xlsx';
+        $writer = new Xlsx($book);
+        $writer->setPreCalculateFormulas(false);
+        $writer->save($tmp);
+        $book->disconnectWorksheets();
+
+        $bytes = file_get_contents($tmp);
+        @unlink($tmp);
+
+        $digits = preg_replace('/[^0-9]/', '', (string) $company->ntn_cnic);
+
+        return response()->json([
+            'filename'    => sprintf('PSID-%s-%s-%s.xlsx',
+                str($company->name)->slug(), $psid->kind, $period->format('Y-m')),
+            'base64'      => base64_encode($bytes),
+            'registration'=> $digits,
+            'reg_type'    => strlen($digits) === 13 ? 'cnic' : 'ntn',
+            'tax_year'    => $period->month >= 7 ? $period->year + 1 : $period->year,
+            'tax_month'   => $period->format('F'),
+            'tax_month_no'=> (int) $period->format('n'),
+            'period'      => $period->format('Y-m'),
+            'periods'     => $periods->all(),
+            'mixed'       => $periods->count() > 1,
+            'entries'     => $rows->count(),
         ]);
     }
 }

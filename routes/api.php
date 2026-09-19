@@ -8,6 +8,7 @@ Route::get('ext/clients', [\App\Http\Controllers\CredentialApiController::class,
 Route::get('ext/credentials/{client}', [\App\Http\Controllers\CredentialApiController::class, 'getCredentials']);
 Route::get('ext/wht/psid-request/{token}', [\App\Http\Controllers\CredentialApiController::class, 'psidRequest']);
 Route::post('ext/wht/psid-request/{token}', [\App\Http\Controllers\CredentialApiController::class, 'completePsidRequest']);
+Route::get('ext/wht/psid-request/{token}/file', [\App\Http\Controllers\CredentialApiController::class, 'psidRequestFile']);
 
 // WHT data for the wht-psid Claude skill (read-only, shared-token auth)
 Route::get('wht/agents', [\App\Http\Controllers\Api\WhtPsidApiController::class, 'agents']);

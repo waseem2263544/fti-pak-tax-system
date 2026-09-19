@@ -38,6 +38,13 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
         return true;
     }
 
+    if (msg.action === 'psidFile') {
+        psidFile(msg.token).then(sendResponse).catch(function (e) {
+            sendResponse({ ok: false, error: e.message });
+        });
+        return true;
+    }
+
     if (msg.action === 'filePsid') {
         filePsid(msg).then(sendResponse).catch(function (e) {
             sendResponse({ ok: false, error: e.message });
@@ -185,4 +192,23 @@ async function filePsid(msg) {
     await chrome.storage.local.remove(['psidJob']);
 
     return { ok: true, entries: data.entries, psid: data.psid_no };
+}
+
+async function psidFile(token) {
+    const stored = await chrome.storage.local.get(['token']);
+
+    if (!stored.token) {
+        return { ok: false, error: 'the extension is signed out' };
+    }
+
+    const res = await fetch(PSID_API + encodeURIComponent(token) + '/file', {
+        headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+    });
+
+    if (!res.ok) {
+        const body = await res.json().catch(function () { return {}; });
+        return { ok: false, error: body.error || ('the app returned ' + res.status) };
+    }
+
+    return { ok: true, data: await res.json() };
 }
