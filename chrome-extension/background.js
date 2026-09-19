@@ -11,6 +11,9 @@
 const API_BASE = 'https://app.fairtaxint.com/api/ext';
 const PSID_API  = API_BASE + '/wht/psid-request/';
 
+// FBR's e-Payments portal, where a challan is created. No sign-in required.
+const EPAYMENT_URL = 'https://e.fbr.gov.pk/';
+
 const PORTAL_URLS = {
     fbr:  'https://iris.fbr.gov.pk/',
     kpra: 'https://kpra.kp.gov.pk/',
@@ -144,35 +147,13 @@ async function startPsid(msg) {
         },
     });
 
-    // The withholding agent files its own return, so sign in as the agent
-    // rather than dropping the preparer on a login page.
-    let credentials = null;
+    // Creating a PSID needs no sign-in: the e-Payments portal takes the NTN,
+    // the section and the amount from anyone. Opening IRIS was the mistake -
+    // it has nothing to do with generating a challan, and only ever produced a
+    // login page.
+    await chrome.tabs.create({ url: EPAYMENT_URL, active: true });
 
-    if (info.has_login && info.client_id) {
-        try {
-            const cr = await fetch(API_BASE + '/credentials/' + info.client_id + '?portal=fbr', {
-                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
-            });
-            if (cr.ok) {
-                const c = await cr.json();
-                if (c.password) { credentials = c; }
-            }
-        } catch (e) { /* the page still opens; it is just not filled */ }
-    }
-
-    const tab = await chrome.tabs.create({ url: 'https://iris.fbr.gov.pk/', active: true });
-
-    if (credentials) {
-        pending.set(tab.id, { portal: 'fbr', credentials: credentials });
-
-        setTimeout(function () {
-            chrome.tabs.sendMessage(tab.id, { action: 'fill', portal: 'fbr', credentials: credentials }, function () {
-                void chrome.runtime.lastError;
-            });
-        }, 2500);
-    }
-
-    return { ok: true, filled: !!credentials };
+    return { ok: true };
 }
 
 async function filePsid(msg) {

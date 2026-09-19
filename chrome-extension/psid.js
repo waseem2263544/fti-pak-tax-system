@@ -49,8 +49,7 @@ function arm() {
         + '<div style="opacity:.75">' + (job.agent || 'this agent') + ' &middot; '
         + job.entryCount + ' entries &middot; '
         + Number(job.totalTax || 0).toLocaleString() + ' tax</div>'
-        + (job.hasLogin ? '' : '<div style="opacity:.6;margin-top:4px">No FBR login stored for this agent &mdash; sign in yourself.</div>')
-        + '<div style="opacity:.6;margin-top:4px">Create the payment as usual; the number will be filed for you.</div>';
+        + '<div style="opacity:.6;margin-top:4px">Create the challan as usual; the number will be filed for you.</div>';
 
     const close = document.createElement('button');
     close.textContent = 'Stop watching';
