@@ -198,7 +198,7 @@
             {{-- Shown only where the extension is installed: it is what carries the
                  number back from IRIS, so without it the button would only open a
                  request nothing ever closes. --}}
-            <button type="button" class="btn btn-accent ext-only" id="createPsid" disabled hidden>
+            <button type="button" class="btn btn-accent" id="createPsid">
                 <i class="bi bi-receipt me-1"></i> Create PSID
             </button>
             <button class="btn btn-outline-danger" id="bulkDelete" disabled>
@@ -239,17 +239,42 @@
         attributes: true, attributeFilter: ['data-fairtax-extension'],
     });
 
+    // The extension's content script may still be starting when this runs, so
+    // readiness is checked at click time, not here.
+
     const btn = document.getElementById('createPsid');
+
     if (btn) {
         btn.addEventListener('click', function () {
-            const sel = Array.from(document.querySelectorAll('.row-check'))
-                .filter(c => c.checked && parseFloat(c.dataset.tax || 0) > 0);
+            const all = Array.from(document.querySelectorAll('.row-check')).filter(c => c.checked);
+            const sel = all.filter(c => parseFloat(c.dataset.tax || 0) > 0);
 
-            if (!sel.length) return;
+            if (!all.length) {
+                alert('Tick the entries you want a PSID for first.');
+                return;
+            }
 
-            const skipped = Array.from(document.querySelectorAll('.row-check')).filter(c => c.checked).length - sel.length;
-            const note = skipped ? '\n\n' + skipped + ' selected ' + (skipped === 1 ? 'entry carries' : 'entries carry')
-                + ' no tax and will be left out.' : '';
+            if (!sel.length) {
+                alert('None of the selected entries carry any tax, so there is nothing to deposit.');
+                return;
+            }
+
+            if (!extensionReady()) {
+                alert(
+                    'The FairTax extension is not running on this page, so nothing would carry the '
+                    + 'PSID back from IRIS.\n\n'
+                    + 'Install or reload it from Administration \u2192 Chrome Extension (version 1.4 or later), '
+                    + 'then reload this page.\n\n'
+                    + 'You can still create the PSID in IRIS yourself and enter it on the Deposit page.'
+                );
+                return;
+            }
+
+            const skipped = all.length - sel.length;
+            const note = skipped
+                ? '\n\n' + skipped + ' selected ' + (skipped === 1 ? 'entry carries' : 'entries carry')
+                  + ' no tax and will be left out.'
+                : '';
 
             if (!confirm('Open a PSID request for ' + sel.length + ' entries?' + note
                 + '\n\nThey will be locked until the number comes back, so they cannot be sent to IRIS twice.')) {
@@ -265,6 +290,9 @@
                 i.value = c.value;
                 box.appendChild(i);
             });
+
+            btn.disabled = true;
+            btn.textContent = 'Opening request\u2026';
             document.getElementById('psidForm').submit();
         });
     }
@@ -304,12 +332,6 @@
         document.getElementById('selTax').textContent = tax.toLocaleString(undefined, {maximumFractionDigits: 0});
         document.getElementById('bulkDelete').disabled = sel.length === 0;
 
-        const psid = document.getElementById('createPsid');
-        if (psid) {
-            // Only entries carrying tax can be deposited.
-            const payable = sel.filter(c => parseFloat(c.dataset.tax || 0) > 0).length;
-            psid.disabled = payable === 0;
-        }
         document.getElementById('selHint').classList.toggle('d-none', sel.length > 0);
 
         // Deleting an entry that has been deposited is the risky case, so say so.
