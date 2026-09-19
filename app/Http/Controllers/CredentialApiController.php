@@ -238,13 +238,17 @@ class CredentialApiController extends Controller
         $bytes = file_get_contents($tmp);
         @unlink($tmp);
 
+        // IRIS validates the punctuation, not just the digits: an NTN must read
+        // xxxxxxx-x and a CNIC xxxxx-xxxxxxx-x. The same rule the deposit file
+        // already follows.
         $digits = preg_replace('/[^0-9]/', '', (string) $company->ntn_cnic);
+        $registration = WhtPsidBatcher::formatTaxNumber($digits, (string) $company->ntn_cnic);
 
         return response()->json([
             'filename'    => sprintf('PSID-%s-%s-%s.xlsx',
                 str($company->name)->slug(), $psid->kind, $period->format('Y-m')),
             'base64'      => base64_encode($bytes),
-            'registration'=> $digits,
+            'registration'=> $registration,
             'reg_type'    => strlen($digits) === 13 ? 'cnic' : 'ntn',
             'tax_year'    => $period->month >= 7 ? $period->year + 1 : $period->year,
             'tax_month'   => $period->format('F'),
