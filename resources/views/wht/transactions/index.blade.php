@@ -372,3 +372,4 @@
     refresh();
 })();
 </script>
+@endsection
