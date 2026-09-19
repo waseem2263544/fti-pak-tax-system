@@ -116,9 +116,72 @@ async function prepare(jobInfo) {
     if (!attach()) { setTimeout(attach, 1500); }
 
     setTimeout(function () {
-        note('Filled: ' + filled.join(' · ')
-           + '. Enter the captcha and press Submit — that part is yours.');
+        note('Filled: ' + filled.join(' · ') + '. Type the captcha and press Enter.');
+        focusCaptcha();
+        offerSubmit();
     }, 2600);
+}
+
+/**
+ * Put the cursor in the captcha, and make Enter carry it forward.
+ *
+ * The captcha is the one thing here a person has to do. Everything around it -
+ * reaching the box, and moving on once it is answered - is not, so it is taken
+ * care of.
+ */
+function focusCaptcha() {
+    const box = document.querySelector('[formcontrolname="userInput"]');
+    if (!box || box.dataset.ftBound) { return; }
+
+    box.dataset.ftBound = '1';
+    box.focus();
+
+    box.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') { return; }
+        e.preventDefault();
+
+        // Whatever button follows the captcha is the one that verifies it.
+        const buttons = Array.prototype.slice.call(document.querySelectorAll('button'));
+        const after = buttons.filter(function (b) {
+            return box.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
+        });
+        if (after.length) { after[0].click(); }
+    });
+}
+
+/**
+ * Press Submit on request.
+ *
+ * The page's own Submit is clicked for the preparer once they have answered the
+ * captcha - the check the captcha exists for has happened by then. It is not
+ * pressed on its own: a challan is a real record at FBR, and the moment before
+ * it is created is the last one at which a wrong batch can be caught.
+ */
+function offerSubmit() {
+    if (document.getElementById('fairtax-ep-submit')) { return; }
+
+    const submit = Array.prototype.slice.call(document.querySelectorAll('button'))
+        .find(function (b) { return /^\s*submit\s*$/i.test(b.innerText || ''); });
+
+    if (!submit) { return; }
+
+    const btn = document.createElement('button');
+    btn.id = 'fairtax-ep-submit';
+    btn.textContent = 'Submit to FBR';
+    btn.style.cssText = [
+        'position:fixed', 'left:18px', 'bottom:66px', 'z-index:2147483646',
+        'background:#2F6FEB', 'color:#fff', 'border:0', 'border-radius:8px',
+        'padding:10px 16px', 'font:600 13px system-ui', 'cursor:pointer',
+        'box-shadow:0 6px 20px rgba(0,0,0,.3)',
+    ].join(';');
+
+    btn.addEventListener('click', function () {
+        btn.disabled = true;
+        btn.textContent = 'Submitting…';
+        submit.click();
+    });
+
+    document.body.appendChild(btn);
 }
 
 function note(message, bad) {
