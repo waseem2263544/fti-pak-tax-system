@@ -10,6 +10,7 @@ Route::post('ext/clients', [\App\Http\Controllers\CredentialApiController::class
 Route::put('ext/clients/{client}', [\App\Http\Controllers\CredentialApiController::class, 'updateClient']);
 Route::post('ext/clients/{client}/reset-password', [\App\Http\Controllers\CredentialApiController::class, 'resetPassword']);
 Route::get('ext/portal-password', [\App\Http\Controllers\CredentialApiController::class, 'portalPassword']);
+Route::get('ext/clients/by-registration', [\App\Http\Controllers\CredentialApiController::class, 'clientByRegistration']);
 Route::get('ext/wht/psid-request/{token}', [\App\Http\Controllers\CredentialApiController::class, 'psidRequest']);
 Route::post('ext/wht/psid-request/{token}', [\App\Http\Controllers\CredentialApiController::class, 'completePsidRequest']);
 Route::get('ext/wht/psid-request/{token}/file', [\App\Http\Controllers\CredentialApiController::class, 'psidRequestFile']);

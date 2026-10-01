@@ -12,18 +12,24 @@
 const PW_API = 'https://app.fairtaxint.com/api/ext';
 
 let pwJob = null;
+let standard = null;
 
+/*
+ * The bar appears whenever the Change Password dialog is open, whether or not
+ * anything was armed in the popup. Being signed in to the client's portal is
+ * the whole context needed: who they are can be read off the page, and the
+ * standard password comes from the app.
+ */
 chrome.storage.local.get(['pwJob'], function (s) {
-    if (!s.pwJob) { return; }
-    pwJob = s.pwJob;
+    pwJob = s.pwJob || null;
     watchForDialog();
 });
 
 function watchForDialog() {
     const look = function () {
-        if (!pwJob) { return; }
         if (document.getElementById('fairtax-pw-bar')) { return; }
-        if (fields().old && fields().neu && fields().confirm) { offer(); }
+        const f = fields();
+        if (f.old && f.neu && f.confirm) { begin(); }
     };
 
     look();
@@ -31,6 +37,121 @@ function watchForDialog() {
         clearTimeout(watchForDialog._t);
         watchForDialog._t = setTimeout(look, 300);
     }).observe(document.body, { childList: true, subtree: true });
+}
+
+/**
+ * Work out who is signed in.
+ *
+ * Any registration number on the page is tried against the app. The profile
+ * block carries it, but so can a dozen other places, so every candidate is
+ * offered until one is recognised.
+ */
+async function identify() {
+    const body = document.body.innerText || '';
+    const seen = [];
+
+    const patterns = [
+        /\b(\d{5}-\d{7}-\d)\b/g,        // CNIC
+        /\b(\d{7}-\d)\b/g,               // NTN
+        /\b(\d{13})\b/g,
+        /\b(\d{8})\b/g,
+    ];
+
+    for (const re of patterns) {
+        let m;
+        while ((m = re.exec(body)) !== null) {
+            if (seen.indexOf(m[1]) < 0) { seen.push(m[1]); }
+        }
+    }
+
+    const stored = await chrome.storage.local.get(['token']);
+    if (!stored.token) { return null; }
+
+    for (const reg of seen.slice(0, 12)) {
+        try {
+            const res = await fetch(PW_API + '/clients/by-registration?reg=' + encodeURIComponent(reg), {
+                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+            });
+            if (res.ok) { return await res.json(); }
+        } catch (e) { /* try the next one */ }
+    }
+
+    return null;
+}
+
+async function fetchStandard() {
+    const stored = await chrome.storage.local.get(['token']);
+    if (!stored.token) { return null; }
+
+    try {
+        const res = await fetch(PW_API + '/portal-password', {
+            headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+        });
+        if (!res.ok) { return null; }
+        return (await res.json()).password;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function begin() {
+    const bar = shell();
+
+    standard = await fetchStandard();
+
+    if (!standard) {
+        return setBar(bar, 'No standard password is configured in the app, so there is nothing to set.', true);
+    }
+
+    // Armed from the popup, or worked out from the page.
+    let client = pwJob
+        ? { id: pwJob.clientId, name: pwJob.clientName, password: pwJob.oldPassword, has_password: !!pwJob.oldPassword }
+        : await identify();
+
+    if (!client) {
+        return setBar(bar,
+            'Change Password is open, but the extension cannot tell which client this login belongs to. '
+            + 'Open the extension, find the client and press "Change this to the standard password", then come back.',
+            true);
+    }
+
+    if (!client.has_password || !client.password) {
+        return setBar(bar,
+            'No current password is stored for ' + client.name + ', and the old one has to be filled. '
+            + 'Add it in the extension first.', true);
+    }
+
+    pwJob = {
+        clientId: client.id,
+        clientName: client.name,
+        oldPassword: client.password,
+        newPassword: standard,
+    };
+
+    offer(bar);
+}
+
+function shell() {
+    const bar = document.createElement('div');
+    bar.id = 'fairtax-pw-bar';
+    bar.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);'
+        + 'z-index:2147483647;background:#16181d;color:#fff;border-left:3px solid #D97706;'
+        + 'font:13px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:14px 18px;'
+        + 'border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;gap:14px;'
+        + 'align-items:center;max-width:min(640px,92vw)';
+    bar.innerHTML = '<div>Checking this login…</div>';
+    document.body.appendChild(bar);
+    return bar;
+}
+
+function setBar(bar, html, bad) {
+    bar.style.borderLeftColor = bad ? '#ef4444' : '#D97706';
+    bar.innerHTML = '<div>' + html + '</div>';
+
+    const close = mk('Dismiss', 'transparent');
+    close.style.border = '1px solid rgba(255,255,255,.28)';
+    close.addEventListener('click', function () { bar.remove(); });
+    bar.appendChild(close);
 }
 
 /** Label text for an input, however Material has attached it. */
@@ -68,14 +189,8 @@ function setValue(el, value) {
     el.dispatchEvent(new Event('blur', { bubbles: true }));
 }
 
-function offer() {
-    const bar = document.createElement('div');
-    bar.id = 'fairtax-pw-bar';
-    bar.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);'
-        + 'z-index:2147483647;background:#16181d;color:#fff;border-left:3px solid #D97706;'
-        + 'font:13px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:14px 18px;'
-        + 'border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;gap:14px;'
-        + 'align-items:center;max-width:min(620px,92vw)';
+function offer(bar) {
+    bar.innerHTML = '';
 
     const msg = document.createElement('div');
     msg.innerHTML = 'Set the IRIS password for <strong>' + (pwJob.clientName || 'this client')
@@ -98,7 +213,6 @@ function offer() {
     bar.appendChild(msg);
     bar.appendChild(no);
     bar.appendChild(go);
-    document.body.appendChild(bar);
 }
 
 function mk(label, bg) {

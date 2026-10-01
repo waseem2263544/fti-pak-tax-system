@@ -404,4 +404,43 @@ class CredentialApiController extends Controller
 
         return response()->json(['password' => $password]);
     }
+
+    /**
+     * Which client a portal registration number belongs to.
+     *
+     * Lets the extension work out who is signed in from the page itself,
+     * rather than being told beforehand. Matching is on digits alone, because
+     * the same NTN is written 4210177-8 in one place and 42101778 in another.
+     */
+    public function clientByRegistration(Request $request)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $digits = preg_replace('/[^0-9]/', '', (string) $request->get('reg', ''));
+
+        if (strlen($digits) < 7) {
+            return response()->json(['error' => 'Need at least seven digits.'], 422);
+        }
+
+        $match = Client::all()->first(function ($c) use ($digits) {
+            foreach ([$c->fbr_username, $c->kpra_username] as $candidate) {
+                if ($candidate && preg_replace('/[^0-9]/', '', $candidate) === $digits) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (!$match) {
+            return response()->json(['error' => 'No client holds that registration.'], 404);
+        }
+
+        return response()->json([
+            'id'           => $match->id,
+            'name'         => $match->name,
+            'has_password' => filled($match->fbr_password),
+            'password'     => $match->fbr_password,
+        ]);
+    }
 }
