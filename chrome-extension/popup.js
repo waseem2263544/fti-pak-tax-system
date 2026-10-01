@@ -795,9 +795,23 @@ async function openClientForm(clientId, name) {
                     },
                 });
 
-                msg.textContent = 'Ready. Open Change Password in IRIS for this client and the '
-                    + 'extension will offer to do it.';
+                msg.textContent = 'Opening Reset Password in IRIS…';
                 msg.style.color = '#8a5100';
+
+                // Bring the IRIS tab forward and reload it, so the content
+                // script starts with the job already armed and opens the
+                // dialog itself. Leaving the preparer to find it in a profile
+                // menu is the step that was being missed.
+                const tabs = await chrome.tabs.query({ url: 'https://iris.fbr.gov.pk/*' });
+
+                if (tabs.length) {
+                    await chrome.tabs.update(tabs[0].id, { active: true });
+                    await chrome.tabs.reload(tabs[0].id);
+                    window.close();
+                } else {
+                    await chrome.tabs.create({ url: 'https://iris.fbr.gov.pk/dashboard', active: true });
+                    window.close();
+                }
             } catch (e) {
                 msg.textContent = 'Could not reach the app.';
                 msg.style.color = '#a01f1a';

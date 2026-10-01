@@ -1,36 +1,42 @@
 /**
- * Changes a client's IRIS password to the firm's standard one.
+ * Resets a client's IRIS password to the firm's standard one.
  *
- * Armed from the popup, which knows which client is meant; completed here,
- * where the dialog is. The three fields carry no name or formcontrolname and
- * their ids shift between loads, so they are told apart by their labels.
+ * Written against the dialog as observed, not as guessed:
  *
- * The app's record is written only after the change appears to have gone
- * through. Recording first would leave the app holding a password the portal
- * never accepted, which locks the firm out of the account.
+ *  - it is not a Material dialog. It is IRIS's password-expiry component in an
+ *    MDB modal, rooted at app-password-expiry-model, and titled "Reset
+ *    Password". mat-dialog-container and [role=dialog] find nothing.
+ *  - the three inputs keep a value set through the native setter, and Angular
+ *    registers it. That part needed no change.
+ *  - Save is never disabled and carries mat-dialog-close, so the modal closes
+ *    whatever happens. A closed dialog is therefore not evidence of success,
+ *    and IRIS shows no inline validation text to read instead. So the outcome
+ *    is put to the preparer rather than assumed.
  */
-const PW_API = 'https://app.fairtaxint.com/api/ext';
+const PW_API  = 'https://app.fairtaxint.com/api/ext';
+const DIALOG  = 'app-password-expiry-model';
 
 let pwJob = null;
 let standard = null;
 
-/*
- * The bar appears whenever the Change Password dialog is open, whether or not
- * anything was armed in the popup. Being signed in to the client's portal is
- * the whole context needed: who they are can be read off the page, and the
- * standard password comes from the app.
- */
-chrome.storage.local.get(['pwJob'], function (s) {
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const txt  = el => ((el && (el.innerText || el.textContent)) || '').trim();
+
+chrome.storage.local.get(['pwJob'], async function (s) {
     pwJob = s.pwJob || null;
+
     watchForDialog();
+
+    // Armed from the popup: open the dialog rather than leaving the preparer
+    // to find it. Two clicks in a menu is the step that was being missed.
+    if (pwJob && !document.querySelector(DIALOG)) {
+        await openChangePassword();
+    }
 });
 
 function watchForDialog() {
     const look = function () {
         if (document.getElementById('fairtax-pw-bar')) { return; }
-        // Three visible password boxes is the dialog, whatever the labels say.
-        // Requiring all three labels to match first meant one unexpected
-        // wording left nothing on screen at all.
         if (passwordBoxes().length >= 3) { begin(); }
     };
 
@@ -42,82 +48,130 @@ function watchForDialog() {
 }
 
 /**
- * Work out who is signed in.
+ * Profile menu, then Change Password.
  *
- * Any registration number on the page is tried against the app. The profile
- * block carries it, but so can a dozen other places, so every candidate is
- * offered until one is recognised.
+ * The trigger is matched on its icon ligature: the menu-trigger class alone
+ * also catches the Certificates sub-menu once the menu is open. The item lives
+ * in the CDK overlay, not under the button, and "Change PIN" carries the same
+ * icon - so the item is matched on its text.
  */
-async function identify() {
-    const body = document.body.innerText || '';
-    const seen = [];
+async function openChangePassword() {
+    const trigger = Array.prototype.slice.call(document.querySelectorAll('button.mat-mdc-menu-trigger'))
+        .find(b => txt(b.querySelector('mat-icon')) === 'person_pin');
 
-    const patterns = [
-        /\b(\d{5}-\d{7}-\d)\b/g,        // CNIC
-        /\b(\d{7}-\d)\b/g,               // NTN
-        /\b(\d{13})\b/g,
-        /\b(\d{8})\b/g,
-    ];
+    if (!trigger) { return false; }
 
-    for (const re of patterns) {
-        let m;
-        while ((m = re.exec(body)) !== null) {
-            if (seen.indexOf(m[1]) < 0) { seen.push(m[1]); }
+    trigger.click();
+
+    for (let i = 0; i < 12; i++) {
+        await wait(250);
+
+        const item = Array.prototype.slice.call(
+            document.querySelectorAll('.cdk-overlay-container [role="menuitem"]')
+        ).find(b => txt(b).endsWith('Change Password'));
+
+        if (item) {
+            item.click();
+            return true;
         }
     }
 
-    const stored = await chrome.storage.local.get(['token']);
-    if (!stored.token) { return null; }
-
-    for (const reg of seen.slice(0, 12)) {
-        try {
-            const res = await fetch(PW_API + '/clients/by-registration?reg=' + encodeURIComponent(reg), {
-                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
-            });
-            if (res.ok) { return await res.json(); }
-        } catch (e) { /* try the next one */ }
-    }
-
-    return null;
+    return false;
 }
 
-async function fetchStandard() {
+function passwordBoxes() {
+    const root = document.querySelector(DIALOG) || document;
+
+    return Array.prototype.slice.call(root.querySelectorAll('input[type="password"]'))
+        .filter(el => el.offsetParent !== null);
+}
+
+function labelOf(el) {
+    if (el.labels && el.labels[0]) { return el.labels[0].innerText || ''; }
+
+    const aria = el.getAttribute('aria-label') || el.getAttribute('placeholder');
+    if (aria) { return aria; }
+
+    const field = el.closest('mat-form-field, .mat-form-field, .mat-mdc-form-field');
+    return field ? (field.innerText || '') : '';
+}
+
+function fields() {
+    const boxes = passwordBoxes();
+    const find = re => boxes.find(el => re.test(labelOf(el)));
+
+    const confirm = find(/confirm|re-?enter|again|retype/i);
+    const old = find(/old|current|existing|previous/i);
+    const neu = boxes.find(el => /new/i.test(labelOf(el)) && el !== confirm);
+
+    if (old && neu && confirm) { return { old, neu, confirm, how: 'labels' }; }
+    if (boxes.length >= 3) { return { old: boxes[0], neu: boxes[1], confirm: boxes[2], how: 'order' }; }
+
+    return { old, neu, confirm, how: 'incomplete' };
+}
+
+function setValue(el, value) {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(el, value);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('blur', { bubbles: true }));
+}
+
+async function fetchJson(path) {
     const stored = await chrome.storage.local.get(['token']);
     if (!stored.token) { return null; }
 
     try {
-        const res = await fetch(PW_API + '/portal-password', {
+        const res = await fetch(PW_API + path, {
             headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
         });
-        if (!res.ok) { return null; }
-        return (await res.json()).password;
+        return res.ok ? await res.json() : null;
     } catch (e) {
         return null;
     }
 }
 
+async function identify() {
+    const body = document.body.innerText || '';
+    const seen = [];
+
+    [/\b(\d{5}-\d{7}-\d)\b/g, /\b(\d{7}-\d)\b/g, /\b(\d{13})\b/g, /\b(\d{8})\b/g].forEach(function (re) {
+        let m;
+        while ((m = re.exec(body)) !== null) {
+            if (seen.indexOf(m[1]) < 0) { seen.push(m[1]); }
+        }
+    });
+
+    for (const reg of seen.slice(0, 12)) {
+        const hit = await fetchJson('/clients/by-registration?reg=' + encodeURIComponent(reg));
+        if (hit) { return hit; }
+    }
+
+    return null;
+}
+
 async function begin() {
     const bar = shell();
 
-    standard = await fetchStandard();
+    const std = await fetchJson('/portal-password');
+    standard = std && std.password;
 
     if (!standard) {
-        return setBar(bar, 'No standard password is configured in the app, so there is nothing to set.', true);
+        return setBar(bar, 'No standard password is configured in the app, or the extension is signed out.', true);
     }
 
-    // Armed from the popup, or worked out from the page.
-    let client = pwJob
-        ? { id: pwJob.clientId, name: pwJob.clientName, password: pwJob.oldPassword, has_password: !!pwJob.oldPassword }
+    let client = pwJob && pwJob.oldPassword
+        ? { id: pwJob.clientId, name: pwJob.clientName, password: pwJob.oldPassword, has_password: true }
         : await identify();
 
     if (!client) {
         return setBar(bar,
-            'Change Password is open, but the extension cannot tell which client this login belongs to. '
-            + 'Open the extension, find the client and press "Change this to the standard password", then come back.',
-            true);
+            'Reset Password is open, but the extension cannot tell which client this login is. '
+            + 'Open the extension, find the client and press "Change this to the standard password".', true);
     }
 
-    if (!client.has_password || !client.password) {
+    if (!client.password) {
         return setBar(bar,
             'No current password is stored for ' + client.name + ', and the old one has to be filled. '
             + 'Add it in the extension first.', true);
@@ -130,7 +184,7 @@ async function begin() {
         newPassword: standard,
     };
 
-    offer(bar, client);
+    offer(bar);
 }
 
 function shell() {
@@ -140,7 +194,7 @@ function shell() {
         + 'z-index:2147483647;background:#16181d;color:#fff;border-left:3px solid #D97706;'
         + 'font:13px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:14px 18px;'
         + 'border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;gap:14px;'
-        + 'align-items:center;max-width:min(640px,92vw)';
+        + 'align-items:center;max-width:min(660px,92vw)';
     bar.innerHTML = '<div>Checking this login…</div>';
     document.body.appendChild(bar);
     return bar;
@@ -152,92 +206,8 @@ function setBar(bar, html, bad) {
 
     const close = mk('Dismiss', 'transparent');
     close.style.border = '1px solid rgba(255,255,255,.28)';
-    close.addEventListener('click', function () { bar.remove(); });
+    close.addEventListener('click', () => bar.remove());
     bar.appendChild(close);
-}
-
-/** Label text for an input, however Material has attached it. */
-function labelOf(el) {
-    if (el.labels && el.labels[0]) { return el.labels[0].innerText || ''; }
-    const aria = el.getAttribute('aria-label') || el.getAttribute('placeholder');
-    if (aria) { return aria; }
-
-    const field = el.closest('mat-form-field, .mat-form-field, .mat-mdc-form-field');
-    return field ? (field.innerText || '') : '';
-}
-
-function passwordBoxes() {
-    return Array.prototype.slice.call(document.querySelectorAll('input[type="password"]'))
-        .filter(function (el) { return el.offsetParent !== null; });
-}
-
-/**
- * Which box is which.
- *
- * By label where the labels say so, and by the order they appear where they do
- * not - the dialog puts old, new and confirm in that order, and a wording this
- * code has not seen should not stop it working.
- */
-function fields() {
-    const boxes = passwordBoxes();
-    const find = re => boxes.find(el => re.test(labelOf(el)));
-
-    const confirm = find(/confirm|re-?enter|again|retype/i);
-    const old = find(/old|current|existing|previous/i);
-    const neu = boxes.find(el => /new/i.test(labelOf(el)) && el !== confirm);
-
-    if (old && neu && confirm) {
-        return { old: old, neu: neu, confirm: confirm, how: 'labels' };
-    }
-
-    if (boxes.length >= 3) {
-        return { old: boxes[0], neu: boxes[1], confirm: boxes[2], how: 'order' };
-    }
-
-    return { old: old, neu: neu, confirm: confirm, how: 'incomplete' };
-}
-
-function setValue(el, value) {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    setter.call(el, value);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-    el.dispatchEvent(new Event('blur', { bubbles: true }));
-}
-
-function offer(bar, client) {
-    bar.innerHTML = '';
-
-    const f = fields();
-    const seen = passwordBoxes().map(function (el) {
-        const l = (labelOf(el) || '').replace(/\s+/g, ' ').trim();
-        return l ? l.slice(0, 26) : '(no label)';
-    });
-
-    const msg = document.createElement('div');
-    msg.innerHTML = 'Set the IRIS password for <strong>' + (pwJob.clientName || 'this client')
-        + '</strong> to the firm\'s standard one?'
-        + '<div style="opacity:.65;font-size:11.5px;margin-top:3px">'
-        + 'Fills all three boxes and presses Save. The app is updated only if it goes through.</div>'
-        + '<div style="opacity:.5;font-size:10.5px;margin-top:4px">'
-        + passwordBoxes().length + ' password boxes found, matched by ' + f.how
-        + ' — ' + seen.join(' / ') + '</div>';
-
-    const go = mk('Do it', '#D97706');
-    const no = mk('Not now', 'transparent');
-    no.style.border = '1px solid rgba(255,255,255,.28)';
-
-    no.addEventListener('click', function () { bar.remove(); });
-
-    go.addEventListener('click', function () {
-        go.disabled = true;
-        go.textContent = 'Changing…';
-        run(bar, msg, go);
-    });
-
-    bar.appendChild(msg);
-    bar.appendChild(no);
-    bar.appendChild(go);
 }
 
 function mk(label, bg) {
@@ -248,6 +218,35 @@ function mk(label, bg) {
     return b;
 }
 
+function offer(bar) {
+    bar.innerHTML = '';
+
+    const f = fields();
+    const seen = passwordBoxes().map(el => (labelOf(el) || '(no label)').replace(/\s+/g, ' ').trim().slice(0, 26));
+
+    const msg = document.createElement('div');
+    msg.innerHTML = 'Reset the IRIS password for <strong>' + (pwJob.clientName || 'this client')
+        + '</strong> to the firm\'s standard one?'
+        + '<div style="opacity:.65;font-size:11.5px;margin-top:3px">Fills all three boxes and presses Save.</div>'
+        + '<div style="opacity:.5;font-size:10.5px;margin-top:4px">'
+        + passwordBoxes().length + ' boxes, matched by ' + f.how + ' — ' + seen.join(' / ') + '</div>';
+
+    const go = mk('Do it', '#D97706');
+    const no = mk('Not now', 'transparent');
+    no.style.border = '1px solid rgba(255,255,255,.28)';
+    no.addEventListener('click', () => bar.remove());
+
+    go.addEventListener('click', function () {
+        go.disabled = true;
+        go.textContent = 'Working…';
+        run(bar, msg, go);
+    });
+
+    bar.appendChild(msg);
+    bar.appendChild(no);
+    bar.appendChild(go);
+}
+
 async function run(bar, msg, go) {
     const f = fields();
 
@@ -255,71 +254,89 @@ async function run(bar, msg, go) {
         return fail(bar, msg, go, 'the three password boxes are no longer on screen');
     }
 
-    if (!pwJob.oldPassword) {
-        return fail(bar, msg, go, 'no current password is stored for this client, so the old one cannot be filled');
-    }
-
     setValue(f.old, pwJob.oldPassword);
     setValue(f.neu, pwJob.newPassword);
     setValue(f.confirm, pwJob.newPassword);
 
-    await new Promise(r => setTimeout(r, 400));
+    await wait(400);
 
-    // Angular can re-render a field straight back to empty. Pressing Save on
-    // three blank boxes achieves nothing and reads as a silent failure, so the
-    // values are read back before going any further.
-    const stuck = [f.old, f.neu, f.confirm].filter(function (el) { return !el.value; });
+    const empty = [f.old, f.neu, f.confirm].filter(el => !el.value).length;
+    if (empty) { return fail(bar, msg, go, empty + ' of the three boxes would not take a value'); }
 
-    if (stuck.length) {
-        return fail(bar, msg, go,
-            stuck.length + ' of the three boxes would not take a value. '
-            + 'Type the passwords in by hand this time, and tell me so I can fix the filling.');
-    }
+    const before = document.body.innerText || '';
 
-    const save = Array.prototype.slice.call(document.querySelectorAll('button'))
-        .filter(b => !b.id.startsWith('fairtax-'))
-        .find(b => /^\s*save\s*$/i.test(b.innerText || ''));
+    const save = Array.prototype.slice.call(
+        (document.querySelector(DIALOG) || document).querySelectorAll('button')
+    ).find(b => /^\s*save\s*$/i.test(txt(b)));
 
     if (!save) { return fail(bar, msg, go, 'the Save button could not be found'); }
 
     save.click();
+    await wait(3000);
 
-    // Treat the dialog closing with no error on screen as success. There is no
-    // reliable signal on this page, so the record is written on that basis and
-    // the preparer is told to check.
-    await new Promise(r => setTimeout(r, 2500));
+    // Save closes the modal whatever the outcome, and IRIS writes no inline
+    // message, so there is nothing here that proves it worked. Whatever is new
+    // on the page is shown, and the preparer decides - the app's record is only
+    // written on their word.
+    const after = document.body.innerText || '';
+    const added = after.split('\n')
+        .filter(line => line.trim() && before.indexOf(line.trim()) < 0)
+        .slice(0, 3)
+        .join(' · ')
+        .slice(0, 180);
 
-    const stillOpen = !!fields().old;
-    const errorText = (document.body.innerText || '').match(/incorrect|invalid|does not match|failed|wrong/i);
+    confirmOutcome(bar, added);
+}
 
-    if (stillOpen || errorText) {
-        return fail(bar, msg, go,
-            errorText ? 'IRIS reported: ' + errorText[0] : 'the dialog is still open, so it may not have saved');
-    }
+function confirmOutcome(bar, evidence) {
+    bar.innerHTML = '';
+    bar.style.borderLeftColor = '#2F6FEB';
 
-    try {
+    const msg = document.createElement('div');
+    msg.innerHTML = 'Save pressed for <strong>' + pwJob.clientName + '</strong>.'
+        + (evidence
+            ? '<div style="opacity:.75;font-size:11.5px;margin-top:3px">IRIS says: ' + evidence + '</div>'
+            : '<div style="opacity:.6;font-size:11.5px;margin-top:3px">IRIS showed no message. '
+              + 'Its Save closes the dialog either way, so this cannot be read automatically.</div>')
+        + '<div style="opacity:.6;font-size:11px;margin-top:4px">Did it accept the new password? '
+        + 'The app is only updated if you say yes.</div>';
+
+    const yes = mk('Yes, record it', '#0a6b4d');
+    const no  = mk('No', 'transparent');
+    no.style.border = '1px solid rgba(255,255,255,.28)';
+
+    no.addEventListener('click', function () {
+        setBar(bar, 'Nothing recorded. The app still holds the old password, which matches the portal.', true);
+    });
+
+    yes.addEventListener('click', async function () {
+        yes.disabled = true;
+        yes.textContent = 'Recording…';
+
         const stored = await chrome.storage.local.get(['token']);
-        const res = await fetch(PW_API + '/clients/' + pwJob.clientId + '/reset-password?portal=fbr', {
-            method: 'POST',
-            headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
-        });
 
-        if (!res.ok) { throw new Error('the app returned ' + res.status); }
-    } catch (e) {
-        bar.style.borderLeftColor = '#ef4444';
-        msg.innerHTML = 'IRIS accepted the change, but the app was not updated (' + e.message
-            + '). Set the password in the app by hand or the two will disagree.';
-        go.remove();
-        return;
-    }
+        try {
+            const res = await fetch(PW_API + '/clients/' + pwJob.clientId + '/reset-password?portal=fbr', {
+                method: 'POST',
+                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+            });
+            if (!res.ok) { throw new Error('the app returned ' + res.status); }
+        } catch (e) {
+            return setBar(bar, 'IRIS accepted it but the app was not updated (' + e.message
+                + '). Set it in the app by hand, or the two will disagree.', true);
+        }
 
-    await chrome.storage.local.remove(['pwJob']);
-    pwJob = null;
+        await chrome.storage.local.remove(['pwJob']);
+        pwJob = null;
 
-    bar.style.borderLeftColor = '#10b981';
-    msg.innerHTML = 'Changed on IRIS and recorded in the app. Sign out and in once to confirm it took.';
-    go.remove();
-    setTimeout(() => bar.remove(), 8000);
+        bar.style.borderLeftColor = '#10b981';
+        bar.innerHTML = '<div>Recorded. Sign out and in once to be sure it took.</div>';
+        setTimeout(() => bar.remove(), 7000);
+    });
+
+    bar.appendChild(msg);
+    bar.appendChild(no);
+    bar.appendChild(yes);
 }
 
 function fail(bar, msg, go, why) {
