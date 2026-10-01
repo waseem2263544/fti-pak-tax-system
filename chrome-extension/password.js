@@ -28,8 +28,10 @@ chrome.storage.local.get(['pwJob'], function (s) {
 function watchForDialog() {
     const look = function () {
         if (document.getElementById('fairtax-pw-bar')) { return; }
-        const f = fields();
-        if (f.old && f.neu && f.confirm) { begin(); }
+        // Three visible password boxes is the dialog, whatever the labels say.
+        // Requiring all three labels to match first meant one unexpected
+        // wording left nothing on screen at all.
+        if (passwordBoxes().length >= 3) { begin(); }
     };
 
     look();
@@ -128,7 +130,7 @@ async function begin() {
         newPassword: standard,
     };
 
-    offer(bar);
+    offer(bar, client);
 }
 
 function shell() {
@@ -164,21 +166,35 @@ function labelOf(el) {
     return field ? (field.innerText || '') : '';
 }
 
-function fields() {
-    const boxes = Array.prototype.slice.call(document.querySelectorAll('input[type="password"]'))
+function passwordBoxes() {
+    return Array.prototype.slice.call(document.querySelectorAll('input[type="password"]'))
         .filter(function (el) { return el.offsetParent !== null; });
+}
 
+/**
+ * Which box is which.
+ *
+ * By label where the labels say so, and by the order they appear where they do
+ * not - the dialog puts old, new and confirm in that order, and a wording this
+ * code has not seen should not stop it working.
+ */
+function fields() {
+    const boxes = passwordBoxes();
     const find = re => boxes.find(el => re.test(labelOf(el)));
 
-    const confirm = find(/confirm|re-?enter|again/i);
+    const confirm = find(/confirm|re-?enter|again|retype/i);
+    const old = find(/old|current|existing|previous/i);
+    const neu = boxes.find(el => /new/i.test(labelOf(el)) && el !== confirm);
 
-    return {
-        old: find(/old|current|existing/i),
-        // "New" also matches "Confirm New Password", so the confirm box is
-        // excluded rather than relying on the order they appear in.
-        neu: boxes.find(el => /new/i.test(labelOf(el)) && el !== confirm),
-        confirm: confirm,
-    };
+    if (old && neu && confirm) {
+        return { old: old, neu: neu, confirm: confirm, how: 'labels' };
+    }
+
+    if (boxes.length >= 3) {
+        return { old: boxes[0], neu: boxes[1], confirm: boxes[2], how: 'order' };
+    }
+
+    return { old: old, neu: neu, confirm: confirm, how: 'incomplete' };
 }
 
 function setValue(el, value) {
@@ -189,14 +205,23 @@ function setValue(el, value) {
     el.dispatchEvent(new Event('blur', { bubbles: true }));
 }
 
-function offer(bar) {
+function offer(bar, client) {
     bar.innerHTML = '';
+
+    const f = fields();
+    const seen = passwordBoxes().map(function (el) {
+        const l = (labelOf(el) || '').replace(/\s+/g, ' ').trim();
+        return l ? l.slice(0, 26) : '(no label)';
+    });
 
     const msg = document.createElement('div');
     msg.innerHTML = 'Set the IRIS password for <strong>' + (pwJob.clientName || 'this client')
         + '</strong> to the firm\'s standard one?'
         + '<div style="opacity:.65;font-size:11.5px;margin-top:3px">'
-        + 'Fills all three boxes and presses Save. The app is updated only if it goes through.</div>';
+        + 'Fills all three boxes and presses Save. The app is updated only if it goes through.</div>'
+        + '<div style="opacity:.5;font-size:10.5px;margin-top:4px">'
+        + passwordBoxes().length + ' password boxes found, matched by ' + f.how
+        + ' — ' + seen.join(' / ') + '</div>';
 
     const go = mk('Do it', '#D97706');
     const no = mk('Not now', 'transparent');
@@ -239,6 +264,17 @@ async function run(bar, msg, go) {
     setValue(f.confirm, pwJob.newPassword);
 
     await new Promise(r => setTimeout(r, 400));
+
+    // Angular can re-render a field straight back to empty. Pressing Save on
+    // three blank boxes achieves nothing and reads as a silent failure, so the
+    // values are read back before going any further.
+    const stuck = [f.old, f.neu, f.confirm].filter(function (el) { return !el.value; });
+
+    if (stuck.length) {
+        return fail(bar, msg, go,
+            stuck.length + ' of the three boxes would not take a value. '
+            + 'Type the passwords in by hand this time, and tell me so I can fix the filling.');
+    }
 
     const save = Array.prototype.slice.call(document.querySelectorAll('button'))
         .filter(b => !b.id.startsWith('fairtax-'))
