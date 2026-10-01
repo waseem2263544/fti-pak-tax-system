@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use Illuminate\Support\Facades\Log;
 use App\Models\WhtPsidRequest;
 use App\Services\Wht\WhtPsidBatcher;
 use App\Services\Wht\WhtPsidWorkbook;
@@ -268,6 +269,124 @@ class CredentialApiController extends Controller
             'regime_label'=> \App\Models\WhtSection::REGIMES[$regime] ?? 'Adjustable Income Tax',
             'mixed_regime'=> $regimes->count() > 1,
             'entries'     => $rows->count(),
+        ]);
+    }
+
+    /** The fields the extension may write, per portal. */
+    private const WRITABLE = [
+        'name', 'email', 'contact_no', 'status', 'notes',
+        'fbr_username', 'fbr_password', 'it_pin_code',
+        'kpra_username', 'kpra_password', 'kpra_pin',
+    ];
+
+    public function storeClient(Request $request)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $validated = $request->validate([
+            'name'          => 'required|string|max:255',
+            'status'        => 'nullable|in:Individual,AOP,Company',
+            'email'         => 'nullable|email|max:255',
+            'contact_no'    => 'nullable|string|max:50',
+            'fbr_username'  => 'nullable|string|max:100',
+            'fbr_password'  => 'nullable|string|max:255',
+            'it_pin_code'   => 'nullable|string|max:20',
+            'kpra_username' => 'nullable|string|max:100',
+            'kpra_password' => 'nullable|string|max:255',
+            'kpra_pin'      => 'nullable|string|max:20',
+            'notes'         => 'nullable|string',
+        ]);
+
+        // A duplicate name is almost always the same client typed twice.
+        $existing = Client::where('name', trim($validated['name']))->first();
+
+        if ($existing) {
+            return response()->json([
+                'error'     => 'A client of that name already exists.',
+                'client_id' => $existing->id,
+            ], 409);
+        }
+
+        $validated['status'] = $validated['status'] ?? 'Individual';
+        $client = Client::create($validated);
+
+        return response()->json(['ok' => true, 'client' => ['id' => $client->id, 'name' => $client->name]], 201);
+    }
+
+    public function updateClient(Request $request, Client $client)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $validated = $request->validate([
+            'name'          => 'sometimes|string|max:255',
+            'status'        => 'sometimes|in:Individual,AOP,Company',
+            'email'         => 'nullable|email|max:255',
+            'contact_no'    => 'nullable|string|max:50',
+            'fbr_username'  => 'nullable|string|max:100',
+            'fbr_password'  => 'nullable|string|max:255',
+            'it_pin_code'   => 'nullable|string|max:20',
+            'kpra_username' => 'nullable|string|max:100',
+            'kpra_password' => 'nullable|string|max:255',
+            'kpra_pin'      => 'nullable|string|max:20',
+            'notes'         => 'nullable|string',
+        ]);
+
+        // An absent field means "leave it"; a blank password must never wipe a
+        // stored one, since the extension sends the whole form each time.
+        foreach ($validated as $field => $value) {
+            if (!in_array($field, self::WRITABLE, true)) { continue; }
+            if (str_ends_with($field, 'password') && ($value === null || $value === '')) { continue; }
+            $client->{$field} = $value;
+        }
+
+        $client->save();
+
+        return response()->json(['ok' => true, 'client' => ['id' => $client->id, 'name' => $client->name]]);
+    }
+
+    /**
+     * The password the firm is standardising portal logins to.
+     *
+     * Kept in the environment rather than the repository: it is a live
+     * credential for a great many taxpayer accounts, and source control is the
+     * wrong place for one.
+     */
+    public function resetPassword(Request $request, Client $client)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $password = (string) config('services.portal_reset.password');
+
+        if ($password === '') {
+            return response()->json([
+                'error' => 'No standard password is configured. Set PORTAL_RESET_PASSWORD in the server .env.',
+            ], 422);
+        }
+
+        $portal = $request->get('portal', 'fbr');
+        $field  = $portal === 'kpra' ? 'kpra_password' : 'fbr_password';
+
+        $previous = $client->{$field};
+
+        $client->{$field} = $password;
+        $client->save();
+
+        Log::info('Portal password standardised', [
+            'client_id' => $client->id,
+            'portal'    => $portal,
+            'by'        => $user->id,
+            'changed'   => $previous !== $password,
+        ]);
+
+        return response()->json([
+            'ok'       => true,
+            'password' => $password,
+            'portal'   => $portal,
+            'client'   => $client->name,
+            'note'     => 'Recorded here. Change it on the portal itself as well, or the two will disagree.',
         ]);
     }
 }

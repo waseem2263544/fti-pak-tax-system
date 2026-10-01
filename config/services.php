@@ -27,6 +27,13 @@ return [
     ],
 
 
+    // The password the firm standardises portal logins to, for the reset
+    // button in the extension. Deliberately not a literal in the repository:
+    // it unlocks a great many taxpayer accounts at once.
+    'portal_reset' => [
+        'password' => env('PORTAL_RESET_PASSWORD', ''),
+    ],
+
     'wht_mcp' => [
         // Secret embedded in the MCP connector URL. Empty disables the endpoint.
         'secret' => env('WHT_MCP_SECRET'),

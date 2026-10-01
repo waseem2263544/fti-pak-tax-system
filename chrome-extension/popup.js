@@ -13,6 +13,11 @@ let currentPortal = null;
 let searchTimer = null;
 
 // On popup open
+document.addEventListener('DOMContentLoaded', function () {
+    const add = document.getElementById('addClientBtn');
+    if (add) { add.addEventListener('click', function () { openClientForm(null, null); }); }
+});
+
 document.addEventListener('DOMContentLoaded', async function () {
     const stored = await chrome.storage.local.get(['token', 'userName']);
 
@@ -161,8 +166,12 @@ function renderClients(clients) {
         return '<div class="client-item" data-id="' + c.id + '">'
             + '<div><div class="client-name">' + c.name + '</div>'
             + '<div class="client-type">' + c.status + (hasCredentials ? ' · Credentials available' + extra : ' · No credentials') + '</div></div>'
+            + '<div style="display:flex;gap:4px;align-items:center;">'
             + buttons
-            + '</div>';
+            + '<button class="edit-btn" data-id="' + c.id + '" data-name="' + String(c.name).replace(/"/g, '&quot;')
+            + '" title="Edit details and credentials" style="background:#55606f;color:#fff;border:0;'
+            + 'border-radius:5px;padding:5px 8px;font-size:11px;cursor:pointer;">Edit</button>'
+            + '</div></div>';
     }).join('');
 
     // Fill handlers
@@ -174,6 +183,13 @@ function renderClients(clients) {
             } else {
                 fillCredentials(this.dataset.id);
             }
+        });
+    });
+
+    list.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openClientForm(this.dataset.id, this.dataset.name);
         });
     });
 
@@ -508,4 +524,179 @@ function describeForms() {
         ).filter(Boolean),
         fileInputs: document.querySelectorAll('input[type=file]').length,
     };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Adding and editing a client without leaving the portal.
+   ══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Open the client form.
+ *
+ * With an id it edits; without one it adds. Passwords come back from the
+ * server so they can be corrected, and a field left blank on save means
+ * "leave what is stored" rather than "clear it" - clearing a password by
+ * accident would lock the firm out of a client's portal.
+ */
+async function openClientForm(clientId, name) {
+    const stored = await chrome.storage.local.get(['token']);
+    if (!stored.token) { return; }
+
+    const main = document.getElementById('mainScreen');
+    const panel = document.createElement('div');
+    panel.id = 'clientForm';
+    panel.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:50;overflow:auto;padding:14px';
+
+    let existing = {};
+
+    if (clientId) {
+        try {
+            const res = await fetch(API_BASE + '/credentials/' + clientId + '?portal=fbr', {
+                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+            });
+            if (res.ok) { existing = await res.json(); }
+        } catch (e) { /* the form still opens, just empty */ }
+
+        try {
+            const k = await fetch(API_BASE + '/credentials/' + clientId + '?portal=kpra', {
+                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+            });
+            if (k.ok) {
+                const kd = await k.json();
+                existing.kpra_username = kd.username;
+                existing.kpra_password = kd.password;
+                existing.kpra_pin = kd.pin;
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    const field = (label, id, value, type) =>
+        '<label style="display:block;font-size:11px;color:#55606f;margin:8px 0 3px">' + label + '</label>'
+        + '<input id="' + id + '" type="' + (type || 'text') + '" value="' + (value ? String(value).replace(/"/g, '&quot;') : '')
+        + '" style="width:100%;box-sizing:border-box;border:1px solid #d5dae1;border-radius:6px;padding:7px 9px;font-size:12px">';
+
+    panel.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        + '<strong style="font-size:13px">' + (clientId ? 'Edit ' + name : 'Add a client') + '</strong>'
+        + '<button id="cfClose" style="background:none;border:0;font-size:16px;cursor:pointer;color:#77828f">×</button></div>'
+        + field('Client name', 'cfName', clientId ? name : '')
+        + '<label style="display:block;font-size:11px;color:#55606f;margin:8px 0 3px">Type</label>'
+        + '<select id="cfStatus" style="width:100%;box-sizing:border-box;border:1px solid #d5dae1;border-radius:6px;padding:7px 9px;font-size:12px">'
+        + '<option>Individual</option><option>AOP</option><option>Company</option></select>'
+        + '<div style="margin-top:12px;padding-top:8px;border-top:1px solid #eef1f4;font-size:11px;font-weight:600;color:#55606f">FBR / IRIS</div>'
+        + field('Username', 'cfFbrUser', existing.username)
+        + field('Password', 'cfFbrPass', existing.password)
+        + field('PIN', 'cfFbrPin', existing.pin)
+        + '<div style="margin-top:12px;padding-top:8px;border-top:1px solid #eef1f4;font-size:11px;font-weight:600;color:#55606f">KPRA</div>'
+        + field('Username', 'cfKpraUser', existing.kpra_username)
+        + field('Password', 'cfKpraPass', existing.kpra_password)
+        + field('PIN', 'cfKpraPin', existing.kpra_pin)
+        + '<div id="cfStatusMsg" style="font-size:11px;margin-top:10px"></div>'
+        + '<button id="cfSave" style="width:100%;margin-top:10px;background:#2F6FEB;color:#fff;border:0;'
+        + 'border-radius:6px;padding:9px;font-size:12px;font-weight:600;cursor:pointer">'
+        + (clientId ? 'Save changes' : 'Add client') + '</button>'
+        + (clientId ? '<button id="cfReset" style="width:100%;margin-top:6px;background:#fff;color:#a01f1a;'
+            + 'border:1px solid #d5dae1;border-radius:6px;padding:8px;font-size:11px;cursor:pointer">'
+            + 'Set portal password to the standard one</button>' : '')
+        + '<div style="font-size:10px;color:#77828f;margin-top:8px;line-height:1.45">'
+        + 'A password left blank keeps whatever is stored. Saving here records the credential in the '
+        + 'firm\'s system; it does not change it on the portal.</div>';
+
+    main.style.position = 'relative';
+    main.appendChild(panel);
+
+    document.getElementById('cfStatus').value = (existing.status || 'Individual');
+    document.getElementById('cfClose').addEventListener('click', () => panel.remove());
+
+    document.getElementById('cfSave').addEventListener('click', async function () {
+        const msg = document.getElementById('cfStatusMsg');
+        const val = id => document.getElementById(id).value.trim();
+
+        const body = {
+            name: val('cfName'),
+            status: document.getElementById('cfStatus').value,
+            fbr_username: val('cfFbrUser'),
+            fbr_password: val('cfFbrPass'),
+            it_pin_code: val('cfFbrPin'),
+            kpra_username: val('cfKpraUser'),
+            kpra_password: val('cfKpraPass'),
+            kpra_pin: val('cfKpraPin'),
+        };
+
+        if (!body.name) {
+            msg.textContent = 'A name is needed.';
+            msg.style.color = '#a01f1a';
+            return;
+        }
+
+        this.disabled = true;
+        this.textContent = 'Saving…';
+
+        try {
+            const res = await fetch(API_BASE + '/clients' + (clientId ? '/' + clientId : ''), {
+                method: clientId ? 'PUT' : 'POST',
+                headers: {
+                    'X-Extension-Token': stored.token,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                msg.textContent = data.error || ('Save failed (' + res.status + ').');
+                msg.style.color = '#a01f1a';
+                this.disabled = false;
+                this.textContent = clientId ? 'Save changes' : 'Add client';
+                return;
+            }
+
+            msg.textContent = 'Saved.';
+            msg.style.color = '#0b6640';
+            setTimeout(() => { panel.remove(); searchClients(document.getElementById('searchInput').value); }, 700);
+        } catch (e) {
+            msg.textContent = 'Could not reach the app.';
+            msg.style.color = '#a01f1a';
+            this.disabled = false;
+            this.textContent = clientId ? 'Save changes' : 'Add client';
+        }
+    });
+
+    const resetBtn = document.getElementById('cfReset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', async function () {
+            const msg = document.getElementById('cfStatusMsg');
+
+            if (!confirm('Record the standard password against ' + name + '?\n\n'
+                + 'This only updates what the app stores. You still have to change it on the '
+                + 'portal itself, or the two will disagree and the login will fail.')) { return; }
+
+            this.disabled = true;
+
+            try {
+                const res = await fetch(API_BASE + '/clients/' + clientId + '/reset-password?portal=fbr', {
+                    method: 'POST',
+                    headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    msg.textContent = data.error || 'Failed.';
+                    msg.style.color = '#a01f1a';
+                    this.disabled = false;
+                    return;
+                }
+
+                document.getElementById('cfFbrPass').value = data.password;
+                msg.textContent = 'Recorded. Now change it on the portal too.';
+                msg.style.color = '#8a5100';
+            } catch (e) {
+                msg.textContent = 'Could not reach the app.';
+                msg.style.color = '#a01f1a';
+                this.disabled = false;
+            }
+        });
+    }
 }
