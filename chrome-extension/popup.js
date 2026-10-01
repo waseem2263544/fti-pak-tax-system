@@ -14,6 +14,11 @@ let searchTimer = null;
 
 // On popup open
 document.addEventListener('DOMContentLoaded', function () {
+    // Shown because a stale unpacked copy is invisible otherwise, and a
+    // feature missing from an old build looks exactly like a broken one.
+    const v = document.getElementById('extVersion');
+    if (v) { v.textContent = 'v' + chrome.runtime.getManifest().version; }
+
     const add = document.getElementById('addClientBtn');
     if (add) { add.addEventListener('click', function () { openClientForm(null, null); }); }
 });
