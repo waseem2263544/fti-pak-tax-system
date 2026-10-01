@@ -542,10 +542,16 @@ async function openClientForm(clientId, name) {
     const stored = await chrome.storage.local.get(['token']);
     if (!stored.token) { return; }
 
-    const main = document.getElementById('mainScreen');
+    // A normal block, not an overlay. Positioned absolutely inside a container
+    // with no height of its own, the form was confined to a box a fraction of
+    // its size and everything below the first few fields - the reset button
+    // included - sat under a scrollbar nobody would find.
+    const main = document.querySelector('.main');
+    const hidden = Array.prototype.slice.call(main.children);
+    hidden.forEach(function (el) { el.style.display = 'none'; });
+
     const panel = document.createElement('div');
     panel.id = 'clientForm';
-    panel.style.cssText = 'position:absolute;inset:0;background:#fff;z-index:50;overflow:auto;padding:14px';
 
     let existing = {};
 
@@ -586,6 +592,9 @@ async function openClientForm(clientId, name) {
         + '<div style="margin-top:12px;padding-top:8px;border-top:1px solid #eef1f4;font-size:11px;font-weight:600;color:#55606f">FBR / IRIS</div>'
         + field('Username', 'cfFbrUser', existing.username)
         + field('Password', 'cfFbrPass', existing.password)
+        + (clientId ? '<button id="cfReset" style="width:100%;margin-top:6px;background:#fff7ed;'
+            + 'color:#8a5100;border:1px solid #D97706;border-radius:6px;padding:8px;font-size:11.5px;'
+            + 'font-weight:600;cursor:pointer">Change this to the standard password</button>' : '')
         + field('PIN', 'cfFbrPin', existing.pin)
         + '<div style="margin-top:12px;padding-top:8px;border-top:1px solid #eef1f4;font-size:11px;font-weight:600;color:#55606f">KPRA</div>'
         + field('Username', 'cfKpraUser', existing.kpra_username)
@@ -595,18 +604,19 @@ async function openClientForm(clientId, name) {
         + '<button id="cfSave" style="width:100%;margin-top:10px;background:#2F6FEB;color:#fff;border:0;'
         + 'border-radius:6px;padding:9px;font-size:12px;font-weight:600;cursor:pointer">'
         + (clientId ? 'Save changes' : 'Add client') + '</button>'
-        + (clientId ? '<button id="cfReset" style="width:100%;margin-top:6px;background:#fff;color:#a01f1a;'
-            + 'border:1px solid #d5dae1;border-radius:6px;padding:8px;font-size:11px;cursor:pointer">'
-            + 'Set portal password to the standard one</button>' : '')
         + '<div style="font-size:10px;color:#77828f;margin-top:8px;line-height:1.45">'
         + 'A password left blank keeps whatever is stored. Saving here records the credential in the '
         + 'firm\'s system; it does not change it on the portal.</div>';
 
-    main.style.position = 'relative';
     main.appendChild(panel);
 
+    const closeForm = function () {
+        panel.remove();
+        hidden.forEach(function (el) { el.style.display = ''; });
+    };
+
     document.getElementById('cfStatus').value = (existing.status || 'Individual');
-    document.getElementById('cfClose').addEventListener('click', () => panel.remove());
+    document.getElementById('cfClose').addEventListener('click', closeForm);
 
     document.getElementById('cfSave').addEventListener('click', async function () {
         const msg = document.getElementById('cfStatusMsg');
@@ -655,7 +665,10 @@ async function openClientForm(clientId, name) {
 
             msg.textContent = 'Saved.';
             msg.style.color = '#0b6640';
-            setTimeout(() => { panel.remove(); searchClients(document.getElementById('searchInput').value); }, 700);
+            setTimeout(function () {
+                closeForm();
+                searchClients(document.getElementById('searchInput').value);
+            }, 700);
         } catch (e) {
             msg.textContent = 'Could not reach the app.';
             msg.style.color = '#a01f1a';
