@@ -665,32 +665,48 @@ async function openClientForm(clientId, name) {
     });
 
     const resetBtn = document.getElementById('cfReset');
+
     if (resetBtn) {
         resetBtn.addEventListener('click', async function () {
             const msg = document.getElementById('cfStatusMsg');
+            const current = document.getElementById('cfFbrPass').value.trim();
 
-            if (!confirm('Record the standard password against ' + name + '?\n\n'
-                + 'This only updates what the app stores. You still have to change it on the '
-                + 'portal itself, or the two will disagree and the login will fail.')) { return; }
+            if (!current) {
+                msg.textContent = 'The current password has to be known before it can be changed on IRIS.';
+                msg.style.color = '#a01f1a';
+                return;
+            }
+
+            if (!confirm('Change ' + name + "'s IRIS password to the firm's standard one?\n\n"
+                + 'Open IRIS, sign in as this client and open Change Password. The extension will '
+                + 'fill all three boxes and press Save, then update the app.')) { return; }
 
             this.disabled = true;
 
             try {
-                const res = await fetch(API_BASE + '/clients/' + clientId + '/reset-password?portal=fbr', {
-                    method: 'POST',
+                const res = await fetch(API_BASE + '/portal-password', {
                     headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
                 });
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
-                    msg.textContent = data.error || 'Failed.';
+                    msg.textContent = data.error || 'No standard password is configured.';
                     msg.style.color = '#a01f1a';
                     this.disabled = false;
                     return;
                 }
 
-                document.getElementById('cfFbrPass').value = data.password;
-                msg.textContent = 'Recorded. Now change it on the portal too.';
+                await chrome.storage.local.set({
+                    pwJob: {
+                        clientId: clientId,
+                        clientName: name,
+                        oldPassword: current,
+                        newPassword: data.password,
+                    },
+                });
+
+                msg.textContent = 'Ready. Open Change Password in IRIS for this client and the '
+                    + 'extension will offer to do it.';
                 msg.style.color = '#8a5100';
             } catch (e) {
                 msg.textContent = 'Could not reach the app.';

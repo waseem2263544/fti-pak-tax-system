@@ -389,4 +389,19 @@ class CredentialApiController extends Controller
             'note'     => 'Recorded here. Change it on the portal itself as well, or the two will disagree.',
         ]);
     }
+
+    /** The standard password, without recording anything yet. */
+    public function portalPassword(Request $request)
+    {
+        $user = $this->authenticate($request);
+        if (!$user) return response()->json(['error' => 'Unauthorized'], 401);
+
+        $password = (string) config('services.portal_reset.password');
+
+        if ($password === '') {
+            return response()->json(['error' => 'No standard password is configured.'], 422);
+        }
+
+        return response()->json(['password' => $password]);
+    }
 }
