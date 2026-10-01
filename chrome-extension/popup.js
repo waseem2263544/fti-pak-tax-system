@@ -97,11 +97,83 @@ async function login() {
     }
 }
 
+/**
+ * Show the client whose portal is open, before anything is typed.
+ *
+ * Opening the popup while signed in to a client's portal and being met with
+ * "type to search" is a step that need not exist: the page says who it is.
+ * Any registration number on it is offered to the app until one is recognised.
+ */
+async function showCurrentClient() {
+    const stored = await chrome.storage.local.get(['token']);
+    if (!stored.token) { return; }
+
+    let found = [];
+
+    try {
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tabs[0]) { return; }
+
+        const results = await chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            func: function () {
+                const body = document.body.innerText || '';
+                const out = [];
+                [/\b(\d{5}-\d{7}-\d)\b/g, /\b(\d{7}-\d)\b/g, /\b(\d{13})\b/g, /\b(\d{8})\b/g]
+                    .forEach(function (re) {
+                        let m;
+                        while ((m = re.exec(body)) !== null) {
+                            if (out.indexOf(m[1]) < 0) { out.push(m[1]); }
+                        }
+                    });
+                return out.slice(0, 12);
+            },
+        });
+
+        found = (results && results[0] && results[0].result) || [];
+    } catch (e) {
+        return;                       // not a page we may read; the search still works
+    }
+
+    for (const reg of found) {
+        try {
+            const res = await fetch(API_BASE + '/clients/by-registration?reg=' + encodeURIComponent(reg), {
+                headers: { 'X-Extension-Token': stored.token, 'Accept': 'application/json' },
+            });
+            if (!res.ok) { continue; }
+
+            const c = await res.json();
+            const list = document.getElementById('clientList');
+
+            list.innerHTML =
+                '<div style="font-size:10.5px;color:#77828f;text-transform:uppercase;'
+                + 'letter-spacing:.6px;margin-bottom:5px">Signed in on this page</div>'
+                + '<div class="client-item" data-id="' + c.id + '">'
+                + '<div><div class="client-name">' + c.name + '</div>'
+                + '<div class="client-type">' + reg + (c.has_password ? ' · Credentials stored' : ' · No password stored') + '</div></div>'
+                + '<button class="edit-btn" data-id="' + c.id + '" data-name="' + String(c.name).replace(/"/g, '&quot;')
+                + '" style="background:#2F6FEB;color:#fff;border:0;border-radius:5px;padding:6px 10px;'
+                + 'font-size:11px;cursor:pointer;font-weight:600">Edit / password</button>'
+                + '</div>';
+
+            list.querySelectorAll('.edit-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    openClientForm(this.dataset.id, this.dataset.name);
+                });
+            });
+
+            return;
+        } catch (e) { /* try the next candidate */ }
+    }
+}
+
 function showMain(name) {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainScreen').classList.remove('hidden');
     document.getElementById('userName').textContent = name;
     document.getElementById('searchInput').focus();
+    showCurrentClient();
 }
 
 function updatePortalBadge() {
