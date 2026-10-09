@@ -77,6 +77,10 @@
         <i class="bi bi-file-zip"></i><h3>Compress</h3>
         <p>Re-render pages as images at lower quality. Best on scans.</p>
     </div>
+    <div class="pt-tool" data-tool="unlock">
+        <i class="bi bi-unlock"></i><h3>Remove password</h3>
+        <p>Unlock a PDF you have the password for, or lift printing and copying restrictions.</p>
+    </div>
     <div class="pt-tool" data-tool="stamp">
         <i class="bi bi-type"></i><h3>Number / stamp</h3>
         <p>Add page numbers or a line of text along the foot of each page.</p>
@@ -156,6 +160,7 @@ const HINTS = {
     pdf2img:  'One PDF',
     compress: 'One or more PDFs',
     stamp:    'One or more PDFs',
+    unlock:   'One or more protected PDFs',
 };
 
 const OPTIONS = {
@@ -208,6 +213,24 @@ const OPTIONS = {
         <div class="col-12"><div class="form-text">
             Every page becomes an image, so text stops being selectable. Good for scans, poor for
             anything with small type or a signature you may need to search.
+        </div></div>
+    </div>`,
+
+    unlock: `<div class="row g-2 align-items-end">
+        <div class="col-auto"><label class="form-label" for="ulPass">Password</label>
+            <input type="password" id="ulPass" class="form-control form-control-sm"
+                   placeholder="Leave blank if it opens without one" style="width:240px"></div>
+        <div class="col-auto"><label class="form-label" for="ulScale">Rebuild at</label>
+            <select id="ulScale" class="form-select form-select-sm">
+                <option value="2">144 dpi — readable</option>
+                <option value="3" selected>216 dpi — print</option>
+                <option value="4">288 dpi — archival</option>
+            </select></div>
+        <div class="col-12"><div class="form-text">
+            For a file you hold the password to, or one that opens freely but blocks printing and
+            copying. The unlocked copy is rebuilt from the rendered pages, so its text is no longer
+            selectable &mdash; the only decryption available in a browser is the renderer's.
+            It will not open a file whose password you do not have.
         </div></div>
     </div>`,
 
@@ -286,6 +309,8 @@ function refreshFiles() {
 
 el('clear').addEventListener('click', () => {
     picked = []; pageState = [];
+    const pw = el('ulPass');
+    if (pw) { pw.value = ''; }
     refreshFiles();
     el('previewCard').classList.add('d-none');
     el('outCard').classList.add('d-none');
@@ -495,6 +520,56 @@ const RUN = {
 
             const bytes = await out.save();
             files.push({ name: clean(p.name) + '-small.pdf', bytes, was: p.size });
+        }
+
+        return files;
+    },
+
+    /**
+     * Unlock a protected PDF.
+     *
+     * pdf.js is the only thing here that can decrypt, and it decrypts in order
+     * to draw, so the unlocked copy is rebuilt from rendered pages. That loses
+     * selectable text, which is a real cost and is stated on the form rather
+     * than discovered afterwards.
+     *
+     * A file whose password is not known stays shut. Guessing at one is not a
+     * feature.
+     */
+    async unlock() {
+        const password = el('ulPass').value;
+        const scale = +el('ulScale').value;
+        const files = [];
+
+        for (const p of picked) {
+            say('Opening ' + p.name + '…');
+
+            let doc;
+            try {
+                doc = await pdfjsLib.getDocument({
+                    data: p.bytes.slice(),
+                    password: password || undefined,
+                }).promise;
+            } catch (e) {
+                if (e && e.name === 'PasswordException') {
+                    throw new Error(password
+                        ? 'that password was not accepted for ' + p.name
+                        : p.name + ' needs a password — type it in the box above');
+                }
+                throw e;
+            }
+
+            const out = await PDFDocument.create();
+
+            for (let n = 1; n <= doc.numPages; n++) {
+                say(p.name + ' — page ' + n + ' of ' + doc.numPages + '…');
+                const blob = await renderPage(doc, n, scale, 0.92);
+                const img = await out.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+                const page = out.addPage([img.width, img.height]);
+                page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+            }
+
+            files.push({ name: clean(p.name) + '-unlocked.pdf', bytes: await out.save(), was: p.size });
         }
 
         return files;
