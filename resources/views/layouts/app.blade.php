@@ -641,6 +641,9 @@
                 <a href="{{ route('documents.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'documents.')) active @endif">
                     <i class="bi bi-folder2-open"></i> Documents
                 </a>
+                <a href="{{ route('pdf.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'pdf.')) active @endif">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF Tools
+                </a>
                 <a href="{{ route('files.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'files.')) active @endif">
                     <i class="bi bi-folder-fill"></i> File Management
                 </a>

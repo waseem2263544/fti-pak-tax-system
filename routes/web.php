@@ -132,6 +132,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('documents/office', [\App\Http\Controllers\DocumentController::class, 'createOffice'])->name('documents.create-office');
     Route::post('documents/folder', [\App\Http\Controllers\DocumentController::class, 'createFolder'])->name('documents.create-folder');
     Route::post('documents/upload', [\App\Http\Controllers\DocumentController::class, 'upload'])->name('documents.upload');
+    Route::view('pdf-tools', 'pdf.index')->name('pdf.index');
     Route::get('documents/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
     Route::post('documents/delete', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::post('documents/rename', [\App\Http\Controllers\DocumentController::class, 'rename'])->name('documents.rename');
