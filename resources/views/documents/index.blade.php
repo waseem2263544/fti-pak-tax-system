@@ -176,6 +176,12 @@
                             @endif
                             <a href="{{ route('documents.download', ['id' => $item['id'], 'name' => $item['name']]) }}"
                                class="btn btn-sm btn-outline-primary" title="Download"><i class="bi bi-download"></i></a>
+                            @if(($item['_type'] ?? '') === 'pdf')
+                                <button class="btn btn-sm btn-outline-primary" title="Remove the password"
+                                        onclick='unlockDoc(@json($item["id"]), @json($item["name"]))'>
+                                    <i class="bi bi-unlock"></i>
+                                </button>
+                            @endif
                         @endif
                         <button class="btn btn-sm btn-outline-primary" title="Move to…"
                                 onclick='pickDestination("move", @json($item["id"]), @json($item["name"]))'><i class="bi bi-arrow-right-square"></i></button>
@@ -307,7 +313,204 @@
 </div>
 @endsection
 
+
+{{-- Unlocking happens here in the browser: the file is fetched, decrypted,
+     rebuilt and put back, and its contents never reach the server unencrypted. --}}
+<div class="modal fade" id="unlockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Remove password</h5>
+                    <p class="ws-sub mb-0" id="ulName" style="font-size: .78rem; color: var(--text-muted);"></p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" for="ulPassword">Password</label>
+                    <input type="password" id="ulPassword" class="form-control form-control-sm"
+                           placeholder="Leave blank if it opens without one" autocomplete="off">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="ulRes">Rebuild at</label>
+                    <select id="ulRes" class="form-select form-select-sm">
+                        <option value="2">144 dpi — readable</option>
+                        <option value="3" selected>216 dpi — print</option>
+                        <option value="4">288 dpi — archival</option>
+                    </select>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="ulSave" checked>
+                    <label class="form-check-label" for="ulSave">Save the unlocked copy back to this folder</label>
+                </div>
+                <p class="form-text mb-0">
+                    The unlocked copy is rebuilt from the rendered pages, so its text is no longer
+                    selectable. The original is left untouched; the new file is named with
+                    <code>-unlocked</code>.
+                </p>
+                <div id="ulStatus" class="mt-3" style="font-size: .83rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-accent" id="ulGo">Unlock</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section('scripts')
+<script>
+/*
+ * Unlocking a document in place.
+ *
+ * The file is fetched into the browser, decrypted there, rebuilt and uploaded
+ * back. The server never holds a decrypted copy and never learns the password,
+ * which is the point: these are clients' bank statements and assessment orders.
+ *
+ * The libraries are only loaded when someone actually unlocks something -
+ * around a megabyte of script has no business on every visit to the folder.
+ */
+(function () {
+    let libsReady = null;
+    let target = null;
+
+    function loadLibs() {
+        if (libsReady) { return libsReady; }
+
+        libsReady = new Promise(function (resolve, reject) {
+            const add = (src) => new Promise(function (ok, bad) {
+                const t = document.createElement('script');
+                t.src = src;
+                t.onload = ok;
+                t.onerror = () => bad(new Error('could not load ' + src));
+                document.head.appendChild(t);
+            });
+
+            add('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js')
+                .then(() => add('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'))
+                .then(function () {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc =
+                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    resolve();
+                })
+                .catch(reject);
+        });
+
+        return libsReady;
+    }
+
+    window.unlockDoc = function (id, name) {
+        target = { id: id, name: name };
+        document.getElementById('ulName').textContent = name;
+        document.getElementById('ulPassword').value = '';
+        document.getElementById('ulStatus').innerHTML = '';
+        document.getElementById('ulGo').disabled = false;
+        document.getElementById('ulGo').textContent = 'Unlock';
+        new bootstrap.Modal(document.getElementById('unlockModal')).show();
+    };
+
+    const say = function (html, bad) {
+        const box = document.getElementById('ulStatus');
+        box.innerHTML = html;
+        box.style.color = bad ? 'var(--danger-ink)' : 'var(--text-soft)';
+    };
+
+    document.getElementById('ulGo').addEventListener('click', async function () {
+        if (!target) { return; }
+
+        const go = this;
+        const password = document.getElementById('ulPassword').value;
+        const scale = +document.getElementById('ulRes').value;
+        const saveBack = document.getElementById('ulSave').checked;
+
+        go.disabled = true;
+        go.textContent = 'Working…';
+
+        try {
+            say('Loading the tools…');
+            await loadLibs();
+
+            say('Fetching ' + target.name + '…');
+            const res = await fetch('{{ route('documents.download') }}?id='
+                + encodeURIComponent(target.id) + '&name=' + encodeURIComponent(target.name),
+                { credentials: 'same-origin' });
+
+            if (!res.ok) { throw new Error('could not fetch the file (' + res.status + ')'); }
+            const bytes = new Uint8Array(await res.arrayBuffer());
+
+            say('Opening it…');
+            let doc;
+            try {
+                doc = await pdfjsLib.getDocument({ data: bytes, password: password || undefined }).promise;
+            } catch (e) {
+                if (e && e.name === 'PasswordException') {
+                    throw new Error(password
+                        ? 'that password was not accepted'
+                        : 'this file needs a password — type it above');
+                }
+                throw e;
+            }
+
+            const out = await PDFLib.PDFDocument.create();
+
+            for (let n = 1; n <= doc.numPages; n++) {
+                say('Rebuilding page ' + n + ' of ' + doc.numPages + '…');
+                const page = await doc.getPage(n);
+                const vp = page.getViewport({ scale: scale });
+                const c = document.createElement('canvas');
+                c.width = vp.width;
+                c.height = vp.height;
+                const ctx = c.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, c.width, c.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+                const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+                const img = await out.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+                const pg = out.addPage([img.width, img.height]);
+                pg.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+            }
+
+            const saved = await out.save();
+            const outName = target.name.replace(/\.pdf$/i, '') + '-unlocked.pdf';
+            const blob = new Blob([saved], { type: 'application/pdf' });
+
+            if (!saveBack) {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = outName;
+                a.click();
+                say('Unlocked and downloaded. The original is untouched.');
+                go.textContent = 'Done';
+                return;
+            }
+
+            say('Saving it back to SharePoint…');
+            const form = new FormData();
+            form.append('_token', '{{ csrf_token() }}');
+            form.append('folder', @json($folder ?? ''));
+            form.append('files[]', new File([blob], outName, { type: 'application/pdf' }));
+
+            const up = await fetch('{{ route('documents.upload') }}', {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            if (!up.ok) { throw new Error('the upload failed (' + up.status + ')'); }
+
+            say('Saved as <strong>' + outName + '</strong>. Reloading the folder…');
+            setTimeout(() => window.location.reload(), 1200);
+        } catch (e) {
+            say((e && e.message ? e.message : e) + '. Nothing was changed.', true);
+            go.disabled = false;
+            go.textContent = 'Try again';
+        }
+    });
+})();
+</script>
 <script>
 /*
  * PHP drops files past max_file_uploads without a word, and rejects an
