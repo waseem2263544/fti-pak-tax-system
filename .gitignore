@@ -30,3 +30,6 @@ Thumbs.db
 # Local copy of the retired standalone WHT portal. Contains live DB
 # credentials in db.php - must never be committed.
 /WHT/
+
+# Images uploaded for blog posts. They live on the server, not in the repo.
+/public/uploads

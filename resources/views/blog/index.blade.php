@@ -42,6 +42,7 @@
                     <th>Title</th>
                     <th style="width: 90px;">Site</th>
                     <th style="width: 130px;">Category</th>
+                    <th style="width: 80px;" title="SEO score from the focus keyphrase analysis">SEO</th>
                     <th style="width: 110px;">Published</th>
                     <th style="width: 110px;">Status</th>
                     <th style="width: 90px;"></th>
@@ -59,6 +60,15 @@
                     </td>
                     <td><span class="badge bg-secondary">{{ \App\Models\Post::REGIONS[$post->region] ?? $post->region }}</span></td>
                     <td style="font-size: .82rem;">{{ $post->category ?: '—' }}</td>
+                    <td style="font-size: .82rem;" class="text-nowrap">
+                        @php
+                            $band = $post->seo_score === null ? 'off'
+                                : ($post->seo_score >= 70 ? 'good' : ($post->seo_score >= 40 ? 'ok' : 'bad'));
+                            $colour = ['good' => '#2e9e5b', 'ok' => '#e0a000', 'bad' => '#c0392b', 'off' => 'var(--n-300)'][$band];
+                        @endphp
+                        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:{{ $colour }};"></span>
+                        {{ $post->seo_score === null ? '—' : $post->seo_score }}
+                    </td>
                     <td style="font-size: .82rem;">{{ $post->published_on?->format('d M Y') ?: '—' }}</td>
                     <td>
                         @if($post->status === 'published')
@@ -78,7 +88,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center py-5 text-muted">
+                <tr><td colspan="7" class="text-center py-5 text-muted">
                     @if($search !== '') Nothing matches “{{ $search }}”. @else No posts yet. @endif
                 </td></tr>
             @endforelse

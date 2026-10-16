@@ -138,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('blog', [\App\Http\Controllers\PostController::class, 'index'])->name('blog.index');
     Route::get('blog/new', [\App\Http\Controllers\PostController::class, 'create'])->name('blog.create');
     Route::post('blog', [\App\Http\Controllers\PostController::class, 'store'])->name('blog.store');
+    Route::post('blog/images', [\App\Http\Controllers\PostController::class, 'uploadImage'])->name('blog.image');
     Route::get('blog/{post}', [\App\Http\Controllers\PostController::class, 'edit'])->name('blog.edit');
     Route::put('blog/{post}', [\App\Http\Controllers\PostController::class, 'update'])->name('blog.update');
     Route::delete('blog/{post}', [\App\Http\Controllers\PostController::class, 'destroy'])->name('blog.destroy');

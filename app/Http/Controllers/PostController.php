@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Blog posts for fairtaxint.com.
@@ -48,12 +50,29 @@ class PostController extends Controller
     {
         $post = new Post(['region' => 'pk', 'status' => 'draft', 'published_on' => now()]);
 
-        return view('blog.edit', compact('post'));
+        return view('blog.edit', ['post' => $post, 'usedKeyphrases' => $this->usedKeyphrases()]);
     }
 
     public function edit(Post $post)
     {
-        return view('blog.edit', compact('post'));
+        return view('blog.edit', ['post' => $post, 'usedKeyphrases' => $this->usedKeyphrases($post)]);
+    }
+
+    /**
+     * Keyphrases already spoken for, so the editor can warn about competing
+     * with your own page for the same search.
+     */
+    private function usedKeyphrases(?Post $post = null): array
+    {
+        return Post::whereNotNull('focus_keyphrase')
+            ->where('focus_keyphrase', '!=', '')
+            ->when($post?->exists, fn($q) => $q->where('id', '!=', $post->id))
+            ->get(['id', 'title', 'slug', 'region', 'focus_keyphrase'])
+            ->map(fn($p) => [
+                'phrase' => mb_strtolower(trim($p->focus_keyphrase)),
+                'title'  => $p->title,
+                'url'    => route('blog.edit', $p),
+            ])->all();
     }
 
     public function store(Request $request)
@@ -112,6 +131,115 @@ class PostController extends Controller
     }
 
     /**
+     * Take an image for the body of a post.
+     *
+     * Files land in public/uploads/blog and are served straight off this
+     * domain. They stay out of git on purpose - the deploy copies files in and
+     * never removes any, so uploads survive a deploy without being carried
+     * around in the repository.
+     *
+     * Anything wider than 1600px is scaled down. A phone photo is 4000px wide
+     * and a column in the blog is 700; shipping the original would cost the
+     * reader several megabytes for nothing.
+     */
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,gif,webp|max:12288',
+        ], [
+            'file.mimes' => 'Images only - jpg, png, gif or webp.',
+            'file.max'   => 'That file is over 12 MB.',
+        ]);
+
+        /** @var UploadedFile $file */
+        $file = $request->file('file');
+
+        $dir = public_path('uploads/blog/' . now()->format('Y/m'));
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+            return response()->json(['message' => 'The uploads folder could not be created on the server.'], 500);
+        }
+
+        $base = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'image';
+        $name = substr($base, 0, 60) . '-' . Str::lower(Str::random(6)) . '.' . strtolower($file->getClientOriginalExtension());
+
+        $file->move($dir, $name);
+        $path = $dir . '/' . $name;
+
+        [$width, $height] = $this->shrink($path, 1600);
+
+        return response()->json([
+            'url'    => asset('uploads/blog/' . now()->format('Y/m') . '/' . $name),
+            'width'  => $width,
+            'height' => $height,
+            'name'   => $file->getClientOriginalName(),
+        ]);
+    }
+
+    /**
+     * Scale an image down in place, and report its dimensions either way.
+     *
+     * The dimensions matter beyond page weight: width and height on the img
+     * tag are what stop the page jumping about as images load, which is a
+     * ranking signal in its own right.
+     */
+    private function shrink(string $path, int $maxWidth): array
+    {
+        $size = @getimagesize($path);
+        if (!$size) {
+            return [null, null];
+        }
+
+        [$width, $height, $type] = $size;
+
+        if ($width <= $maxWidth || !function_exists('imagecreatetruecolor') || $type === IMAGETYPE_GIF) {
+            return [$width, $height];
+        }
+
+        $readers = [
+            IMAGETYPE_JPEG => 'imagecreatefromjpeg',
+            IMAGETYPE_PNG  => 'imagecreatefrompng',
+            IMAGETYPE_WEBP => 'imagecreatefromwebp',
+        ];
+
+        if (!isset($readers[$type]) || !function_exists($readers[$type])) {
+            return [$width, $height];
+        }
+
+        try {
+            $source = $readers[$type]($path);
+            if (!$source) {
+                return [$width, $height];
+            }
+
+            $newWidth  = $maxWidth;
+            $newHeight = (int) round($height * ($maxWidth / $width));
+            $target = imagecreatetruecolor($newWidth, $newHeight);
+
+            if ($type === IMAGETYPE_PNG || $type === IMAGETYPE_WEBP) {
+                imagealphablending($target, false);
+                imagesavealpha($target, true);
+            }
+
+            imagecopyresampled($target, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            match ($type) {
+                IMAGETYPE_JPEG => imagejpeg($target, $path, 82),
+                IMAGETYPE_PNG  => imagepng($target, $path, 7),
+                IMAGETYPE_WEBP => imagewebp($target, $path, 82),
+            };
+
+            imagedestroy($source);
+            imagedestroy($target);
+
+            return [$newWidth, $newHeight];
+        } catch (\Throwable $e) {
+            Log::warning('Image resize failed', ['path' => $path, 'error' => $e->getMessage()]);
+
+            return [$width, $height];
+        }
+    }
+
+    /**
      * Ask Vercel to rebuild the pages this post appears on.
      *
      * Both the post itself and the index that lists it, since a new title or
@@ -166,6 +294,14 @@ class PostController extends Controller
             'read_time'      => 'nullable|string|max:30',
             'hero_image'     => 'nullable|string|max:400',
             'hero_image_alt' => 'nullable|string|max:300',
+            'focus_keyphrase'    => 'nullable|string|max:200',
+            'related_keyphrases' => 'nullable|string|max:500',
+            'meta_title'         => 'nullable|string|max:300',
+            'meta_description'   => 'nullable|string|max:400',
+            'canonical_url'      => 'nullable|string|max:400',
+            'noindex'            => 'nullable|boolean',
+            'seo_score'          => 'nullable|integer|min:0|max:100',
+            'readability_score'  => 'nullable|integer|min:0|max:100',
             'status'         => 'required|in:draft,published',
             'published_on'   => 'nullable|date',
             'reviewed_on'    => 'nullable|date',
@@ -175,6 +311,7 @@ class PostController extends Controller
         ]);
 
         $data['featured'] = $request->boolean('featured');
+        $data['noindex'] = $request->boolean('noindex');
 
         return $data;
     }
