@@ -34,6 +34,14 @@ return [
         'password' => env('PORTAL_RESET_PASSWORD', ''),
     ],
 
+    // Vercel, for asking fairtaxint.com to regenerate a page the moment a post
+    // is published. Both values live in the environment: the secret is shared
+    // with the site, and the URL changes if the site moves.
+    'vercel' => [
+        'revalidate_url'    => env('VERCEL_REVALIDATE_URL', 'https://fairtaxint.com/api/revalidate'),
+        'revalidate_secret' => env('VERCEL_REVALIDATE_SECRET', ''),
+    ],
+
     'wht_mcp' => [
         // Secret embedded in the MCP connector URL. Empty disables the endpoint.
         'secret' => env('WHT_MCP_SECRET'),

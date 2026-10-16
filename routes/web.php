@@ -133,6 +133,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('documents/folder', [\App\Http\Controllers\DocumentController::class, 'createFolder'])->name('documents.create-folder');
     Route::post('documents/upload', [\App\Http\Controllers\DocumentController::class, 'upload'])->name('documents.upload');
     Route::view('pdf-tools', 'pdf.index')->name('pdf.index');
+
+    // ── BLOG (fairtaxint.com) ──
+    Route::get('blog', [\App\Http\Controllers\PostController::class, 'index'])->name('blog.index');
+    Route::get('blog/new', [\App\Http\Controllers\PostController::class, 'create'])->name('blog.create');
+    Route::post('blog', [\App\Http\Controllers\PostController::class, 'store'])->name('blog.store');
+    Route::get('blog/{post}', [\App\Http\Controllers\PostController::class, 'edit'])->name('blog.edit');
+    Route::put('blog/{post}', [\App\Http\Controllers\PostController::class, 'update'])->name('blog.update');
+    Route::delete('blog/{post}', [\App\Http\Controllers\PostController::class, 'destroy'])->name('blog.destroy');
     Route::get('documents/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
     Route::post('documents/delete', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::post('documents/rename', [\App\Http\Controllers\DocumentController::class, 'rename'])->name('documents.rename');

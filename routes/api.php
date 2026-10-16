@@ -15,6 +15,9 @@ Route::get('ext/wht/psid-request/{token}', [\App\Http\Controllers\CredentialApiC
 Route::post('ext/wht/psid-request/{token}', [\App\Http\Controllers\CredentialApiController::class, 'completePsidRequest']);
 Route::get('ext/wht/psid-request/{token}/file', [\App\Http\Controllers\CredentialApiController::class, 'psidRequestFile']);
 
+// Public blog feed, read by fairtaxint.com.
+Route::get('blog/posts', [\App\Http\Controllers\PostController::class, 'feed']);
+
 // WHT data for the wht-psid Claude skill (read-only, shared-token auth)
 Route::get('wht/agents', [\App\Http\Controllers\Api\WhtPsidApiController::class, 'agents']);
 Route::get('wht/psid', [\App\Http\Controllers\Api\WhtPsidApiController::class, 'psid']);
