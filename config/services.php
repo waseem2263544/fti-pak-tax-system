@@ -37,6 +37,18 @@ return [
     // Vercel, for asking fairtaxint.com to regenerate a page the moment a post
     // is published. Both values live in the environment: the secret is shared
     // with the site, and the URL changes if the site moves.
+    /*
+     * Where images uploaded here are served from.
+     *
+     * Blank, they are served off this app. Set to the website's own media
+     * path, the website proxies them instead, so a post's images sit on the
+     * same domain as the post - which is what search engines expect, and one
+     * less domain for a reader's browser to negotiate with.
+     */
+    'site' => [
+        'media_base' => env('SITE_MEDIA_BASE', ''),
+    ],
+
     'vercel' => [
         'revalidate_url'    => env('VERCEL_REVALIDATE_URL', 'https://fairtaxint.com/api/revalidate'),
         'revalidate_secret' => env('VERCEL_REVALIDATE_SECRET', ''),

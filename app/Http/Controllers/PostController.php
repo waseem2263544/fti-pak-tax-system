@@ -145,34 +145,86 @@ class PostController extends Controller
     public function uploadImage(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:jpg,jpeg,png,gif,webp|max:12288',
+            'file'   => 'required|file|mimes:jpg,jpeg,png,gif,webp|max:12288',
+            'folder' => 'nullable|string|max:80|regex:/^[a-z0-9][a-z0-9\-\/]*$/',
         ], [
-            'file.mimes' => 'Images only - jpg, png, gif or webp.',
-            'file.max'   => 'That file is over 12 MB.',
+            'file.mimes'    => 'Images only - jpg, png, gif or webp.',
+            'file.max'      => 'That file is over 12 MB.',
+            'folder.regex'  => 'A folder may contain only lowercase letters, numbers, hyphens and slashes.',
         ]);
 
         /** @var UploadedFile $file */
         $file = $request->file('file');
 
-        $dir = public_path('uploads/blog/' . now()->format('Y/m'));
+        // The folder is the writer's to choose - usually the post's own slug,
+        // so a post's screenshots stay together and can be found again by
+        // name a year later. Date folders are the fallback, not the rule.
+        $folder = trim((string) $request->input('folder'), '/');
+        $folder = $folder === ''
+            ? now()->format('Y/m')
+            : implode('/', array_slice(array_filter(explode('/', $folder)), 0, 3));
+
+        $dir = public_path('uploads/blog/' . $folder);
         if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
             return response()->json(['message' => 'The uploads folder could not be created on the server.'], 500);
         }
 
+        $this->protectUploads();
+
         $base = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'image';
-        $name = substr($base, 0, 60) . '-' . Str::lower(Str::random(6)) . '.' . strtolower($file->getClientOriginalExtension());
+        $extension = strtolower($file->getClientOriginalExtension());
+        $name = substr($base, 0, 60) . '.' . $extension;
+
+        // Keep the chosen name where it is free, since the file name is read
+        // by image search; fall back to a suffix rather than overwriting
+        // whatever is already there.
+        if (file_exists($dir . '/' . $name)) {
+            $name = substr($base, 0, 60) . '-' . Str::lower(Str::random(5)) . '.' . $extension;
+        }
 
         $file->move($dir, $name);
         $path = $dir . '/' . $name;
 
         [$width, $height] = $this->shrink($path, 1600);
 
+        $relative = 'uploads/blog/' . $folder . '/' . $name;
+        $mediaBase = rtrim((string) config('services.site.media_base'), '/');
+
         return response()->json([
-            'url'    => asset('uploads/blog/' . now()->format('Y/m') . '/' . $name),
+            'url'    => $mediaBase !== ''
+                ? $mediaBase . '/' . $folder . '/' . $name   // served under the website's own domain
+                : asset($relative),
+            'path'   => '/' . $relative,
+            'folder' => $folder,
             'width'  => $width,
             'height' => $height,
-            'name'   => $file->getClientOriginalName(),
+            'name'   => $name,
         ]);
+    }
+
+    /**
+     * Tell Apache to cache uploads hard and never run anything in there.
+     *
+     * The folder is written to by an upload form, so a .php file arriving by
+     * some route nobody thought of must not be executable.
+     */
+    private function protectUploads(): void
+    {
+        $file = public_path('uploads/.htaccess');
+        if (file_exists($file)) {
+            return;
+        }
+
+        @file_put_contents($file, <<<'HTACCESS'
+        <IfModule mod_headers.c>
+            Header set Cache-Control "public, max-age=31536000, immutable"
+        </IfModule>
+        <IfModule mod_authz_core.c>
+            <FilesMatch "\.(php|phtml|phar|cgi|pl|py|sh)$">
+                Require all denied
+            </FilesMatch>
+        </IfModule>
+        HTACCESS);
     }
 
     /**

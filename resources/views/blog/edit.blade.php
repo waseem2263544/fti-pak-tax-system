@@ -127,6 +127,8 @@
                             <ul class="dropdown-menu">
                                 <li><button type="button" class="dropdown-item" id="imgUpload">Upload from this computer…</button></li>
                                 <li><button type="button" class="dropdown-item" id="imgUrl">Use a web address or site path…</button></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><button type="button" class="dropdown-item" id="imgFolder">Choose the folder…</button></li>
                             </ul>
                         </span>
                         <button type="button" id="mkTable">Table</button>
@@ -170,6 +172,8 @@
                     <textarea name="content" id="content" class="form-control bl-html d-none" rows="24">{{ old('content', $post->content) }}</textarea>
                     <div class="form-text mt-2">
                         You can also drag an image straight onto the text, or paste one from a screenshot.
+                        They are filed under <code id="folderLabel"></code> —
+                        <a href="#" id="folderChange">change</a>.
                     </div>
                 </div>
             </div>
@@ -484,6 +488,32 @@
 
     let pickerTarget = 'body';
 
+    /*
+     * Where the files go.
+     *
+     * The post's own slug by default, so a post's screenshots stay together
+     * and are still findable by name in a year. It follows the slug until
+     * the writer picks something else.
+     */
+    const folderLabel = document.getElementById('folderLabel');
+    let folder = @json(old('slug', $post->slug) ?: '');
+    let folderTouched = false;
+
+    function showFolder() {
+        folderLabel.textContent = '/uploads/blog/' + (folder || new Date().toISOString().slice(0, 7).replace('-', '/'));
+    }
+
+    function chooseFolder() {
+        const picked = prompt('Which folder should images go in?\n\nLowercase letters, numbers, hyphens and slashes — for example ptcl or 2026/sales-tax.', folder);
+        if (picked === null) { return; }
+        folder = picked.trim().toLowerCase().replace(/[^a-z0-9\-\/]+/g, '-').replace(/^\/+|\/+$/g, '');
+        folderTouched = true;
+        showFolder();
+    }
+
+    document.getElementById('imgFolder').addEventListener('click', chooseFolder);
+    document.getElementById('folderChange').addEventListener('click', e => { e.preventDefault(); chooseFolder(); });
+
     document.getElementById('imgUpload').addEventListener('click', () => {
         pickerTarget = 'body';
         remember();
@@ -551,6 +581,7 @@
     function upload(file) {
         const data = new FormData();
         data.append('file', file);
+        data.append('folder', folder);
         data.append('_token', token);
 
         return fetch(uploadUrl, { method: 'POST', body: data, headers: { 'Accept': 'application/json' } })
@@ -789,11 +820,16 @@
     const slug = document.getElementById('slug');
     let slugTouched = slug.value !== '';
 
-    slug.addEventListener('input', () => { slugTouched = true; schedule(); });
+    slug.addEventListener('input', () => {
+        slugTouched = true;
+        if (!folderTouched) { folder = slug.value; showFolder(); }
+        schedule();
+    });
     title.addEventListener('input', () => {
         if (!slugTouched) {
             slug.value = title.value.toLowerCase().normalize('NFKD')
                 .replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').replace(/-+/g, '-').slice(0, 80);
+            if (!folderTouched) { folder = slug.value; showFolder(); }
         }
         schedule();
     });
@@ -920,6 +956,7 @@
         return escapeHtml(s).replace(/"/g, '&quot;');
     }
 
+    showFolder();
     drawHero();
     run();
 })();
