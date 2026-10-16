@@ -326,6 +326,10 @@ class PostController extends Controller
 
             Log::warning('Vercel revalidation refused', ['status' => $response->status(), 'paths' => $paths]);
 
+            if ($response->status() === 503) {
+                return 'The website has no revalidation secret set, so it was not told. It will catch up within five minutes.';
+            }
+
             return 'The website refused the refresh (' . $response->status() . '). It will catch up on its own schedule.';
         } catch (\Throwable $e) {
             Log::warning('Vercel revalidation failed', ['error' => $e->getMessage()]);
