@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -50,12 +52,20 @@ class PostController extends Controller
     {
         $post = new Post(['region' => 'pk', 'status' => 'draft', 'published_on' => now()]);
 
-        return view('blog.edit', ['post' => $post, 'usedKeyphrases' => $this->usedKeyphrases()]);
+        return view('blog.edit', [
+            'post' => $post,
+            'usedKeyphrases' => $this->usedKeyphrases(),
+            'askPassword' => Setting::get('blog.require_password', '1') === '1',
+        ]);
     }
 
     public function edit(Post $post)
     {
-        return view('blog.edit', ['post' => $post, 'usedKeyphrases' => $this->usedKeyphrases($post)]);
+        return view('blog.edit', [
+            'post' => $post,
+            'usedKeyphrases' => $this->usedKeyphrases($post),
+            'askPassword' => Setting::get('blog.require_password', '1') === '1',
+        ]);
     }
 
     /**
@@ -79,6 +89,10 @@ class PostController extends Controller
     {
         $data = $this->validated($request);
 
+        if ($refusal = $this->publishBlocked($request, $data['status'])) {
+            return back()->withInput()->withErrors(['publish_password' => $refusal]);
+        }
+
         $data['slug'] = $data['slug'] ?: Post::uniqueSlug($data['title'], $data['region']);
         $data['author_id'] = auth()->id();
 
@@ -94,6 +108,11 @@ class PostController extends Controller
     public function update(Request $request, Post $post)
     {
         $data = $this->validated($request, $post);
+
+        if ($refusal = $this->publishBlocked($request, $data['status'])) {
+            return back()->withInput()->withErrors(['publish_password' => $refusal]);
+        }
+
         $wasLive = $post->status === 'published';
 
         $data['slug'] = $data['slug'] ?: Post::uniqueSlug($data['title'], $data['region'], $post->id);
@@ -188,7 +207,7 @@ class PostController extends Controller
         [$width, $height] = $this->shrink($path, 1600);
 
         $relative = 'uploads/blog/' . $folder . '/' . $name;
-        $mediaBase = rtrim((string) config('services.site.media_base'), '/');
+        $mediaBase = rtrim((string) Setting::get('blog.media_base', config('services.site.media_base')), '/');
 
         return response()->json([
             'url'    => $mediaBase !== ''
@@ -292,6 +311,51 @@ class PostController extends Controller
     }
 
     /**
+     * How this app reaches the website.
+     *
+     * These used to live in the .env, which on this host meant a terminal
+     * and a deploy to change. The secret is stored encrypted and is never
+     * sent back to the browser - the form shows only whether one is set.
+     */
+    public function settings()
+    {
+        return view('blog.settings', [
+            'revalidateUrl' => Setting::get('blog.revalidate_url', config('services.vercel.revalidate_url')),
+            'mediaBase'     => Setting::get('blog.media_base', config('services.site.media_base')),
+            'hasSecret'     => (string) Setting::secret('blog.revalidate_secret', config('services.vercel.revalidate_secret')) !== '',
+            'askPassword'   => (bool) Setting::get('blog.require_password', '1'),
+        ]);
+    }
+
+    public function saveSettings(Request $request)
+    {
+        $data = $request->validate([
+            'revalidate_url'    => 'nullable|url|max:300',
+            'media_base'        => 'nullable|url|max:300',
+            'revalidate_secret' => 'nullable|string|max:200',
+            'require_password'  => 'nullable|boolean',
+        ]);
+
+        Setting::put('blog.revalidate_url', $data['revalidate_url'] ?? '');
+        Setting::put('blog.media_base', $data['media_base'] ?? '');
+        Setting::put('blog.require_password', $request->boolean('require_password') ? '1' : '0');
+
+        // An empty box means "leave it alone", not "delete it" - otherwise
+        // saving any other field would quietly disconnect the website.
+        if (!empty($data['revalidate_secret'])) {
+            Setting::putSecret('blog.revalidate_secret', $data['revalidate_secret']);
+        }
+
+        return back()->with('success', 'Saved. ' . $this->testConnection());
+    }
+
+    /** Ask the website to refresh the blog index, and report what it said. */
+    private function testConnection(): string
+    {
+        return $this->ping(['/pk/blog']);
+    }
+
+    /**
      * Ask Vercel to rebuild the pages this post appears on.
      *
      * Both the post itself and the index that lists it, since a new title or
@@ -307,11 +371,11 @@ class PostController extends Controller
 
     private function ping(array $paths): string
     {
-        $endpoint = (string) config('services.vercel.revalidate_url');
-        $secret   = (string) config('services.vercel.revalidate_secret');
+        $endpoint = (string) Setting::get('blog.revalidate_url', config('services.vercel.revalidate_url'));
+        $secret   = (string) Setting::secret('blog.revalidate_secret', config('services.vercel.revalidate_secret'));
 
         if ($endpoint === '' || $secret === '') {
-            return 'The website was not told — no revalidation endpoint is configured yet.';
+            return 'The website was not told — set the connection under Blog → Website connection.';
         }
 
         try {
@@ -336,6 +400,32 @@ class PostController extends Controller
 
             return 'The website could not be reached. It will catch up on its own schedule.';
         }
+    }
+
+    /**
+     * Publishing puts something on a public website in someone else's name.
+     *
+     * So it asks for the password of whoever is signed in, every time, until
+     * someone turns that off under Blog -> Website connection. Saving a
+     * draft never asks: nothing leaves the building.
+     */
+    private function publishBlocked(Request $request, string $status): ?string
+    {
+        if ($status !== 'published' || Setting::get('blog.require_password', '1') !== '1') {
+            return null;
+        }
+
+        $password = (string) $request->input('publish_password');
+
+        if ($password === '') {
+            return 'Enter your password to publish.';
+        }
+
+        if (!Hash::check($password, (string) auth()->user()->password)) {
+            return 'That password is not right. Nothing was published.';
+        }
+
+        return null;
     }
 
     private function validated(Request $request, ?Post $post = null): array

@@ -82,9 +82,15 @@
                    class="btn btn-sm btn-outline-primary">View live</a>
             @endif
             <button name="status" value="draft" class="btn btn-sm btn-outline-primary">Save as draft</button>
-            <button name="status" value="published" class="btn btn-sm btn-accent">
-                {{ $post->status === 'published' ? 'Save & refresh site' : 'Publish' }}
-            </button>
+            @if($askPassword ?? true)
+                <button type="button" class="btn btn-sm btn-accent" data-bs-toggle="modal" data-bs-target="#publishModal">
+                    {{ $post->status === 'published' ? 'Save & refresh site' : 'Publish' }}
+                </button>
+            @else
+                <button name="status" value="published" class="btn btn-sm btn-accent">
+                    {{ $post->status === 'published' ? 'Save & refresh site' : 'Publish' }}
+                </button>
+            @endif
         </div>
     </div>
 
@@ -359,6 +365,36 @@
 </form>
 
 <input type="file" id="filePicker" accept="image/*" multiple class="d-none">
+
+@if($askPassword ?? true)
+<div class="modal fade" id="publishModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Publish to fairtaxint.com</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: .84rem;" class="text-muted">
+                    This puts the post on the public website. Enter your own password to confirm.
+                </p>
+                <input type="password" name="publish_password" id="publishPassword" form="postForm"
+                       class="form-control form-control-sm @error('publish_password') is-invalid @enderror"
+                       autocomplete="current-password" placeholder="Your password">
+                @error('publish_password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" name="status" value="published" form="postForm" class="btn btn-sm btn-accent">
+                    Publish
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 @if($post->exists)
     <form method="POST" id="delForm" action="{{ route('blog.destroy', $post) }}" class="d-none">
@@ -959,6 +995,14 @@
     showFolder();
     drawHero();
     run();
+
+    @error('publish_password')
+        const failed = document.getElementById('publishModal');
+        if (failed) {
+            new bootstrap.Modal(failed).show();
+            document.getElementById('publishPassword').focus();
+        }
+    @enderror
 })();
 </script>
 @endsection

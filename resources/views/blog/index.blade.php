@@ -9,9 +9,14 @@
             Posts on fairtaxint.com. Publishing asks the site to refresh that page straight away.
         </p>
     </div>
-    <a href="{{ route('blog.create') }}" class="btn btn-accent btn-sm">
-        <i class="bi bi-plus-lg me-1"></i> New post
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('blog.settings') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-gear me-1"></i> Website connection
+        </a>
+        <a href="{{ route('blog.create') }}" class="btn btn-accent btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> New post
+        </a>
+    </div>
 </div>
 
 <form method="GET" class="d-flex flex-wrap gap-2 mb-3">
