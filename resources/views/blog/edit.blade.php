@@ -16,6 +16,10 @@
     .bl-editor table { width: 100%; border-collapse: collapse; margin: 0 0 1em; }
     .bl-editor th, .bl-editor td { border: 1px solid var(--border); padding: 6px 9px; font-size: .86rem; }
     .bl-editor a { color: var(--accent-dark); text-decoration: underline; text-underline-offset: 2px; }
+    .bl-editor .callout { background: rgba(47,111,235,.06); border-left: 4px solid var(--accent);
+                          border-radius: var(--radius-lg); padding: 12px 16px; margin: 1.2em 0; }
+    .bl-editor .callout p:first-child { margin-top: 0; }
+    .bl-editor .callout p:last-child { margin-bottom: 0; }
     .bl-editor figure { margin: 1.2em 0; }
     .bl-editor figure img { max-width: 100%; height: auto; border-radius: var(--radius);
                             display: block; border: 1px solid var(--border); }
@@ -156,6 +160,7 @@
                                 <li><button type="button" class="dropdown-item" id="imgFolder">Choose the folder…</button></li>
                             </ul>
                         </span>
+                        <button type="button" id="mkCallout" title="The highlighted box at the top of a post">Quick answer</button>
                         <button type="button" id="mkTable">Table</button>
                         <button type="button" data-cmd="removeFormat">Clear</button>
                     </div>
@@ -196,6 +201,8 @@
 
                     <textarea name="content" id="content" class="form-control bl-html d-none" rows="24">{{ old('content', $post->content) }}</textarea>
                     <div class="form-text mt-2">
+                        <strong>Quick answer</strong> turns the paragraph you are in into the highlighted box at the
+                        top of a post — the one Google lifts into the result. Press it again to take the box off.
                         You can also drag an image straight onto the text, or paste one from a screenshot.
                         They are filed under <code id="folderLabel"></code> —
                         <a href="#" id="folderChange">change</a>.
@@ -541,6 +548,54 @@
     document.getElementById('rmLink').addEventListener('click', () => {
         restore();
         document.execCommand('unlink');
+        schedule();
+    });
+
+    /*
+     * The quick answer box.
+     *
+     * The site styles a div with class "callout" as the highlighted block at
+     * the top of a post - its own stylesheet calls it featured-snippet bait,
+     * and Google does lift those straight into the result. Nothing else in a
+     * post carries a class, so this is the one piece of markup the writer
+     * would otherwise have to hand-write in the HTML view.
+     */
+    document.getElementById('mkCallout').addEventListener('click', () => {
+        restore();
+
+        const sel = window.getSelection();
+        const start = sel.anchorNode ? (sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentNode : sel.anchorNode) : null;
+        const inside = start && editor.contains(start) ? start.closest('.callout') : null;
+
+        // A second press takes the box off again, leaving the words behind.
+        if (inside) {
+            while (inside.firstChild) { inside.parentNode.insertBefore(inside.firstChild, inside); }
+            inside.remove();
+            schedule();
+
+            return;
+        }
+
+        const block = outerBlock(sel.anchorNode);
+        const box = document.createElement('div');
+        box.className = 'callout';
+
+        if (block && block.textContent.trim() !== '') {
+            editor.insertBefore(box, block);
+            box.appendChild(block);
+        } else {
+            box.innerHTML = '<p><strong>Quick answer:</strong>&nbsp;</p>';
+            if (block) { editor.insertBefore(box, block.nextSibling); } else { editor.appendChild(box); }
+        }
+
+        // Leave the caret at the end of the box, ready to type the answer.
+        const where = document.createRange();
+        where.selectNodeContents(box.lastChild || box);
+        where.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(where);
+        saved = where.cloneRange();
+
         schedule();
     });
 
