@@ -78,6 +78,9 @@
                     <td>
                         @if($post->status === 'published')
                             <span class="badge bg-success">Published</span>
+                            @if($post->differsFromLive())
+                                <div class="text-muted mt-1" style="font-size: .7rem;">draft changes</div>
+                            @endif
                         @else
                             <span class="badge bg-secondary">Draft</span>
                         @endif

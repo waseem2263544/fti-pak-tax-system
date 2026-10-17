@@ -81,7 +81,9 @@
                 <a href="https://fairtaxint.com/{{ $post->region }}/blog/{{ $post->slug }}" target="_blank"
                    class="btn btn-sm btn-outline-primary">View live</a>
             @endif
-            <button name="status" value="draft" class="btn btn-sm btn-outline-primary">Save as draft</button>
+            <button name="status" value="draft" class="btn btn-sm btn-outline-primary">
+                {{ $post->status === 'published' ? 'Save without publishing' : 'Save as draft' }}
+            </button>
             @if($askPassword ?? true)
                 <button type="button" class="btn btn-sm btn-accent" data-bs-toggle="modal" data-bs-target="#publishModal">
                     {{ $post->status === 'published' ? 'Save & refresh site' : 'Publish' }}
@@ -93,6 +95,23 @@
             @endif
         </div>
     </div>
+
+    @if($post->exists && $post->liveRevision && $post->differsFromLive())
+        <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
+            <div style="font-size: .85rem;">
+                This draft has changes the website does not have. Readers still see the version published
+                {{ $post->liveRevision->created_at?->diffForHumans() }}.
+            </div>
+            <div class="d-flex gap-2">
+                <a href="https://fairtaxint.com/{{ $post->region }}/blog/{{ $post->liveRevision->slug }}"
+                   target="_blank" class="btn btn-sm btn-outline-primary">See the live version</a>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        onclick="if(confirm('Replace this draft with the version that is live on the website? Your unpublished changes are lost.')) document.getElementById('revertForm').submit();">
+                    Reset to the live version
+                </button>
+            </div>
+        </div>
+    @endif
 
     <div class="row g-3">
         <div class="col-lg-8">
@@ -335,14 +354,22 @@
                     <button type="button" class="btn btn-sm btn-outline-primary" id="heroUpload">Upload</button>
                 </div>
                 <div class="card-body">
-                    <input type="text" name="hero_image" id="hero_image" class="form-control form-control-sm mb-2 bl-html"
+                    <label class="form-label" for="hero_image">Image</label>
+                    <input type="text" name="hero_image" id="hero_image" class="form-control form-control-sm mb-1 bl-html"
                            value="{{ old('hero_image', $post->hero_image) }}" placeholder="/blog/something.jpg">
-                    <input type="text" name="hero_image_alt" id="hero_image_alt" class="form-control form-control-sm"
-                           value="{{ old('hero_image_alt', $post->hero_image_alt) }}" placeholder="What the image shows">
-                    <div id="heroPreview" class="mt-2"></div>
-                    <div class="form-text">
-                        A path in the website's own public folder, or an uploaded image held here.
+                    <div class="form-text mb-2">
+                        Upload above, or give a path in the website's own public folder.
                     </div>
+
+                    <label class="form-label" for="hero_image_alt">Alt text</label>
+                    <input type="text" name="hero_image_alt" id="hero_image_alt" class="form-control form-control-sm"
+                           value="{{ old('hero_image_alt', $post->hero_image_alt) }}"
+                           placeholder="What the image shows">
+                    <div class="form-text">
+                        Describes the image for a reader who cannot see it, and is what Google reads. It counts
+                        in the SEO analysis, since the hero heads the post.
+                    </div>
+                    <div id="heroPreview" class="mt-2"></div>
                 </div>
             </div>
 
@@ -353,10 +380,18 @@
                             @if($post->author) Created by {{ $post->author->name }}<br>@endif
                             Updated {{ $post->updated_at?->diffForHumans() }}
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                onclick="if(confirm('Delete this post? If it is live, the page disappears from the site.')) document.getElementById('delForm').submit();">
-                            Delete
-                        </button>
+                        <div class="d-flex gap-2">
+                            @if($post->status === 'published')
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="if(confirm('Take this post off the website? It stays here and can go back up.')) document.getElementById('unpublishForm').submit();">
+                                    Take down
+                                </button>
+                            @endif
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    onclick="if(confirm('Delete this post? If it is live, the page disappears from the site.')) document.getElementById('delForm').submit();">
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             @endif
@@ -399,6 +434,12 @@
 @if($post->exists)
     <form method="POST" id="delForm" action="{{ route('blog.destroy', $post) }}" class="d-none">
         @csrf @method('DELETE')
+    </form>
+    <form method="POST" id="unpublishForm" action="{{ route('blog.unpublish', $post) }}" class="d-none">
+        @csrf
+    </form>
+    <form method="POST" id="revertForm" action="{{ route('blog.revert', $post) }}" class="d-none">
+        @csrf
     </form>
 @endif
 @endsection

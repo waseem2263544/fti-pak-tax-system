@@ -130,6 +130,15 @@
 
     function seoChecks(input, text) {
         var checks = [];
+
+        if (input.heroImage) {
+            text.images.inBody = text.images.total;
+            text.images.total += 1;
+            if (input.heroAlt) { text.images.alts.push(input.heroAlt); } else { text.images.missingAlt += 1; }
+        } else {
+            text.images.inBody = text.images.total;
+        }
+
         var phrase = (input.keyphrase || '').trim();
         var synonyms = (input.synonyms || []).filter(Boolean);
         var seoTitle = (input.metaTitle || input.title || '').trim();
@@ -187,19 +196,32 @@
             add('internalLinks', GOOD, links.internal + ' internal link' + (links.internal === 1 ? '' : 's') + '.');
         }
 
+        /*
+         * The hero counts as one of the page's images.
+         *
+         * It is not decoration held back for the sharing card - the site
+         * renders it at the top of the post - so leaving it out of the count
+         * would mark a well-illustrated post down for having no images.
+         */
         var images = text.images;
+        var where = [];
+        if (input.heroImage) { where.push('the hero'); }
+        if (images.inBody) { where.push(images.inBody + ' in the text'); }
+
         if (!images.total) {
-            add('images', BAD, 'No images in the body. A screenshot of the portal or form helps a how-to enormously.');
+            add('images', BAD, 'No images at all. A screenshot of the portal or form helps a how-to enormously.');
         } else if (images.missingAlt) {
-            add('images', OK, images.total + ' image' + (images.total === 1 ? '' : 's') + ', but ' + images.missingAlt + ' without alt text.');
+            add('images', OK, images.total + ' image' + (images.total === 1 ? '' : 's') +
+                ' (' + where.join(', ') + '), but ' + images.missingAlt + ' without alt text.');
         } else {
-            add('images', GOOD, images.total + ' image' + (images.total === 1 ? '' : 's') + ', all with alt text.');
+            add('images', GOOD, images.total + ' image' + (images.total === 1 ? '' : 's') +
+                ' (' + where.join(', ') + '), all with alt text.');
         }
 
         if (!input.heroImage) {
-            add('heroImage', OK, 'No hero image. It is what shows when the post is shared.');
+            add('heroImage', OK, 'No hero image. It heads the post and is what shows when the post is shared.');
         } else if (!input.heroAlt) {
-            add('heroImage', OK, 'The hero image has no alt text.');
+            add('heroImage', BAD, 'The hero image has no alt text.');
         } else {
             add('heroImage', GOOD, 'Hero image set, with alt text.');
         }

@@ -143,6 +143,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('blog/settings', [\App\Http\Controllers\PostController::class, 'saveSettings'])->name('blog.settings.save');
     Route::get('blog/{post}', [\App\Http\Controllers\PostController::class, 'edit'])->name('blog.edit');
     Route::put('blog/{post}', [\App\Http\Controllers\PostController::class, 'update'])->name('blog.update');
+    Route::post('blog/{post}/revert', [\App\Http\Controllers\PostController::class, 'revert'])->name('blog.revert');
+    Route::post('blog/{post}/unpublish', [\App\Http\Controllers\PostController::class, 'unpublish'])->name('blog.unpublish');
     Route::delete('blog/{post}', [\App\Http\Controllers\PostController::class, 'destroy'])->name('blog.destroy');
     Route::get('documents/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
     Route::post('documents/delete', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');

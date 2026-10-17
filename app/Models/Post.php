@@ -36,6 +36,70 @@ class Post extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
+    public function revisions()
+    {
+        return $this->hasMany(PostRevision::class)->orderByDesc('id');
+    }
+
+    /** The version the website is serving. */
+    public function liveRevision()
+    {
+        return $this->hasOne(PostRevision::class)->latestOfMany();
+    }
+
+    /** Record what has just been published, so there is a way back to it. */
+    public function snapshot(): PostRevision
+    {
+        return $this->revisions()->create(
+            collect(PostRevision::FIELDS)->mapWithKeys(fn($f) => [$f => $this->{$f}])->all()
+            + ['published_by' => auth()->id()]
+        );
+    }
+
+    /**
+     * Whether the working copy has moved away from what is live.
+     *
+     * Only the fields a reader sees are compared: re-saving without changing
+     * anything should not announce unpublished changes.
+     */
+    public function differsFromLive(): bool
+    {
+        $live = $this->liveRevision;
+
+        if (!$live) {
+            return false;
+        }
+
+        foreach (PostRevision::FIELDS as $field) {
+            $mine = $this->{$field};
+            $theirs = $live->{$field};
+
+            if ($mine instanceof \DateTimeInterface) { $mine = $mine->format('Y-m-d'); }
+            if ($theirs instanceof \DateTimeInterface) { $theirs = $theirs->format('Y-m-d'); }
+
+            if ((string) $mine !== (string) $theirs) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Put the live version back over the working copy. */
+    public function revertToLive(): bool
+    {
+        $live = $this->liveRevision;
+
+        if (!$live) {
+            return false;
+        }
+
+        $this->fill(collect(PostRevision::FIELDS)->mapWithKeys(fn($f) => [$f => $live->{$f}])->all());
+        $this->save();
+
+        return true;
+    }
+
     public function scopeLive($query)
     {
         return $query->where('status', 'published');
@@ -86,26 +150,34 @@ class Post extends Model
         return $this->meta_description ?: (string) $this->excerpt;
     }
 
-    /** The shape the website expects. */
+    /**
+     * The shape the website expects.
+     *
+     * Served from the published version where there is one, so an edit in
+     * progress never reaches the site. Posts published before versions were
+     * recorded fall back to their own row.
+     */
     public function toFeed(): array
     {
+        $live = $this->liveRevision ?: $this;
+
         return array_filter([
-            'slug'         => $this->slug,
-            'title'        => $this->title,
-            'excerpt'      => $this->excerpt,
-            'date'         => $this->published_on?->format('Y-m-d'),
-            'updated'      => $this->reviewed_on?->format('Y-m-d'),
-            'readTime'     => $this->read_time,
-            'category'     => $this->category,
-            'featured'     => $this->featured ?: null,
-            'content'      => $this->content,
-            'heroImage'    => $this->hero_image,
-            'heroImageAlt' => $this->hero_image_alt,
-            'metaTitle'    => $this->metaTitle(),
-            'metaDescription' => $this->metaDescription(),
-            'focusKeyphrase'  => $this->focus_keyphrase,
-            'canonical'    => $this->canonical_url,
-            'noindex'      => $this->noindex ?: null,
+            'slug'         => $live->slug,
+            'title'        => $live->title,
+            'excerpt'      => $live->excerpt,
+            'date'         => $live->published_on?->format('Y-m-d'),
+            'updated'      => $live->reviewed_on?->format('Y-m-d'),
+            'readTime'     => $live->read_time,
+            'category'     => $live->category,
+            'featured'     => $live->featured ?: null,
+            'content'      => $live->content,
+            'heroImage'    => $live->hero_image,
+            'heroImageAlt' => $live->hero_image_alt,
+            'metaTitle'    => $live->meta_title ?: $live->title,
+            'metaDescription' => $live->meta_description ?: $live->excerpt,
+            'focusKeyphrase'  => $live->focus_keyphrase,
+            'canonical'    => $live->canonical_url,
+            'noindex'      => $live->noindex ?: null,
         ], fn($v) => $v !== null);
     }
 }

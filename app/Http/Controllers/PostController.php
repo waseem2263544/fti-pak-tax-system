@@ -26,7 +26,7 @@ class PostController extends Controller
         $region = in_array($request->get('region'), ['pk', 'ae'], true) ? $request->get('region') : null;
         $search = trim((string) $request->get('q', ''));
 
-        $posts = Post::with('author')
+        $posts = Post::with('author', 'liveRevision')
             ->when($region, fn($q) => $q->where('region', $region))
             ->when($request->get('status'), fn($q, $s) => $q->where('status', $s))
             ->when($search !== '', fn($q) => $q->where(function ($w) use ($search) {
@@ -61,6 +61,8 @@ class PostController extends Controller
 
     public function edit(Post $post)
     {
+        $post->load('liveRevision');
+
         return view('blog.edit', [
             'post' => $post,
             'usedKeyphrases' => $this->usedKeyphrases($post),
@@ -102,7 +104,14 @@ class PostController extends Controller
             $post->update(['read_time' => $post->estimateReadTime()]);
         }
 
-        return redirect()->route('blog.edit', $post)->with('success', 'Post created.');
+        $message = 'Post created.';
+
+        if ($post->status === 'published') {
+            $post->snapshot();
+            $message .= ' ' . $this->revalidate($post);
+        }
+
+        return redirect()->route('blog.edit', $post)->with('success', $message);
     }
 
     public function update(Request $request, Post $post)
@@ -113,9 +122,22 @@ class PostController extends Controller
             return back()->withInput()->withErrors(['publish_password' => $refusal]);
         }
 
+        $live = $post->liveRevision;
         $wasLive = $post->status === 'published';
 
         $data['slug'] = $data['slug'] ?: Post::uniqueSlug($data['title'], $data['region'], $post->id);
+
+        /*
+         * Saving a draft of a post that is already up leaves the live version
+         * alone. Before versions were recorded this took the post off the
+         * website entirely, which is nobody's idea of saving a draft - the
+         * way off the site is the Take down button.
+         */
+        $keepLive = $data['status'] === 'draft' && $live && $wasLive;
+
+        if ($keepLive) {
+            $data['status'] = 'published';
+        }
 
         $post->update($data);
 
@@ -123,15 +145,50 @@ class PostController extends Controller
             $post->update(['read_time' => $post->estimateReadTime()]);
         }
 
-        // Regenerate the page when something live has changed, and when a post
-        // has just gone live. An edit nobody can see needs no revalidation.
+        if ($keepLive) {
+            return back()->with('success',
+                'Draft saved. The website still shows the version published ' . $live->created_at->diffForHumans() . '.');
+        }
+
         $message = 'Saved.';
 
-        if ($post->status === 'published' || $wasLive) {
-            $message .= ' ' . $this->revalidate($post);
+        if ($post->status === 'published') {
+            $post->snapshot();
+            $post->unsetRelation('liveRevision');
+
+            // A changed address leaves the old page behind, so that one is
+            // refreshed too and stops serving a post that has moved.
+            $paths = $this->pathsFor($post);
+
+            if ($live && $live->slug !== $post->slug) {
+                $paths[] = '/' . $post->region . '/blog/' . $live->slug;
+            }
+
+            $message .= ' ' . $this->ping($paths);
+        } elseif ($wasLive) {
+            $message .= ' ' . $this->ping($this->pathsFor($post));
         }
 
         return back()->with('success', $message);
+    }
+
+    /** Put the live version back over the draft. */
+    public function revert(Post $post)
+    {
+        if (!$post->revertToLive()) {
+            return back()->with('success', 'This post has never been published, so there is nothing to go back to.');
+        }
+
+        return redirect()->route('blog.edit', $post)
+            ->with('success', 'The draft has been replaced with the version that is live on the website.');
+    }
+
+    /** Take a post off the website, keeping it here. */
+    public function unpublish(Post $post)
+    {
+        $post->update(['status' => 'draft']);
+
+        return back()->with('success', 'Taken off the website. ' . $this->ping($this->pathsFor($post)));
     }
 
     public function destroy(Post $post)
@@ -363,10 +420,16 @@ class PostController extends Controller
      */
     private function revalidate(Post $post): string
     {
-        return $this->ping([
+        return $this->ping($this->pathsFor($post));
+    }
+
+    /** The pages a post appears on: itself, and the index that lists it. */
+    private function pathsFor(Post $post): array
+    {
+        return [
             '/' . $post->region . '/blog',
             '/' . $post->region . '/blog/' . $post->slug,
-        ]);
+        ];
     }
 
     private function ping(array $paths): string
@@ -474,6 +537,7 @@ class PostController extends Controller
         $region = in_array($request->get('region'), ['pk', 'ae'], true) ? $request->get('region') : null;
 
         $posts = Post::live()
+            ->with('liveRevision')
             ->when($region, fn($q) => $q->where('region', $region))
             ->orderByDesc('published_on')
             ->orderBy('sort_order')
