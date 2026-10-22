@@ -269,3 +269,42 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Social Studio: TikTok posts drafted by Claude, approved here, downloaded for upload.
+Route::middleware(['auth'])->prefix('social')->name('social.')->group(function () {
+    $c = \App\Http\Controllers\Social\SocialPostController::class;
+    Route::get('/', [$c, 'index'])->name('index');
+    Route::get('new', [$c, 'create'])->name('create');
+    Route::post('posts', [$c, 'store'])->name('store');
+    Route::get('posts/{post}', [$c, 'show'])->name('show');
+    Route::put('posts/{post}', [$c, 'update'])->name('update');
+    Route::delete('posts/{post}', [$c, 'destroy'])->name('destroy');
+    Route::post('posts/{post}/generate', [$c, 'generate'])->name('generate');
+    Route::get('posts/{post}/status', [$c, 'status'])->name('status');
+    Route::post('posts/{post}/approve', [$c, 'approve'])->name('approve');
+    Route::post('posts/{post}/reject', [$c, 'reject'])->name('reject');
+    Route::post('posts/{post}/changes', [$c, 'requestChanges'])->name('changes');
+    Route::post('posts/{post}/regenerate', [$c, 'regenerate'])->name('regenerate');
+    Route::post('posts/{post}/assets', [$c, 'storeAsset'])->name('assets.store');
+    Route::post('posts/{post}/rerender', [$c, 'rerender'])->name('rerender');
+    Route::post('posts/{post}/posted', [$c, 'markPosted'])->name('posted');
+    Route::get('posts/{post}/download', [$c, 'download'])->name('download');
+    Route::get('posts/{post}/asset/{index}', [$c, 'asset'])->name('asset')->whereNumber('index');
+    Route::get('posts/{post}/video', [$c, 'video'])->name('video');
+
+    $i = \App\Http\Controllers\Social\SocialIdeaController::class;
+    Route::get('ideas', [$i, 'index'])->name('ideas');
+    Route::post('ideas', [$i, 'store'])->name('ideas.store');
+    Route::post('ideas/suggest', [$i, 'suggest'])->name('ideas.suggest');
+    Route::post('ideas/{idea}/dismiss', [$i, 'dismiss'])->name('ideas.dismiss');
+    Route::delete('ideas/{idea}', [$i, 'destroy'])->name('ideas.destroy');
+
+    $s = \App\Http\Controllers\Social\SocialSettingsController::class;
+    Route::get('settings', [$s, 'edit'])->name('settings');
+    Route::post('settings', [$s, 'update'])->name('settings.update');
+    Route::post('settings/rotate-token', [$s, 'rotateToken'])->name('settings.rotate-token');
+});
+
+// Social Studio pages the VPS render worker opens (no session; token or public logo).
+Route::get('social/brand/{which}', [\App\Http\Controllers\Social\SocialSettingsController::class, 'brandFile'])->name('social.brand-file');
+Route::get('social/render/{post}', [\App\Http\Controllers\Api\SocialRenderApiController::class, 'renderPage'])->name('social.render-page');

@@ -1,0 +1,18 @@
+[Unit]
+Description=FTI Social Studio render worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=fti
+WorkingDirectory=/opt/fti-social-render
+ExecStart=/usr/bin/node /opt/fti-social-render/worker.js
+Restart=always
+RestartSec=10
+Nice=5
+# Chromium plus ffmpeg peak around 1 GB on a 30 s video.
+MemoryMax=1500M
+
+[Install]
+WantedBy=multi-user.target

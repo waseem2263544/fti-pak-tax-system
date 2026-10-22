@@ -35,6 +35,14 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('Scheduled tasks execution failed');
             });
+
+        // Social Studio: daily TikTok drafts, stuck jobs (command checks what is due)
+        $schedule->command('social:run')
+            ->hourly()
+            ->withoutOverlapping(120)
+            ->onFailure(function () {
+                \Log::error('Social Studio run failed');
+            });
     }
 
     /**

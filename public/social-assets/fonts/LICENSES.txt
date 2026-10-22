@@ -1,0 +1,2 @@
+Geist (Vercel) and Noto Nastaliq Urdu / Noto Naskh Arabic (Google) are licensed under the SIL Open Font License 1.1.
+https://openfontlicense.org - bundled unmodified for rendering Social Studio posts.

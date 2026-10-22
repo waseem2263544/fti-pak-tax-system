@@ -91,6 +91,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Social Studio. The key is normally set in Social Studio > Settings;
+    // these are only the fallback.
+    'anthropic' => [
+        'key'   => env('ANTHROPIC_API_KEY'),
+        'model' => env('SOCIAL_CLAUDE_MODEL', 'claude-sonnet-5-5'),
+        'base_url' => env('SOCIAL_ANTHROPIC_BASE_URL', 'https://api.anthropic.com'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

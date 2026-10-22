@@ -1,0 +1,15 @@
+{
+  "name": "fti-social-render-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Renders Social Studio videos and slides for app.fairtaxint.com",
+  "main": "worker.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node worker.js",
+    "once": "node worker.js --once"
+  },
+  "dependencies": {
+    "puppeteer": "^23.11.1"
+  }
+}
