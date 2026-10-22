@@ -29,3 +29,12 @@ Route::get('wht/status', [\App\Http\Controllers\Api\WhtPsidApiController::class,
 Route::post('mcp/{secret}', [\App\Http\Controllers\Mcp\WhtMcpController::class, 'handle'])
     ->middleware('throttle:120,1')
     ->where('secret', '[A-Za-z0-9_-]{32,128}');
+
+// Social Studio render worker (VPS). Shared-token auth: Bearer or ?token=.
+Route::prefix('social')->middleware('throttle:240,1')->group(function () {
+    $r = \App\Http\Controllers\Api\SocialRenderApiController::class;
+    Route::get('render-jobs/next', [$r, 'next']);
+    Route::post('render-jobs/{post}/complete', [$r, 'complete']);
+    Route::post('render-jobs/{post}/fail', [$r, 'fail']);
+    Route::get('music', [$r, 'music'])->name('social.api.music');
+});

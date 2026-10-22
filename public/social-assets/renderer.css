@@ -1,0 +1,158 @@
+/*
+ * Social Studio renderer - Fair Tax house style for TikTok (1080 x 1920).
+ *
+ * Every slide is a fixed 1080x1920 stage. Sizes are in px multiplied by
+ * --fit, which renderer.js lowers until the text fits its box, so long Urdu
+ * lines shrink instead of spilling.
+ *
+ * Safe area: TikTok draws its tabs above y 200, the caption below y 1500 and
+ * the like/comment rail along the right edge, so content sits in
+ * x 84..940, y 300..1450. Urdu is right-aligned, which is why the right
+ * margin is the wide one.
+ */
+
+@font-face { font-family: 'FT Geist'; src: url('fonts/Geist-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: block; }
+@font-face { font-family: 'FT Nastaliq'; src: url('fonts/noto-nastaliq-urdu-arabic-400-normal.woff2') format('woff2'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'FT Nastaliq'; src: url('fonts/noto-nastaliq-urdu-arabic-700-normal.woff2') format('woff2'); font-weight: 700; font-display: block; }
+@font-face { font-family: 'FT Naskh'; src: url('fonts/noto-naskh-arabic-arabic-400-normal.woff2') format('woff2'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'FT Naskh'; src: url('fonts/noto-naskh-arabic-arabic-700-normal.woff2') format('woff2'); font-weight: 700; font-display: block; }
+
+.ft-stage {
+    --blue: #1982C3; --navy: #0B2744; --ink: #061B31; --amber: #FFCB21; --sky: #A8DAFF;
+    --paper: #F3F8FD; --green: #1AAF63; --red: #F0484D; --slate: #4A6078; --white: #fff;
+    --wa: #25D366;
+    --urdu: 'FT Nastaliq';
+    --fit: 1;
+    --lh: 1.95;          /* Nastaliq needs tall lines; Naskh overrides below */
+    position: relative;
+    width: 1080px; height: 1920px;
+    overflow: hidden;
+    font-family: 'FT Geist', var(--urdu), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+    box-sizing: border-box;
+}
+.ft-stage *, .ft-stage *::before, .ft-stage *::after { box-sizing: border-box; }
+.ft-stage.urdu-naskh { --urdu: 'FT Naskh'; --lh: 1.55; }
+
+/* The stage is dropped into app pages: undo their element styles inside it.
+   :where() keeps this at element-level specificity so the .ft-* classes win. */
+:where(.ft-stage) :is(h1, h2, h3, p, ul, li) {
+    margin: 0; padding: 0; color: inherit; letter-spacing: normal; font-size: inherit; font-weight: inherit; line-height: inherit; }
+:where(.ft-stage) img { max-width: none; max-height: none; border: 0; vertical-align: top; object-fit: contain; }
+
+/* ---------- scenes and rooms ---------- */
+.ft-scene { position: absolute; inset: 0; will-change: transform, opacity; }
+.ft-room-navy  { background: radial-gradient(120% 80% at 85% 10%, #123A62 0%, var(--navy) 45%, var(--ink) 100%); color: var(--white); }
+.ft-room-paper { background: linear-gradient(180deg, #FFFFFF 0%, var(--paper) 60%, #E6F1FB 100%); color: var(--ink); }
+.ft-room-blue  { background: radial-gradient(110% 80% at 15% 0%, #2B97D8 0%, var(--blue) 50%, #0F6AA5 100%); color: var(--white); }
+.ft-grain { position: absolute; inset: 0; opacity: .07; mix-blend-mode: overlay; pointer-events: none;
+    background-image: url("grain.png"); background-size: 256px 256px; }
+.ft-room-paper .ft-grain { opacity: .05; mix-blend-mode: multiply; }
+
+/* decorative shapes */
+.ft-orb { position: absolute; border-radius: 50%; pointer-events: none; }
+.ft-room-navy .ft-orb  { background: radial-gradient(circle, rgba(25,130,195,.35) 0%, rgba(25,130,195,0) 70%); }
+.ft-room-blue .ft-orb  { background: radial-gradient(circle, rgba(255,255,255,.18) 0%, rgba(255,255,255,0) 70%); }
+.ft-room-paper .ft-orb { background: radial-gradient(circle, rgba(25,130,195,.12) 0%, rgba(25,130,195,0) 70%); }
+.ft-ghost { position: absolute; left: -40px; bottom: 380px; font-family: 'FT Geist'; font-weight: 900; font-size: 560px;
+    line-height: .8; letter-spacing: -0.04em; color: transparent; -webkit-text-stroke: 3px rgba(168,218,255,.16);
+    white-space: nowrap; pointer-events: none; direction: ltr; }
+.ft-room-paper .ft-ghost { -webkit-text-stroke-color: rgba(25,130,195,.13); }
+.ft-room-blue .ft-ghost  { -webkit-text-stroke-color: rgba(255,255,255,.2); }
+
+/* ---------- chrome ---------- */
+.ft-head { position: absolute; top: 200px; left: 84px; right: 84px; height: 76px; display: flex; align-items: center; justify-content: space-between; direction: ltr; }
+.ft-logo { height: 76px; width: auto; display: block; }
+.ft-count { font-family: 'FT Geist'; font-weight: 700; font-size: 30px; letter-spacing: .04em; opacity: .55; font-variant-numeric: tabular-nums; }
+.ft-progress { position: absolute; top: 172px; left: 84px; right: 84px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.15); overflow: hidden; direction: ltr; }
+.ft-room-paper .ft-progress { background: rgba(11,39,68,.1); }
+.ft-progress i { display: block; height: 100%; width: 0; background: var(--amber); border-radius: 3px; }
+.ft-room-paper .ft-progress i { background: var(--blue); }
+
+.ft-foot { position: absolute; top: 1384px; left: 84px; right: 140px; display: flex; align-items: center; gap: 18px; direction: ltr;
+    font-family: 'FT Geist'; font-weight: 600; font-size: 30px; letter-spacing: -0.005em; opacity: .75; }
+.ft-foot > span { white-space: nowrap; }
+.ft-foot .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .5; }
+.ft-wa-ico { width: 34px; height: 34px; flex: none; }
+
+/* ---------- content box ---------- */
+.ft-body {
+    position: absolute; top: 330px; left: 84px; right: 140px; height: 1020px;
+    display: flex; flex-direction: column; justify-content: center; align-items: stretch;
+    gap: calc(44px * var(--fit));
+    direction: rtl; text-align: right;
+    unicode-bidi: isolate;
+}
+.ft-u { font-family: var(--urdu), "FT Geist", serif; line-height: var(--lh); }
+.ft-u .ft-lat, .ft-lat { font-family: 'FT Geist'; }
+
+.ft-kicker { align-self: flex-start; display: inline-flex; align-items: center; gap: 14px;
+    padding: calc(6px * var(--fit)) calc(30px * var(--fit)); border-radius: 999px;
+    font-size: calc(38px * var(--fit)); font-weight: 700; line-height: 1.9;
+    background: var(--amber); color: var(--ink); }
+.ft-room-paper .ft-kicker { background: var(--blue); color: var(--white); }
+.ft-kicker.warn { background: var(--red); color: var(--white); }
+
+.ft-h { margin: 0; font-weight: 700; font-size: calc(92px * var(--fit)); letter-spacing: 0; }
+.ft-h.xl { font-size: calc(112px * var(--fit)); }
+.ft-h.md { font-size: calc(80px * var(--fit)); }
+.ft-h em { font-style: normal; color: var(--amber); }
+.ft-room-paper .ft-h em { color: var(--blue); }
+.ft-room-blue .ft-h em  { color: var(--amber); }
+
+.ft-bar { height: 10px; width: 180px; border-radius: 5px; background: var(--amber); align-self: flex-start; transform-origin: right center; }
+.ft-room-paper .ft-bar { background: var(--blue); }
+.ft-bar.warn { background: var(--red); }
+
+.ft-p { margin: 0; font-size: calc(52px * var(--fit)); font-weight: 400; opacity: .9; }
+.ft-room-paper .ft-p { color: var(--slate); opacity: 1; }
+
+/* lists */
+.ft-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(26px * var(--fit)); }
+.ft-li { display: flex; align-items: center; gap: calc(30px * var(--fit));
+    padding: calc(14px * var(--fit)) calc(34px * var(--fit)); border-radius: 28px;
+    background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+    font-size: calc(50px * var(--fit)); font-weight: 400; }
+.ft-room-paper .ft-li { background: #fff; border-color: rgba(11,39,68,.08); box-shadow: 0 1px 2px rgba(6,27,49,.06), 0 12px 30px rgba(6,27,49,.07); }
+.ft-li .mark { flex: none; width: calc(64px * var(--fit)); height: calc(64px * var(--fit)); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; background: var(--amber); color: var(--ink);
+    font-family: 'FT Geist'; font-weight: 800; font-size: calc(32px * var(--fit)); line-height: 1; }
+.ft-room-paper .ft-li .mark { background: var(--blue); color: #fff; }
+.ft-li .mark svg { width: 55%; height: 55%; }
+.ft-li.warn .mark { background: var(--red); color: #fff; }
+.ft-li .txt { flex: 1; min-width: 0; }
+
+/* steps: numbered, joined by a rail */
+.ft-steps { position: relative; }
+.ft-steps .ft-li { background: transparent; border: 0; box-shadow: none; padding-inline: 0; }
+.ft-steps .ft-li .mark { width: calc(84px * var(--fit)); height: calc(84px * var(--fit)); font-size: calc(42px * var(--fit)); box-shadow: 0 0 0 10px rgba(255,203,33,.14); }
+.ft-room-paper .ft-steps .ft-li .mark { box-shadow: 0 0 0 10px rgba(25,130,195,.12); }
+
+/* stat */
+.ft-stat { direction: ltr; text-align: right; font-family: 'FT Geist'; font-weight: 900;
+    font-size: calc(250px * var(--fit)); line-height: .95; letter-spacing: -0.03em; color: var(--amber);
+    font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ft-room-paper .ft-stat { color: var(--blue); }
+.ft-stat-label { margin: 0; font-size: calc(62px * var(--fit)); font-weight: 700; }
+
+/* warning */
+.ft-warn-ico { width: calc(120px * var(--fit)); height: calc(120px * var(--fit)); align-self: flex-start; }
+
+/* cta end card */
+.ft-cta .ft-body { justify-content: center; align-items: center; text-align: center; }
+.ft-cta .ft-h, .ft-cta .ft-p { text-align: center; }
+.ft-cta-logo { height: calc(150px * var(--fit)); width: auto; align-self: center; }
+.ft-wa-btn { align-self: center; display: inline-flex; align-items: center; gap: 22px; direction: ltr;
+    padding: 26px 52px; border-radius: 999px; background: var(--wa); color: #fff;
+    font-family: 'FT Geist'; font-weight: 800; font-size: calc(54px * var(--fit)); letter-spacing: -0.01em;
+    box-shadow: 0 2px 0 rgba(255,255,255,.25) inset, 0 18px 40px rgba(0,0,0,.25); white-space: nowrap; }
+.ft-wa-btn svg { width: 1.15em; height: 1.15em; }
+.ft-site { font-family: 'FT Geist'; font-weight: 600; font-size: calc(40px * var(--fit)); opacity: .7; text-align: center; direction: ltr; }
+.ft-tagline { font-family: 'FT Geist'; font-weight: 600; font-size: 30px; opacity: .55; text-align: center; direction: ltr; }
+
+.ft-swipe { position: absolute; top: 1290px; left: 84px; display: inline-flex; align-items: center; gap: 14px; direction: rtl;
+    padding: 4px 26px; border-radius: 999px; font-size: 34px; font-weight: 700;
+    background: rgba(255,255,255,.12); color: inherit; }
+.ft-room-paper .ft-swipe { background: rgba(25,130,195,.1); color: var(--blue); }
+.ft-swipe svg { width: 34px; height: 34px; }

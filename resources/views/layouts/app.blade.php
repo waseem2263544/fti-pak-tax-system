@@ -644,6 +644,14 @@
                 <a href="{{ route('blog.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'blog.')) active @endif">
                     <i class="bi bi-pencil-square"></i> Blog
                 </a>
+                <a href="{{ route('social.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'social.')) active @endif">
+                    <i class="bi bi-tiktok"></i> Social Studio
+                    @php
+                        // Before migrate-social.php has run the table is missing; show no badge rather than fail.
+                        try { $socialWaiting = \App\Models\SocialPost::where('status', 'review')->count(); } catch (\Throwable $e) { $socialWaiting = 0; }
+                    @endphp
+                    @if($socialWaiting)<span class="badge rounded-pill bg-warning text-dark ms-auto" style="font-size:.62rem">{{ $socialWaiting }}</span>@endif
+                </a>
                 <a href="{{ route('pdf.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'pdf.')) active @endif">
                     <i class="bi bi-file-earmark-pdf"></i> PDF Tools
                 </a>
