@@ -127,10 +127,8 @@ return [
     |
     */
 
-    'migrations' => [
-        'table' => 'migrations',
-        'update_date_on_publish' => true,
-    ],
+    // Laravel 10 expects the table name as a plain string here.
+    'migrations' => 'migrations',
 
     /*
     |--------------------------------------------------------------------------
