@@ -47,6 +47,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('fbr-notices/{fbr_notice}/download', [FbrNoticeController::class, 'download'])->name('fbr-notices.download');
 
     // Processes
+    Route::resource('firm-registrations', \App\Http\Controllers\FirmRegistrationController::class);
+    Route::get('firm-registrations/{firm_registration}/download/{document}', [\App\Http\Controllers\FirmRegistrationController::class, 'download'])
+        ->where('document', 'form-a|affidavit|deed|all')->name('firm-registrations.download');
     Route::resource('processes', ProcessController::class);
     Route::post('processes/{process}/stage', [ProcessController::class, 'updateStage'])->name('processes.updateStage');
     Route::get('processes/{process}/document/{document}/generate', [\App\Http\Controllers\ProcessDocumentController::class, 'generate'])->name('processes.document.generate');

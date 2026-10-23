@@ -673,13 +673,16 @@
                     </a>
                 </div>
 
-                <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) open @endif" onclick="toggleSection('operations')">
+                <div class="sidebar-collapse-toggle @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || str_starts_with(Route::currentRouteName() ?? '', 'firm-registrations.')) open @endif" onclick="toggleSection('operations')">
                     <span><i class="bi bi-gear me-1"></i> Operations</span>
                     <i class="bi bi-chevron-right chevron"></i>
                 </div>
-                <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) open @endif" id="section-operations">
+                <div class="sidebar-collapsible @if(str_starts_with(Route::currentRouteName() ?? '', 'processes.') || str_starts_with(Route::currentRouteName() ?? '', 'firm-registrations.')) open @endif" id="section-operations">
                     <a href="{{ route('processes.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'processes.')) active @endif">
                         <i class="bi bi-arrow-repeat"></i> Processes
+                    </a>
+                    <a href="{{ route('firm-registrations.index') }}" class="@if(str_starts_with(Route::currentRouteName() ?? '', 'firm-registrations.')) active @endif">
+                        <i class="bi bi-file-earmark-text"></i> Firm Registration
                     </a>
                 </div>
 
